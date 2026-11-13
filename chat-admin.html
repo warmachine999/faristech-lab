@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Friends Chat Admin · FarisTech X</title>
+<style>
+:root{color-scheme:dark;--bg:#101114;--panel:#1b1e22;--field:#25292e;--fg:#f5f6f7;--muted:#9ba3ad;--line:#363b42;--accent:#39916b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px system-ui}.wrap{max-width:1000px;margin:auto;padding:18px}.top,.item,.gate{background:var(--panel);border:1px solid var(--line);border-radius:14px}.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px}.top h1{font-size:1.1rem;margin:0;flex:1}.top button,.top a,button{background:var(--field);border:1px solid var(--line);color:var(--fg);padding:9px 12px;border-radius:9px;text-decoration:none;cursor:pointer}.tabs{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}.tabs button.active,.primary{background:var(--accent);color:white}.item{padding:13px;margin:9px 0}.meta{color:var(--muted);font-size:12px;margin-bottom:7px}.content{overflow-wrap:anywhere;white-space:pre-wrap}.actions{display:flex;gap:7px;margin-top:10px}.danger{border-color:#8b4444;color:#ffb5b5}.gate{max-width:420px;margin:12vh auto;padding:22px}.gate input{width:100%;padding:12px;margin:8px 0 12px;background:var(--field);border:1px solid var(--line);color:var(--fg);border-radius:9px}.muted{color:var(--muted)}#app[hidden],#gate[hidden]{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section id="gate" class="gate"><h2>Friends Chat Admin</h2><p class="muted">Sign in with the admin password configured for the chat service.</p><input id="password" type="password" placeholder="Admin password" autocomplete="current-password"><button id="login" class="primary">Log in</button><p id="error" class="muted"></p></section>
+<section id="app" hidden>
+<header class="top"><h1>Friends Chat moderation</h1><button id="refresh">Refresh</button><a href="chat.html">Open chat</a><button id="logout">Log out</button></header>
+<nav class="tabs"><button data-tab="chat" class="active">Friends Chat</button><button data-tab="project">Project Chat</button><button data-tab="deleted">Deleted history</button></nav>
+<div id="list" aria-live="polite"></div>
+</section>
+</div>
+<script>
+const API='https://faristech-chat-api.makerlab.workers.dev', $=id=>document.getElementById(id);
+let token=sessionStorage.getItem('ft-chat-admin-token')||'',tab='chat';
+async function req(path,method='GET',body){const r=await fetch(API+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});const d=await r.json();if(!r.ok)throw Error(d.error||'Request failed');return d}
+function showApp(){ $('gate').hidden=true;$('app').hidden=false;load() }
+async function login(){try{const r=await fetch(API+'/auth/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('password').value})}),d=await r.json();if(!r.ok)throw Error(d.error||'Incorrect admin password');token=d.token;sessionStorage.setItem('ft-chat-admin-token',token);$('password').value='';$('error').textContent='';showApp()}catch(e){$('error').textContent=e.message}}
+$('login').onclick=login;$('password').onkeydown=e=>{if(e.key==='Enter')login()};
+async function load(){const list=$('list');list.textContent='Loading…';try{const d=await req(tab==='deleted'?'/admin/deleted':'/admin/messages');list.replaceChildren();const rows=(d.messages||[]).filter(m=>tab==='deleted'?true:(m.channel||'chat')===tab&&!m.deleted_at);if(!rows.length){list.textContent='No messages in this section.';return}for(const m of rows){const card=document.createElement('article');card.className='item';const meta=document.createElement('div');meta.className='meta';meta.textContent=(m.sender_name||'Unknown')+' · '+(m.channel||'chat')+' · '+new Date(m.created_at).toLocaleString();const body=document.createElement('div');body.className='content';body.textContent=m.type==='text'?m.content:('📎 '+m.type+' attachment');card.append(meta,body);const actions=document.createElement('div');actions.className='actions';if(tab==='deleted'){const b=document.createElement('button');b.className='primary';b.textContent='Restore';b.onclick=async()=>{try{await req('/admin/restore','POST',{deletedId:m.id});load()}catch(e){alert(e.message)}};actions.append(b)}else{const b=document.createElement('button');b.className='danger';b.textContent='Delete';b.onclick=async()=>{if(confirm('Delete this message?'))try{await req((m.channel==='project'?'/project/messages/':'/messages/')+m.id,'DELETE');load()}catch(e){alert(e.message)}};actions.append(b)}card.append(actions);list.append(card)}}catch(e){list.textContent=e.message;if(/unlock|session/i.test(e.message)){token='';sessionStorage.removeItem('ft-chat-admin-token');$('app').hidden=true;$('gate').hidden=false}}}
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));load()});
+$('refresh').onclick=load;$('logout').onclick=async()=>{try{await req('/logout','POST')}catch{}token='';sessionStorage.removeItem('ft-chat-admin-token');$('app').hidden=true;$('gate').hidden=false};
+if(token)showApp();
+</script>
+</body></html>
