@@ -49,7 +49,7 @@ function applyTheme(){const t=localStorage.getItem('ft-theme')||'dark';document.
 function cycleTheme(){const ts=['dark','light','tech','caramel'],cur=document.documentElement.dataset.theme;const next=ts[(ts.indexOf(cur)+1)%ts.length];localStorage.setItem('ft-theme',next);applyTheme()}
 function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return[]}}
 function save(a){localStorage.setItem(KEY,JSON.stringify(a))}
-function name(){return ($('friendName').value||localStorage.getItem('ft-friend-name')||'').trim()}
+function name(){return $('friendName').value.trim()}
 function syncComposer(){ $('friendCompose').classList.toggle('ready',!!name()); $('readOnlyNote').textContent=name()?'You can now send messages.':'Leave blank to read only.'}
 function render(){const box=$('friendChatMessages');box.innerHTML='';const arr=load();if(!arr.length){const d=document.createElement('div');d.className='bubble';d.textContent='Welcome. The chat is ready on this device.';box.append(d);return}arr.forEach(m=>{const b=document.createElement('div');b.className='bubble '+(m.name===name()?'me':'');const s=document.createElement('small');s.textContent=(m.name||'Friend')+' · '+new Date(m.time).toLocaleString();b.append(s);if(m.type==='image'){const im=document.createElement('img');im.src=m.data;im.className='chatImage';b.append(im)}else if(m.type==='audio'){const au=document.createElement('audio');au.controls=true;au.src=m.data;au.className='chatAudio';b.append(au)}else{const span=document.createElement('span');span.textContent=m.text||'';b.append(span)}box.append(b)});box.scrollTop=box.scrollHeight}
 function add(m){const n=name();if(!n){syncComposer();return}const a=load();a.push({...m,name:n,time:Date.now()});save(a);render()}
