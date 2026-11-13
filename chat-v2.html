@@ -29,6 +29,7 @@ function updateMessage(el,m){
  if(['image','gif'].includes(m.type)){let im=document.createElement('img');im.src=m.content;im.alt=m.type==='gif'?'GIF attachment':'Image attachment';body.append(im)}
  else if(m.type==='video'){let v=document.createElement('video');v.src=m.content;v.controls=true;v.preload='metadata';body.append(v)}
  else if(m.type==='audio'){let a=document.createElement('audio');a.src=m.content;a.controls=true;a.preload='metadata';body.append(a)}
+ else if(m.type==='file'){let a=document.createElement('a');a.href=m.content;a.download='faristech-attachment';a.textContent='📎 Attached file';a.style.color='var(--accent)';body.append(a)}
  else{let t=document.createElement('div');t.textContent=m.content;body.append(t)}
  const reactions=el.querySelector('.reactions');reactions.replaceChildren();const counts=new Map();(m.reactions||[]).forEach(r=>counts.set(r.emoji,(counts.get(r.emoji)||0)+1));for(const [emoji,count] of counts){let chip=document.createElement('button');chip.textContent=emoji+' '+count;chip.title='Toggle your reaction';chip.onclick=async()=>{await req('/reactions','POST',{channel,messageId:m.id,emoji});refresh()};reactions.append(chip)}for(const emoji of ['👍','❤️','😂','😮','🎉','🔥']){let chip=document.createElement('button');chip.className='picker';chip.textContent=emoji;chip.title='React '+emoji;chip.onclick=async()=>{await req('/reactions','POST',{channel,messageId:m.id,emoji});refresh()};reactions.append(chip)}const tools=el.querySelector('.tools');tools.replaceChildren();
  if(m.sender_id===sid){
