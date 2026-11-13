@@ -273,7 +273,7 @@ function setupAskButtons(){
  const d=$('discordLink');if(d){d.href=DISCORD_URL;d.target='_blank';d.rel='noopener';d.classList.remove('disabled');d.removeAttribute('aria-disabled');$('discordText').textContent='@'+DISCORD_USERNAME;d.title=lang==='ar'?('افتح Discord ثم أضف @'+DISCORD_USERNAME):('Open Discord, then add @'+DISCORD_USERNAME)}
 }
 const themes=['dark','light','caramel','tech'];function themeLabel(th){return th==='dark'?t('themeDark'):th==='light'?t('themeLight'):th==='caramel'?t('themeCaramel'):t('themeTech')}function themeIcon(th){return th==='dark'?'🌙':th==='light'?'☀️':th==='caramel'?'🍮':'◈'}function updateThemeButton(){const th=document.documentElement.dataset.theme;$('themeIcon').textContent=themeIcon(th);$('themeText').textContent=themeLabel(th)}document.documentElement.dataset.theme=localStorage.getItem('ft-theme')||'dark';$('themeBtn').onclick=()=>{const cur=document.documentElement.dataset.theme;const next=themes[(themes.indexOf(cur)+1)%themes.length];document.documentElement.dataset.theme=next;localStorage.setItem('ft-theme',next);updateThemeButton()};$('langBtn').onclick=()=>{lang=lang==='en'?'ar':'en';localStorage.setItem('ft-lang',lang);applyLanguage()};$('menuBtn').onclick=()=>document.querySelector('.nav').classList.toggle('open');document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>document.querySelector('.nav').classList.remove('open')));
-const FRIEND_CHAT_PASSWORD='1234567898';
+const FRIEND_CHAT_PASSWORD='123456788';
 const CHAT_KEY='faristech_private_chat_v3';
 const chatOverlay=$('friendChatOverlay'),chatName=$('friendName'),chatInput=$('friendMessage'),chatMessages=$('friendChatMessages');
 let friendUnlocked=false,mediaRecorder=null,voiceChunks=[];
@@ -288,7 +288,7 @@ $('friendUnlock')?.addEventListener('click',()=>{const v=($('friendPassword')?.v
 $('friendPassword')?.addEventListener('keydown',e=>{if(e.key==='Enter')$('friendUnlock')?.click()});
 $('friendJoin')?.addEventListener('click',()=>{const n=(chatName.value||'').trim();if(n)localStorage.setItem('ft-friend-name',n);chatInput?.focus();renderChat()});
 function addChatMessage(m){const a=chatLoad();a.push({...m,name:getFriendName(),time:Date.now()});chatSave(a);renderChat()}
-function sendPreviewChat(){if(!friendUnlocked)return;const msg=(chatInput?.value||'').trim();if(!msg)return;addChatMessage({type:'text',text:msg});chatInput.value=''}
+function sendPreviewChat(){if(!friendUnlocked)return;const name=(chatName?.value||localStorage.getItem('ft-friend-name')||'').trim();if(!name){alert('Choose a name before sending messages. You can still read without a name.');chatName?.focus();return}localStorage.setItem('ft-friend-name',name);const msg=(chatInput?.value||'').trim();if(!msg)return;addChatMessage({type:'text',text:msg});chatInput.value=''}
 $('friendSend')?.addEventListener('click',sendPreviewChat);chatInput?.addEventListener('keydown',e=>{if(e.key==='Enter')sendPreviewChat()});
 $('friendClearLocal')?.addEventListener('click',()=>{if(confirm('Reset all chat stored on this device?')){localStorage.removeItem(CHAT_KEY);renderChat()}});
 $('friendImage')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f||!friendUnlocked)return;if(f.size>3*1024*1024){alert('Please use an image under 3 MB.');e.target.value='';return}const r=new FileReader();r.onload=()=>addChatMessage({type:'image',data:r.result});r.readAsDataURL(f);e.target.value=''});
