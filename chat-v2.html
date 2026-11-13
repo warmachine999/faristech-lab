@@ -10,7 +10,50 @@ async function req(p,m='GET',b){let r=await fetch(API+p,{method:m,headers:{'Cont
 $('go').onclick=async()=>{try{if($('nameWrap').hidden){if(!$('pass').value)throw Error('Enter the chat password.');$('pass').hidden=true;$('nameWrap').hidden=false;$('name').value=name;$('desc').textContent='Choose a display name (optional).';$('go').textContent='Open chat';return}name=$('name').value.trim();localStorage.setItem('ft-friend-name',name);let d=await req('/auth/chat','POST',{password:$('pass').value,senderId:sid,name});token=d.token;localStorage.setItem('ft-chat-token',token);$('gate').hidden=true;start()}catch(e){alert(e.message)}};
 $('pass').onkeydown=e=>{if(e.key==='Enter')$('go').click()};$('name').onkeydown=e=>{if(e.key==='Enter')$('go').click()};
 async function start(){$('gate').hidden=true;$('composerWrap').hidden=!name;$('status').textContent=name?'Connected as '+name:'Read only';await refresh();clearInterval(poll);poll=setInterval(refresh,4000)}
-async function refresh(){try{let d=await req('/messages');let f=$('feed');f.innerHTML='';if(!d.messages.length){f.innerHTML='<div class="empty">No messages yet. Start the conversation.</div>';return}for(let m of d.messages){let el=document.createElement('article');el.className='msg';let meta=document.createElement('div');meta.className='meta';meta.textContent=(m.sender_id===sid?'You':m.sender_name)+' · ';let tm=document.createElement('time');tm.textContent=new Date(m.created_at).toLocaleString();meta.append(tm);if(m.edited_at)meta.append(' · edited');el.append(meta);if(['image','gif'].includes(m.type)){let im=document.createElement('img');im.src=m.content;el.append(im)}else if(m.type==='video'){let v=document.createElement('video');v.src=m.content;v.controls=true;el.append(v)}else if(m.type==='audio'){let a=document.createElement('audio');a.src=m.content;a.controls=true;el.append(a)}else{let t=document.createElement('div');t.textContent=m.content;el.append(t)}if(m.sender_id===sid){let tools=document.createElement('div');tools.className='tools';if(m.type==='text'){let edit=document.createElement('button');edit.textContent='Edit';edit.onclick=async()=>{let v=prompt('Edit message',m.content);if(v?.trim()){await req('/messages/'+m.id,'PATCH',{content:v.trim()});refresh()}};tools.append(edit)}let del=document.createElement('button');del.textContent='Delete';del.onclick=async()=>{if(confirm('Delete this message?')){await req('/messages/'+m.id,'DELETE');refresh()}};tools.append(del);el.append(tools)}f.append(el)}f.scrollTop=f.scrollHeight}catch(e){if(token){token='';localStorage.removeItem('ft-chat-token');$('gate').hidden=false;alert(e.message)}}}
+const rendered=new Map();
+function makeMessage(m){
+ let el=document.createElement('article');el.className='msg';el.dataset.id=String(m.id);
+ let meta=document.createElement('div');meta.className='meta';let who=document.createElement('span');who.className='who';let tm=document.createElement('time');meta.append(who,tm);let edited=document.createElement('span');edited.className='edited';meta.append(edited);el.append(meta);
+ let body=document.createElement('div');body.className='messageBody';el.append(body);
+ let tools=document.createElement('div');tools.className='tools';el.append(tools);
+ updateMessage(el,m);return el;
+}
+function updateMessage(el,m){
+ el.dataset.signature=[m.type,m.content,m.sender_id,m.sender_name,m.created_at,m.edited_at||''].join('|');
+ const who=el.querySelector('.who');who.textContent=(m.sender_id===sid?'You':m.sender_name)+' · ';
+ el.querySelector('time').textContent=new Date(m.created_at).toLocaleString();
+ el.querySelector('.edited').textContent=m.edited_at?' · edited':'';
+ const body=el.querySelector('.messageBody');
+ // Only rebuild the content when the actual message changes, never on each poll.
+ body.replaceChildren();
+ if(['image','gif'].includes(m.type)){let im=document.createElement('img');im.src=m.content;im.alt=m.type==='gif'?'GIF attachment':'Image attachment';body.append(im)}
+ else if(m.type==='video'){let v=document.createElement('video');v.src=m.content;v.controls=true;v.preload='metadata';body.append(v)}
+ else if(m.type==='audio'){let a=document.createElement('audio');a.src=m.content;a.controls=true;a.preload='metadata';body.append(a)}
+ else{let t=document.createElement('div');t.textContent=m.content;body.append(t)}
+ const tools=el.querySelector('.tools');tools.replaceChildren();
+ if(m.sender_id===sid){
+  if(m.type==='text'){let edit=document.createElement('button');edit.textContent='Edit';edit.onclick=async()=>{let v=prompt('Edit message',m.content);if(v?.trim()){await req('/messages/'+m.id,'PATCH',{content:v.trim()});refresh()}};tools.append(edit)}
+  let del=document.createElement('button');del.textContent='Delete';del.onclick=async()=>{if(confirm('Delete this message?')){await req('/messages/'+m.id,'DELETE');refresh()}};tools.append(del);
+ }
+ if(['image','gif','video','audio'].includes(m.type)){
+  let a=document.createElement('a');a.textContent='Download';a.href=m.content;a.download='faristech-'+m.id+(m.type==='video'?'.webm':m.type==='audio'?'.webm':m.type==='gif'?'.gif':'.jpg');a.style.color='var(--accent)';a.style.fontSize='12px';a.style.marginLeft='8px';tools.append(a);
+ }
+}
+async function refresh(){try{
+ let d=await req('/messages'),feed=$('feed'),nearBottom=feed.scrollHeight-feed.scrollTop-feed.clientHeight<100;
+ const incoming=new Set(d.messages.map(m=>String(m.id)));
+ for(const [id,el] of rendered){if(!incoming.has(id)){el.remove();rendered.delete(id)}}
+ if(!d.messages.length){if(!feed.querySelector('.empty')){feed.replaceChildren(Object.assign(document.createElement('div'),{className:'empty',textContent:'No messages yet. Start the conversation.'}))}return}
+ feed.querySelector('.empty')?.remove();
+ for(const m of d.messages){
+  const id=String(m.id);let el=rendered.get(id);
+  if(!el){el=makeMessage(m);rendered.set(id,el);feed.append(el)}
+  else if(el.dataset.signature!==[m.type,m.content,m.sender_id,m.sender_name,m.created_at,m.edited_at||''].join('|'))updateMessage(el,m);
+ }
+ // Keep server order without recreating nodes or interrupting media playback.
+ for(const m of d.messages){const el=rendered.get(String(m.id));if(el&&el!==feed.lastElementChild)feed.append(el)}
+ if(nearBottom)feed.scrollTop=feed.scrollHeight;
+ }catch(e){if(token){token='';localStorage.removeItem('ft-chat-token');$('gate').hidden=false;alert(e.message)}}}
 async function send(type='text',content){let c=content??$('text').value.trim();if(!c)return;try{await req('/messages','POST',{type,content:c});$('text').value='';$('send').classList.remove('on');$('emojiPanel').classList.remove('on');refresh()}catch(e){alert(e.message)}}
 $('send').onclick=()=>send();$('text').oninput=()=>$('send').classList.toggle('on',!!$('text').value.trim());$('text').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();send()}};
 let em='😀 😃 😄 😁 😆 😅 😂 🙂 😉 😊 😍 🥰 😎 🤩 🥳 😭 😮 🤔 😇 😋 🤗 👍 👎 👏 🙌 🙏 💪 ❤️ 💛 💚 💙 💜 💯 🔥 ✨ ⭐ 🎉 🚀 🤖 ⚡ 💡 🛠️ 🎮 📱 💻 🎧 📷'.split(' ');$('emojiGrid').innerHTML=em.map(x=>'<button>'+x+'</button>').join('');$('emojiGrid').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('text').value+=[...b.textContent].join('');$('text').focus();$('send').classList.add('on')});$('emoji').onclick=()=>$('emojiPanel').classList.toggle('on');
