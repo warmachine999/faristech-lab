@@ -50,8 +50,8 @@ async function refresh(){try{
   if(!el){el=makeMessage(m);rendered.set(id,el);feed.append(el)}
   else if(el.dataset.signature!==[m.type,m.content,m.sender_id,m.sender_name,m.created_at,m.edited_at||''].join('|'))updateMessage(el,m);
  }
- // Keep server order without recreating nodes or interrupting media playback.
- for(const m of d.messages){const el=rendered.get(String(m.id));if(el&&el!==feed.lastElementChild)feed.append(el)}
+ // Reorder only when the server order actually differs; leave playing media untouched.
+ d.messages.forEach((m,i)=>{const el=rendered.get(String(m.id)),at=feed.children[i];if(el&&at!==el)feed.insertBefore(el,at||null)})
  if(nearBottom)feed.scrollTop=feed.scrollHeight;
  }catch(e){if(token){token='';localStorage.removeItem('ft-chat-token');$('gate').hidden=false;alert(e.message)}}}
 async function send(type='text',content){let c=content??$('text').value.trim();if(!c)return;try{await req('/messages','POST',{type,content:c});$('text').value='';$('send').classList.remove('on');$('emojiPanel').classList.remove('on');refresh()}catch(e){alert(e.message)}}
