@@ -88,7 +88,7 @@ html[data-theme=caramel]{--bg:#24160d;--panel:#392312;--panel2:#452a15;--text:#f
 .atom .orbit.o1{width:500px;height:130px;transform:rotate(-18deg);border-color:rgba(43,231,255,.30)}
 .atom .orbit.o2{width:500px;height:130px;transform:rotate(58deg);border-color:rgba(147,87,255,.28)}
 .atom .orbit.o3{width:420px;height:146px;transform:rotate(28deg);border-color:rgba(43,231,255,.24)}
-.atom .orbLabel{position:absolute;top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;
+.atom .orbLabel{position:absolute;top:0;left:0;right:auto;bottom:auto;
  z-index:6;will-change:transform;transform-origin:center;backface-visibility:hidden;animation:none!important}
 @keyframes varonAtomFloat{0%,100%{transform:translateY(-34px)}50%{transform:translateY(-43px)}}
 @media(prefers-reduced-motion:reduce){.atom{animation:none!important}.atom .orbLabel{animation:none!important}}
@@ -525,7 +525,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
 
 <script id="varon-radiation-effect">
 (()=>{
- const core=document.querySelector('.atom .core');
+ const atom=document.querySelector('.atom'),core=document.querySelector('.atom .core');
  if(!core||document.getElementById('varonRadiationCanvas'))return;
  const canvas=document.createElement('canvas');
  canvas.id='varonRadiationCanvas';canvas.setAttribute('aria-hidden','true');
@@ -552,13 +552,17 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   requestAnimationFrame(animateElectrons);
   if(reduced||now-orbitLast<32)return;
   orbitLast=now;
-  const r=core.getBoundingClientRect();
+  const atomRect=atom.getBoundingClientRect(),coreRect=core.getBoundingClientRect();
+  const centerX=coreRect.left-atomRect.left+coreRect.width/2;
+  const centerY=coreRect.top-atomRect.top+coreRect.height/2;
   for(const el of orbitLabels){
    const track=orbitTracks[Number(el.dataset.track)||0],a=now/1000*(Math.PI*2/track.period)+Number(el.dataset.phase||0),p=track.plane*Math.PI/180;
    const ex=track.rx*Math.cos(a),ey=track.ry*Math.sin(a);
    const x=ex*Math.cos(p)-ey*Math.sin(p),y=ex*Math.sin(p)+ey*Math.cos(p);
    const depth=.94+.06*(.5+.5*Math.sin(a));
-   el.style.transform='translate3d(-50%,-50%,0) translate3d('+x.toFixed(2)+'px,'+y.toFixed(2)+'px,0) scale('+depth.toFixed(3)+')';
+   el.style.left=(centerX+x).toFixed(2)+'px';
+   el.style.top=(centerY+y).toFixed(2)+'px';
+   el.style.transform='translate3d(-50%,-50%,0) scale('+depth.toFixed(3)+')';
   }
  }
  const cardState=new WeakMap(),backgroundMarks=[];
