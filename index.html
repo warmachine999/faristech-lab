@@ -72,7 +72,27 @@ html[data-theme=caramel]{--bg:#24160d;--panel:#392312;--panel2:#452a15;--text:#f
 @media(max-width:460px){.identityBadge{font-size:.68rem;padding:6px 8px}.brandWrap{gap:6px}.controlGrid{grid-template-columns:1fr}.labStats{grid-template-columns:1fr}.meterRow{grid-template-columns:58px 1fr 42px 40px}.brand b{font-size:.78rem}.canvasWrap{margin-inline:-10px}}
 [dir=rtl] .hero h1,[dir=rtl] .head h2,[dir=rtl] .about h2,[dir=rtl] .contact h2{letter-spacing:0}[dir=rtl] .nav,[dir=rtl] .controls{direction:rtl}
 #contactText{white-space:pre-line}
-</style>
+
+/* VARON atom: stable elliptical electron paths */
+.atom{transform:translateY(-34px);animation:varonAtomFloat 4.2s ease-in-out infinite;will-change:transform}
+.atom .core{width:178px;height:178px;isolation:isolate;overflow:visible;
+ background:radial-gradient(circle at 34% 27%,#253d5c 0%,#111d31 38%,#080e19 72%);
+ border:1px solid rgba(92,220,255,.72);
+ box-shadow:0 0 0 7px rgba(43,231,255,.045),0 0 0 15px rgba(147,87,255,.035),0 0 48px rgba(43,231,255,.24),inset 0 0 35px rgba(43,231,255,.12);
+ animation:none}
+.atom .core:before,.atom .core:after{content:"";position:absolute;inset:10px;border-radius:50%;border:1px solid rgba(43,231,255,.22);pointer-events:none}
+.atom .core:after{inset:-8px;border-color:rgba(147,87,255,.24);border-style:dashed;animation:none}
+.atom .core span{position:relative;z-index:1;display:block;font-size:3.55rem;font-weight:950;letter-spacing:3px;line-height:1;
+ color:#f4fbff;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 12px rgba(43,231,255,.52),0 0 30px rgba(43,231,255,.22);filter:none;animation:none}
+.atom .orbit{position:absolute;border:1px solid rgba(92,220,255,.22);border-radius:50%;opacity:.9;animation:none!important}
+.atom .orbit.o1{width:500px;height:130px;transform:rotate(-18deg);border-color:rgba(43,231,255,.30)}
+.atom .orbit.o2{width:500px;height:130px;transform:rotate(58deg);border-color:rgba(147,87,255,.28)}
+.atom .orbit.o3{width:420px;height:146px;transform:rotate(28deg);border-color:rgba(43,231,255,.24)}
+.atom .orbLabel{top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;
+ z-index:6;will-change:transform;animation:none!important}
+@keyframes varonAtomFloat{0%,100%{transform:translateY(-34px)}50%{transform:translateY(-43px)}}
+@media(prefers-reduced-motion:reduce){.atom{animation:none!important}.atom .orbLabel{animation:none!important}}
+#varonRadiationCanvas{image-rendering:auto}</style>
 
 <style id="responsiveHeaderFix">
 /* Responsive header refinement */
@@ -205,6 +225,34 @@ body{overflow-x:hidden}
   .nav{top:100%!important}
 }
 </style>
+<style>
+/* VARON: persistent radiation effects on the original homepage */
+#varonRadiationCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;mix-blend-mode:screen}
+body>main{position:relative;z-index:2!important}
+.atom{position:relative;z-index:auto}
+.atom .core,.atom .orbLabel{z-index:5}
+.header{z-index:4}
+.varon-ray-label{position:fixed;z-index:3;pointer-events:none;font:800 9px system-ui,sans-serif;letter-spacing:.8px;text-shadow:0 0 9px currentColor;white-space:nowrap;transform:translate(-50%,-100%)}
+.varon-caption{position:absolute;left:50%;bottom:-43px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px;white-space:nowrap;pointer-events:none;text-align:center}
+.varon-caption strong{font-size:1.2rem;letter-spacing:4px;color:var(--cyan);text-shadow:0 0 16px rgba(43,231,255,.55)}
+.varon-caption span{font-size:.72rem;font-weight:800;letter-spacing:1.4px;color:var(--muted);text-transform:uppercase}
+.atom .core span{font-size:3.2rem;letter-spacing:2px;font-weight:950;color:#e8faff;filter:drop-shadow(0 0 18px rgba(43,231,255,.8))}
+.radiation-hit{position:relative!important;overflow:hidden!important}
+.radiation-accumulation{position:absolute;inset:0;z-index:0!important;pointer-events:none;border-radius:inherit;mix-blend-mode:screen;opacity:.9}
+.radiation-meter{position:absolute;right:9px;top:9px;z-index:3!important;pointer-events:none;padding:4px 7px;border:1px solid rgba(255,255,255,.22);border-radius:999px;background:rgba(5,8,15,.72);color:#fff;font:800 9px/1.2 system-ui,sans-serif;letter-spacing:.4px}
+.radiation-hit>.radiation-ink{display:none!important}
+.radiation-hit>*:not(.radiation-accumulation):not(.radiation-meter){position:relative;z-index:1}
+</style>
+
+<style id="varon-radiation-refinement">
+/* Continuous, visible VARON waves; only their labels use the 20-second display cycle. */
+#varonRadiationCanvas{z-index:1!important;mix-blend-mode:screen;pointer-events:none}
+.varon-ray-label{z-index:3!important;font-size:10px!important;letter-spacing:1px!important;padding:3px 6px;border:1px solid currentColor;border-radius:999px;background:rgba(4,8,14,.78);box-shadow:0 0 13px currentColor}
+.atom .orbit{animation:none!important;border-width:1px}
+.atom .orbLabel{transition:none!important;will-change:transform;backface-visibility:hidden}
+.radiation-hit h1,.radiation-hit h2,.radiation-hit h3,.radiation-hit p,.radiation-hit strong,.radiation-hit b,.radiation-hit .banner,.radiation-hit .pill{text-shadow:0 0 12px rgba(255,255,255,.22),0 0 18px rgba(43,231,255,.16)}
+.radiation-hit>.radiation-accumulation{opacity:1!important}
+</style>
 </head>
 <body><canvas id="themeBg" aria-hidden="true"></canvas>
 <header class="header wrap">
@@ -216,14 +264,13 @@ body{overflow-x:hidden}
 <div class="controls"><button id="themeBtn" class="controlBtn"><span id="themeIcon">🌙</span> <span id="themeText" class="themeText">Dark</span></button><button id="langBtn" class="controlBtn">العربية</button><button id="accountBtn" class="controlBtn accountBtn" aria-label="Private friends chat" title="Private friends chat">👤</button><button id="menuBtn" class="menu" aria-label="Menu"><span></span><span></span><span></span></button></div>
 </header>
 <main class="wrap">
-<section id="home" class="hero"><div><div class="eyebrow" data-i18n="heroEyebrow"></div><h1><span id="heroTitleA"></span><br><span class="gradient" id="heroTitleB"></span></h1><p id="heroText"></p><p class="note" style="margin-top:-12px">Official website of <strong>Faris Ahmed</strong> • Inventor • Fast Learner • Taif, Saudi Arabia • Age 16</p><div class="actions"><a class="btn primary" href="projects.html" data-i18n="explore"></a><a class="btn" href="#contact" data-i18n="workWithMe"></a></div><div class="banners"><span class="banner" data-i18n="banner1"></span><span class="banner" data-i18n="banner2"></span><span class="banner" data-i18n="banner3"></span><span class="banner" data-i18n="banner4"></span></div></div><div class="atom"><div class="orbit o1"></div><div class="orbit o2"></div><div class="orbit o3"></div><div class="core"><span>⚡</span></div><button class="orbLabel l1 orbAsk" type="button" data-topic="3D">3D</button><button class="orbLabel l2 orbAsk" type="button" data-topic="PCB">PCB</button><button class="orbLabel l3 orbAsk" type="button" data-topic="ESP32">ESP32</button><button class="orbLabel l4 orbAsk" type="button" data-topic="Arduino">Arduino</button><button class="orbLabel l5 orbAsk" type="button" data-topic="Sensors">Sensors</button><button class="orbLabel l6 orbAsk" type="button" data-topic="Motors">Motors</button><button class="orbLabel l7 orbAsk" type="button" data-topic="Displays">Displays</button><button class="orbLabel l8 orbAsk" type="button" data-topic="RFID">RFID</button><button class="orbLabel l9 orbAsk" type="button" data-topic="LEDs">LEDs</button><button class="orbLabel l10 orbAsk" type="button" data-topic="Servos">Servos</button><button class="orbLabel l11 orbAsk" type="button" data-topic="IoT">IoT</button><button class="orbLabel l12 orbAsk" type="button" data-topic="Robotics">Robotics</button></div></section>
+<section id="home" class="hero"><div><div class="eyebrow" data-i18n="heroEyebrow"></div><h1><span id="heroTitleA"></span><br><span class="gradient" id="heroTitleB"></span></h1><p id="heroText"></p><p class="note" style="margin-top:-12px">Official website of <strong>Faris Ahmed</strong> • Inventor • Fast Learner • Taif, Saudi Arabia • Age 16</p><div class="actions"><a class="btn primary" href="projects.html" data-i18n="explore"></a><a class="btn" href="#contact" data-i18n="workWithMe"></a></div><div class="banners"><span class="banner" data-i18n="banner1"></span><span class="banner" data-i18n="banner2"></span><span class="banner" data-i18n="banner3"></span><span class="banner" data-i18n="banner4"></span></div></div><div class="atom"><div class="orbit o1"></div><div class="orbit o2"></div><div class="orbit o3"></div><div class="core"><span>VR</span></div><button class="orbLabel l1 orbAsk" type="button" data-topic="3D">3D</button><button class="orbLabel l2 orbAsk" type="button" data-topic="PCB">PCB</button><button class="orbLabel l3 orbAsk" type="button" data-topic="ESP32">ESP32</button><button class="orbLabel l4 orbAsk" type="button" data-topic="Arduino">Arduino</button><button class="orbLabel l5 orbAsk" type="button" data-topic="Sensors">Sensors</button><button class="orbLabel l6 orbAsk" type="button" data-topic="Motors">Motors</button><button class="orbLabel l7 orbAsk" type="button" data-topic="Displays">Displays</button><button class="orbLabel l8 orbAsk" type="button" data-topic="RFID">RFID</button><button class="orbLabel l9 orbAsk" type="button" data-topic="LEDs">LEDs</button><button class="orbLabel l10 orbAsk" type="button" data-topic="Servos">Servos</button><button class="orbLabel l11 orbAsk" type="button" data-topic="IoT">IoT</button><button class="orbLabel l12 orbAsk" type="button" data-topic="Robotics">Robotics</button><div class="varon-caption"><strong>VR</strong><span>The Element of Inventions</span></div></div></section>
 <section id="projects" class="section"><div class="head"><div><div class="eyebrow" data-i18n="projectEyebrow"></div><h2 data-i18n="projectTitle"></h2></div><p data-i18n="projectLead"></p></div><div class="grid" id="projectsGrid"></div><div style="display:flex;justify-content:center;margin-top:22px"><a class="btn primary" href="projects.html">Browse All Projects ↗</a></div></section>
 <section id="services" class="section"><div class="head"><div><div class="eyebrow" data-i18n="servicesEyebrow"></div><h2 data-i18n="servicesTitle"></h2></div><p data-i18n="servicesLead"></p></div><div class="pricePolicy" id="pricePolicy"></div><div class="services" id="servicesGrid"></div><div class="print"><h3 data-i18n="printTitle"></h3><p data-i18n="printText"></p><button class="btn primary ask" data-service-key="printing" data-i18n="printAsk"></button></div></section>
 <section id="about" class="section"><div class="about"><div><div class="eyebrow" data-i18n="aboutEyebrow"></div><h2><span data-i18n="aboutTitle1"></span><br><span class="gradient" data-i18n="aboutTitle2"></span></h2></div><div><p id="aboutText"></p><div class="pills"><span class="pill">Tinkercad</span><span class="pill">Shapr3D</span><span class="pill">ESP32</span><span class="pill">Arduino</span><span class="pill">Robotics</span><span class="pill" data-i18n="fastLearner"></span></div></div></div></section>
 <section id="lab" class="lab section"><div class="labHeader"><div><div class="eyebrow" data-i18n="labEyebrow"></div><h2 data-i18n="labTitle"></h2></div><p data-i18n="labLead"></p></div><div class="labGrid"><article class="labCard"><h3 data-i18n="circuitTitle"></h3><p style="color:var(--muted)" data-i18n="circuitHelp"></p><div class="controlGrid"><div class="ctrl"><label><span data-i18n="battery"></span><span id="vOut">9.0 V</span></label><input id="voltage" type="range" min="0" max="24" step="0.1" value="9"></div><div class="ctrl"><label><span data-i18n="resistor"></span><span id="rOut">330 Ω</span></label><input id="resistance" type="hidden" value="330"><div class="resistorModeRow"><button id="fixedResistorMode" class="resistorModeBtn active">Fixed</button><button id="variableResistorMode" class="resistorModeBtn">Variable</button></div><div class="resistorChoices" id="resistorChoices"></div><div id="variableResistorWrap" class="variableResistorWrap"><input id="variableResistance" type="range" min="50" max="1000" step="10" value="330"><div style="margin-top:5px;color:var(--muted);font-size:.72rem">50 Ω — 1000 Ω</div></div></div><div class="ctrl"><label><span data-i18n="capacitance"></span><span id="capOut">2200 µF</span></label><input id="capacitance" type="range" min="100" max="4700" step="100" value="2200"></div><div class="ctrl"><label><span data-i18n="capRating"></span><span id="capRatingOut">16 V</span></label><select id="capRating"><option>6.3</option><option>10</option><option selected>16</option><option>25</option><option>35</option><option>50</option></select></div><div class="ctrl"><label><span data-i18n="capPolarity"></span><span id="capPolarityOut"></span></label><select id="capPolarity"><option value="correct" data-i18n="polarityCorrect"></option><option value="reversed" data-i18n="polarityReversed"></option><option value="none">Remove capacitor</option><option value="super">Supercapacitor</option></select></div><div class="ctrl"><label><span data-i18n="ledColor"></span><span id="ledName"></span></label><div class="ledChoices" id="ledChoices"></div></div><div class="ctrl"><label><span data-i18n="recommendedR"></span><span id="recommendedR">350 Ω</span></label><div style="margin-top:8px;color:var(--muted);font-size:.72rem" data-i18n="recommendedHint"></div></div></div><div class="switchRow"><div><b data-i18n="powerSwitch"></b><div style="color:var(--muted);font-size:.75rem" id="switchText"></div></div><button id="switchBtn" class="toggle on" aria-label="Power switch"></button></div><div class="canvasWrap"><canvas id="circuitCanvas" width="1100" height="590"></canvas></div><div class="labActions"><button id="pauseBtn" data-i18n="pauseElectrons"></button><button id="resetBtn" data-i18n="reset"></button></div><div class="labStats"><div class="statBox"><small data-i18n="current"></small><b><span id="iOut">0.00</span> mA</b></div><div class="statBox"><small data-i18n="brightness"></small><b><span id="brightnessOut">0</span>%</b></div><div class="statBox"><small data-i18n="capVoltage"></small><b><span id="capVoltageOut">0.00</span> V</b></div><div class="statBox"><small data-i18n="electronFlow"></small><b id="flowOut">0%</b></div></div></article><aside class="labCard"><div id="circuitStatus" class="status"></div><div id="capStatus" class="status"></div><div class="infoList"><div class="infoItem"><small data-i18n="selectedLed"></small><b id="selectedLedInfo"></b></div><div class="infoItem"><small data-i18n="forwardVoltage"></small><b id="vfInfo"></b></div><div class="infoItem"><small data-i18n="targetCurrent"></small><b>20 mA</b></div><div class="infoItem"><small data-i18n="actualResistance"></small><b id="rInfo"></b></div></div><div class="trade"><h3 data-i18n="tradeTitle"></h3><p style="color:var(--muted);font-size:.82rem" data-i18n="tradeHelp"></p><div class="meters"><div class="meterRow" data-trade="fast"><span>⚡ <span data-i18n="fast"></span></span><input id="mFast" class="tradeRange" type="range" min="0" max="100" step="1" value="100"><b id="mFastText">100%</b><button class="tradeToggle on" data-choice="fast" aria-label="Fast toggle"></button></div><div class="meterRow" data-trade="cheap"><span>💰 <span data-i18n="cheap"></span></span><input id="mCheap" class="tradeRange" type="range" min="0" max="100" step="1" value="0"><b id="mCheapText">0%</b><button class="tradeToggle" data-choice="cheap" aria-label="Cheap toggle"></button></div><div class="meterRow" data-trade="good"><span>⭐ <span data-i18n="good"></span></span><input id="mGood" class="tradeRange" type="range" min="0" max="100" step="1" value="0"><b id="mGoodText">0%</b><button class="tradeToggle" data-choice="good" aria-label="Good toggle"></button></div></div><div id="tradeResult" class="result"></div></div></aside></div></section>
 <section id="contact" class="contact"><div class="contactGrid"><div><div class="eyebrow" data-i18n="contactEyebrow"></div><h2><span data-i18n="contactTitle1"></span><br><span class="gradient" data-i18n="contactTitle2"></span></h2><p id="contactText"></p></div><div class="contactLinks"><a class="wa" id="waLink" target="_blank" rel="noopener"><span class="waIcon">✆</span><span><small>WhatsApp</small><strong>050-934-7473</strong></span><b>↗</b></a><a class="wa discord" id="discordLink" href="https://discord.com/channels/@me" target="_blank" rel="noopener" title="Open Discord, then add @imthebest0373_47116"><span class="waIcon">D</span><span><small>Discord</small><strong id="discordText">@imthebest0373_47116</strong></span><b>↗</b></a></div></div></section>
 </main>
-<div id="friendChatOverlay" class="friendChatOverlay" aria-hidden="true"><section class="friendChat"><div class="friendChatHead"><div><strong>Friends Chat</strong><small>Private space for invited friends</small></div><button id="friendChatClose" class="friendChatClose" aria-label="Close">✕</button></div><div id="friendLock" class="friendChatSetup"><input id="friendPassword" type="password" inputmode="numeric" autocomplete="off" placeholder="Password"><button id="friendUnlock" type="button">Unlock</button></div><div id="friendChatBody" style="display:none"><div class="friendChatSetup"><input id="friendName" maxlength="24" placeholder="Your name"><button id="friendJoin" type="button">Enter</button></div><div class="friendChatTools"><a class="btn" href="https://warmachine999.github.io/faristech/" target="_blank" rel="noopener">Open Control Panel ↗</a><button class="btn" id="friendClearLocal" type="button">Reset This Device</button></div><div id="friendChatMessages" class="friendChatMessages"></div><div class="friendChatNotice">Messages, images and voice notes are saved on this browser. For secure shared storage across different phones/computers, connect a real backend such as Firebase, Supabase, or a Cloudflare Worker. A browser-only page cannot securely synchronize private messages between devices.</div><div class="friendChatCompose"><input id="friendMessage" maxlength="500" placeholder="Type a message…"><label class="btn" style="cursor:pointer">Image<input id="friendImage" type="file" accept="image/*" hidden></label><button class="btn" id="friendVoice" type="button">🎙 Voice</button><button id="friendSend" type="button">Send</button></div></div></section></div>
 <footer class="wrap" style="padding:24px 0 35px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.8rem"><b style="color:var(--text)">FARIS<em style="font-style:normal;color:var(--orange)">TECH</em><span style="color:var(--cyan)"> X</span></b><span data-i18n="footerTag"></span><span>© <span id="year"></span></span></footer>
 <script>
 const $=id=>document.getElementById(id);
@@ -273,7 +320,7 @@ function setupAskButtons(){
  const d=$('discordLink');if(d){d.href=DISCORD_URL;d.target='_blank';d.rel='noopener';d.classList.remove('disabled');d.removeAttribute('aria-disabled');$('discordText').textContent='@'+DISCORD_USERNAME;d.title=lang==='ar'?('افتح Discord ثم أضف @'+DISCORD_USERNAME):('Open Discord, then add @'+DISCORD_USERNAME)}
 }
 const themes=['dark','light','caramel','tech'];function themeLabel(th){return th==='dark'?t('themeDark'):th==='light'?t('themeLight'):th==='caramel'?t('themeCaramel'):t('themeTech')}function themeIcon(th){return th==='dark'?'🌙':th==='light'?'☀️':th==='caramel'?'🍮':'◈'}function updateThemeButton(){const th=document.documentElement.dataset.theme;$('themeIcon').textContent=themeIcon(th);$('themeText').textContent=themeLabel(th)}document.documentElement.dataset.theme=localStorage.getItem('ft-theme')||'dark';$('themeBtn').onclick=()=>{const cur=document.documentElement.dataset.theme;const next=themes[(themes.indexOf(cur)+1)%themes.length];document.documentElement.dataset.theme=next;localStorage.setItem('ft-theme',next);updateThemeButton()};$('langBtn').onclick=()=>{lang=lang==='en'?'ar':'en';localStorage.setItem('ft-lang',lang);applyLanguage()};$('menuBtn').onclick=()=>document.querySelector('.nav').classList.toggle('open');document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>document.querySelector('.nav').classList.remove('open')));
-const FRIEND_CHAT_PASSWORD='1234567898';
+const FRIEND_CHAT_PASSWORD='123456788';
 const CHAT_KEY='faristech_private_chat_v3';
 const chatOverlay=$('friendChatOverlay'),chatName=$('friendName'),chatInput=$('friendMessage'),chatMessages=$('friendChatMessages');
 let friendUnlocked=false,mediaRecorder=null,voiceChunks=[];
@@ -283,12 +330,12 @@ function renderChat(){if(!chatMessages)return;const a=chatLoad();chatMessages.in
 function getFriendName(){return(localStorage.getItem('ft-friend-name')||chatName?.value||'Friend').trim()||'Friend'}
 function openFriendsChat(){chatOverlay?.classList.add('open');chatOverlay?.setAttribute('aria-hidden','false');if(chatName)chatName.value=localStorage.getItem('ft-friend-name')||'';renderChat()}
 function closeFriendsChat(){chatOverlay?.classList.remove('open');chatOverlay?.setAttribute('aria-hidden','true')}
-$('accountBtn')?.addEventListener('click',openFriendsChat);$('friendChatClose')?.addEventListener('click',closeFriendsChat);chatOverlay?.addEventListener('click',e=>{if(e.target===chatOverlay)closeFriendsChat()});
+$('accountBtn')?.addEventListener('click',()=>{location.href='chat.html'});$('friendChatClose')?.addEventListener('click',closeFriendsChat);chatOverlay?.addEventListener('click',e=>{if(e.target===chatOverlay)closeFriendsChat()});
 $('friendUnlock')?.addEventListener('click',()=>{const v=($('friendPassword')?.value||'').trim();if(v===FRIEND_CHAT_PASSWORD){friendUnlocked=true;$('friendLock').style.display='none';$('friendChatBody').style.display='block';renderChat();chatInput?.focus()}else{alert('Incorrect password.')}});
 $('friendPassword')?.addEventListener('keydown',e=>{if(e.key==='Enter')$('friendUnlock')?.click()});
 $('friendJoin')?.addEventListener('click',()=>{const n=(chatName.value||'').trim();if(n)localStorage.setItem('ft-friend-name',n);chatInput?.focus();renderChat()});
 function addChatMessage(m){const a=chatLoad();a.push({...m,name:getFriendName(),time:Date.now()});chatSave(a);renderChat()}
-function sendPreviewChat(){if(!friendUnlocked)return;const msg=(chatInput?.value||'').trim();if(!msg)return;addChatMessage({type:'text',text:msg});chatInput.value=''}
+function sendPreviewChat(){if(!friendUnlocked)return;const name=(chatName?.value||localStorage.getItem('ft-friend-name')||'').trim();if(!name){alert('Choose a name before sending messages. You can still read without a name.');chatName?.focus();return}localStorage.setItem('ft-friend-name',name);const msg=(chatInput?.value||'').trim();if(!msg)return;addChatMessage({type:'text',text:msg});chatInput.value=''}
 $('friendSend')?.addEventListener('click',sendPreviewChat);chatInput?.addEventListener('keydown',e=>{if(e.key==='Enter')sendPreviewChat()});
 $('friendClearLocal')?.addEventListener('click',()=>{if(confirm('Reset all chat stored on this device?')){localStorage.removeItem(CHAT_KEY);renderChat()}});
 $('friendImage')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f||!friendUnlocked)return;if(f.size>3*1024*1024){alert('Please use an image under 3 MB.');e.target.value='';return}const r=new FileReader();r.onload=()=>addChatMessage({type:'image',data:r.result});r.readAsDataURL(f);e.target.value=''});
@@ -388,7 +435,7 @@ function updateStatus(m){$('iOut').textContent=m.current.toFixed(2);$('brightnes
  else if(!switchOn&&Math.abs(capV)>m.led.vf+.03){$('capStatus').innerHTML=`<h3 class="warn">${m.isSuper?(lang==='ar'?'المكثف الفائق: يفرغ':'Supercapacitor: Discharging'):t('capDischarging')}</h3><p>${m.isSuper?(lang==='ar'?'يفرغ بسرعة أقل بحوالي 75% من المكثف العادي في هذا النموذج.':'It discharges about 75% more slowly than the normal capacitor in this model.'):t('capDischargingText')}</p>`}
  else if(switchOn&&Math.abs(capV)>0){$('capStatus').innerHTML=`<h3 class="good">${t('capCharged')}</h3><p>${t('capChargedText')}</p>`}
  else{$('capStatus').innerHTML=`<h3>${t('capEmpty')}</h3><p>${t('capEmptyText')}</p>`}}
-function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;let m=model();updatePhysics(dt,m);m=model();updateCircuitLabels();updateStatus(m);drawCircuit(m);requestAnimationFrame(tick)}
+function tick(now){requestAnimationFrame(tick);if(now-last<32)return;const dt=Math.min(.05,(now-last)/1000);last=now;let m=model();updatePhysics(dt,m);m=model();updateCircuitLabels();updateStatus(m);drawCircuit(m)}
 [voltage,capacitance,capRating,capPolarity].forEach(x=>x.oninput=()=>updateCircuitLabels());variableResistance.oninput=()=>{resistance.value=variableResistance.value;updateCircuitLabels()};$('fixedResistorMode').onclick=()=>{resistorMode='fixed';renderResistorChoices();updateCircuitLabels()};$('variableResistorMode').onclick=()=>{resistorMode='variable';variableResistance.value=resistance.value;renderResistorChoices();updateCircuitLabels()};$('switchBtn').onclick=()=>{if(!batteryFailed){switchOn=!switchOn;$('switchBtn').classList.toggle('on',switchOn);updateCircuitLabels()}};$('pauseBtn').onclick=()=>{animating=!animating;$('pauseBtn').textContent=animating?t('pauseElectrons'):t('resumeElectrons')};$('resetBtn').onclick=()=>{voltage.value=9;resistance.value=330;capacitance.value=2200;capRating.value=16;capPolarity.value='correct';ledKey='red';resistorMode='fixed';variableResistance.value=330;switchOn=true;animating=true;capV=0;electronDrift=0;chargeAnimPhase=0;flowElectrons.forEach((e,i)=>e.u=i/flowElectrons.length);ledFailed=capFailed=batteryFailed=false;ledStress=batteryStress=capStress=0;$('switchBtn').classList.add('on');renderLedChoices();renderResistorChoices();updateCircuitLabels();$('pauseBtn').textContent=t('pauseElectrons')};
 let tradeValues={fast:100,cheap:50,good:0};
 const TRADE_MAX=200;
@@ -468,11 +515,176 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   traces.forEach((s,i)=>{trace(s,i%4===0?'rgba(0,238,155,.14)':'rgba(0,215,244,.125)',1.05);s.forEach((p,j)=>{if(j&&j<s.length-1){g.fillStyle=i%4===0?'rgba(0,238,155,.24)':'rgba(0,215,244,.22)';g.beginPath();g.arc(p.x,p.y,2.1,0,7);g.fill()}})});
   movers.forEach((m,i)=>{let p=pathPoint(traces[m.tr],m.u+t*m.sp);g.shadowBlur=11;g.shadowColor=i%3===0?'#00ee9b':'#00d7f4';g.fillStyle=i%3===0?'rgba(0,238,155,.82)':'rgba(0,215,244,.84)';g.beginPath();g.arc(p.x,p.y,2.6,0,7);g.fill();g.shadowBlur=0});cubes.forEach((o,i)=>cube(o,t,i%3===0?'0,238,155':'0,215,244',.12));
  }
- function draw(now){requestAnimationFrame(draw);t=now/1000;g.clearRect(0,0,W,H);const th=document.documentElement.dataset.theme||'dark';if(th==='dark')darkBackground();else if(th==='light')lightBackground();else if(th==='caramel')caramelBackground();else techBackground()}
+ let lastDraw=0;function draw(now){requestAnimationFrame(draw);if(now-lastDraw<40)return;lastDraw=now;t=now/1000;g.clearRect(0,0,W,H);const th=document.documentElement.dataset.theme||'dark';if(th==='dark')darkBackground();else if(th==='light')lightBackground();else if(th==='caramel')caramelBackground();else techBackground()}
  addEventListener('resize',rebuild);rebuild();requestAnimationFrame(draw);
 })();
 </script>
 <script id="mobile-header-autohide-v3">
 (()=>{const h=document.querySelector('.header');if(!h)return;let lastY=window.scrollY||0,ticking=false;function update(){const y=window.scrollY||0;if(window.innerWidth<=520){if(y>lastY&&y>90)h.classList.add('mobileHeaderHidden');else if(y<lastY-2||y<30)h.classList.remove('mobileHeaderHidden')}else h.classList.remove('mobileHeaderHidden');lastY=y;ticking=false}addEventListener('scroll',()=>{if(!ticking){requestAnimationFrame(update);ticking=true}},{passive:true});addEventListener('resize',()=>{if(innerWidth>520)h.classList.remove('mobileHeaderHidden')});})();
 </script>
-</body></html>
+
+<script id="varon-radiation-effect">
+(()=>{
+ const core=document.querySelector('.atom .core');
+ if(!core||document.getElementById('varonRadiationCanvas'))return;
+ const canvas=document.createElement('canvas');
+ canvas.id='varonRadiationCanvas';canvas.setAttribute('aria-hidden','true');
+ document.body.appendChild(canvas);
+ const ctx=canvas.getContext('2d');if(!ctx)return;
+ let w=0,h=0,dpr=1,last=0,emitAt=0,particles=[];
+ const labelCycle=40000,labelDuration=20000,labelStart=performance.now();
+ const types=[
+  {name:'ALPHA',color:'#ff3b45',speed:125,amplitude:58,frequency:0.7,trailLength:760,trailAlpha:.96,trailWidth:3.1,ionization:18,maxDistance:3200,maxHits:1},
+  {name:'BETA',color:'#2795ff',speed:235,amplitude:42,frequency:2.1,trailLength:520,trailAlpha:.82,trailWidth:2.3,ionization:9,maxDistance:4600,maxHits:4},
+  {name:'GAMMA',color:'#32e875',speed:370,amplitude:28,frequency:5.3,trailLength:330,trailAlpha:.72,trailWidth:1.9,ionization:3,maxDistance:Infinity,maxHits:Infinity}
+ ];
+ types.forEach(t=>t.wavelength=t.speed/t.frequency);
+ const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const orbitLabels=[...document.querySelectorAll('.atom .orbLabel')];
+ const orbitTracks=[
+  {rx:250,ry:65,plane:-18,period:16},
+  {rx:250,ry:65,plane:58,period:21},
+  {rx:210,ry:73,plane:28,period:26}
+ ];
+ orbitLabels.forEach((el,i)=>{el.dataset.track=String(i%3);el.dataset.phase=String(Math.floor(i/3)*Math.PI/2)});
+ let orbitLast=0;
+ function animateElectrons(now){
+  requestAnimationFrame(animateElectrons);
+  if(reduced||now-orbitLast<16)return;
+  orbitLast=now;
+  const r=core.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  for(const el of orbitLabels){
+   const track=orbitTracks[Number(el.dataset.track)||0],a=now/1000*(Math.PI*2/track.period)+Number(el.dataset.phase||0),p=track.plane*Math.PI/180;
+   const ex=track.rx*Math.cos(a),ey=track.ry*Math.sin(a);
+   const x=ex*Math.cos(p)-ey*Math.sin(p),y=ex*Math.sin(p)+ey*Math.cos(p);
+   const depth=.94+.06*(.5+.5*Math.sin(a));
+   el.style.transform='translate(-50%,-50%) translate('+x.toFixed(2)+'px,'+y.toFixed(2)+'px) scale('+depth.toFixed(3)+')';
+  }
+ }
+ const cardState=new WeakMap(),backgroundMarks=[];
+ function addBackgroundMark(p,now){
+  backgroundMarks.push({x:p.x,y:p.y,color:p.type.color,at:now,strength:p.type.name==='ALPHA'?.32:p.type.name==='BETA'?.25:.19});
+  if(backgroundMarks.length>320)backgroundMarks.splice(0,backgroundMarks.length-320);
+ }
+ function drawBackgroundMarks(now){
+  for(let i=backgroundMarks.length-1;i>=0;i--){
+   const m=backgroundMarks[i],age=now-m.at;
+   if(age>90000){backgroundMarks.splice(i,1);continue}
+   const fade=Math.max(0,1-age/90000),x=m.x-scrollX,y=m.y-scrollY,radius=145;
+   const glow=ctx.createRadialGradient(x,y,1,x,y,radius);
+   glow.addColorStop(0,rgba(m.color,m.strength*fade));
+   glow.addColorStop(.3,rgba(m.color,m.strength*.48*fade));
+   glow.addColorStop(1,rgba(m.color,0));
+   ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
+  }
+ }
+ function resize(){
+  dpr=Math.min(1.5,window.devicePixelRatio||1);w=innerWidth;h=innerHeight;
+  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+  canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);
+ }
+ function source(){
+  const r=core.getBoundingClientRect();
+  return{x:r.left+r.width/2+scrollX,y:r.top+r.height/2+scrollY};
+ }
+ function rgba(hex,alpha){
+  const n=parseInt(hex.slice(1),16);
+  return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+alpha+')';
+ }
+ function labelsVisible(now){return ((now-labelStart)%labelCycle)<labelDuration}
+ function addRayLabel(p,now){
+  if(!labelsVisible(now))return;
+  const el=document.createElement('span');el.className='varon-ray-label';
+  el.textContent=p.type.name+' · '+p.type.frequency.toFixed(1)+' Hz';
+  el.style.color=p.type.color;document.body.appendChild(el);p.label=el;
+ }
+ function removeRay(p){p.dead=true;if(p.label){p.label.remove();p.label=null}}
+ function emit(now){
+  const s=source(),type=types[Math.floor(Math.random()*types.length)];
+  const angle=(Math.random()-.5)*.10;
+  const p={type,x:s.x,y:s.y,startX:s.x,startY:s.y,angle,phase:Math.random()*Math.PI*2,
+   age:0,travel:0,maxHits:type.name==='ALPHA'?1:type.name==='BETA'?2+Math.floor(Math.random()*3):Infinity,
+   hits:0,hitCards:new Set(),path:[],dead:false,label:null,nextMarkAt:95};
+  addRayLabel(p,now);particles.push(p);emitAt=now+430+Math.random()*360;
+ }
+ function cardHit(card,p){
+  let state=cardState.get(card);
+  if(!state){
+   card.classList.add('radiation-hit');
+   const wash=document.createElement('span');wash.className='radiation-accumulation';
+   const meter=document.createElement('span');meter.className='radiation-meter';
+   meter.textContent='VR EXPOSURE 0% · 0 HITS';card.prepend(wash);card.appendChild(meter);
+   state={hits:0,ionization:0,colors:[],wash,meter};cardState.set(card,state);
+  }
+  state.hits++;state.ionization+=p.type.ionization;
+  const r=card.getBoundingClientRect();
+  state.colors.push({color:p.type.color,x:Math.max(0,Math.min(100,((p.x-scrollX)-r.left)/Math.max(1,r.width)*100)),y:Math.max(0,Math.min(100,((p.y-scrollY)-r.top)/Math.max(1,r.height)*100))});
+  if(state.colors.length>30)state.colors.shift();
+  const layers=state.colors.map(c=>'radial-gradient(circle at '+c.x.toFixed(1)+'% '+c.y.toFixed(1)+'%, '+rgba(c.color,.46)+' 0%, '+rgba(c.color,.18)+' 25%, transparent 70%)');
+  state.wash.style.background=layers.join(',');
+  state.meter.textContent='VR EXPOSURE '+Math.min(100,state.ionization)+'% · '+state.hits+' HITS';
+ }
+ function cardAt(x,y){
+  const targets=document.querySelectorAll('.card,.service,.labCard,.about,.contact,.print,.status,.infoItem,.statBox,.banner,.pill,.orbLabel');
+  for(const card of targets){const r=card.getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return card}
+  return null;
+ }
+ function hitTest(p,now){
+  if(now<(p.nextHitCheck||0))return;p.nextHitCheck=now+45;
+  const card=cardAt(p.x-scrollX,p.y-scrollY);
+  if(card&&!p.hitCards.has(card)){
+   p.hitCards.add(card);cardHit(card,p);p.hits++;
+   if(p.hits>=p.maxHits)removeRay(p);
+  }
+ }
+ function wavePoint(p,travel){
+  const t=p.type,perp=p.angle+Math.PI/2;
+  const phase=(travel/t.wavelength)*Math.PI*2+p.phase;
+  const wave=Math.sin(phase)*t.amplitude;
+  return{x:p.startX+Math.cos(p.angle)*travel+Math.cos(perp)*wave,
+         y:p.startY+Math.sin(p.angle)*travel+Math.sin(perp)*wave};
+ }
+ function move(p,dt,now){
+  const old=p.travel,step=p.type.speed*dt/1000;p.age+=dt;p.travel+=step;
+  const segments=Math.max(2,Math.ceil(step/3));
+  for(let i=1;i<=segments;i++){
+   const q=wavePoint(p,old+(p.travel-old)*i/segments);
+   p.path.push({x:q.x,y:q.y,travel:old+(p.travel-old)*i/segments});
+  }
+  while(p.path.length>2&&p.travel-p.path[0].travel>p.type.trailLength)p.path.shift();
+  while(p.travel>=p.nextMarkAt){addBackgroundMark(p,now);p.nextMarkAt+=135}
+  const head=wavePoint(p,p.travel);p.x=head.x;p.y=head.y;
+  hitTest(p,now);
+  const rightEdge=Math.max(document.documentElement.scrollWidth,innerWidth)+scrollX+80;
+  if(p.x>rightEdge||p.y<-300+scrollY||p.y>document.documentElement.scrollHeight+scrollY+300||p.travel>p.type.maxDistance||p.age>90000)removeRay(p);
+ }
+ function draw(p){
+  if(p.path.length<2)return;
+  ctx.beginPath();
+  for(let i=0;i<p.path.length;i++){const q=p.path[i],x=q.x-scrollX,y=q.y-scrollY;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+  const first=p.path[0],lastPoint=p.path[p.path.length-1];
+  const grad=ctx.createLinearGradient(first.x-scrollX,first.y-scrollY,lastPoint.x-scrollX,lastPoint.y-scrollY);
+  grad.addColorStop(0,rgba(p.type.color,0));grad.addColorStop(1,rgba(p.type.color,p.type.trailAlpha));
+  ctx.strokeStyle=grad;ctx.lineWidth=p.type.trailWidth;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.shadowColor=p.type.color;ctx.shadowBlur=p.type.name==='ALPHA'?8:p.type.name==='BETA'?5:3;ctx.stroke();ctx.shadowBlur=0;
+  const hx=p.x-scrollX,hy=p.y-scrollY;
+  if(p.label){p.label.style.left=hx+'px';p.label.style.top=(hy-14)+'px'}
+  ctx.beginPath();ctx.arc(hx,hy,p.type.name==='GAMMA'?2.7:3.1,0,Math.PI*2);
+  ctx.fillStyle=p.type.color;ctx.shadowColor=p.type.color;ctx.shadowBlur=8;ctx.fill();ctx.shadowBlur=0;
+ }
+ function frame(now){
+  requestAnimationFrame(frame);
+  if(now-last<16)return;
+  const dt=Math.min(28,Math.max(0,now-(last||now)));last=now;
+  ctx.clearRect(0,0,w,h);drawBackgroundMarks(now);
+  const showLabels=labelsVisible(now);
+  for(const p of particles){if(p.label&&!showLabels){p.label.remove();p.label=null}}
+  if(now>=emitAt&&particles.length<15)emit(now);
+  particles.forEach(p=>{if(!p.dead)move(p,dt,now);if(!p.dead)draw(p)});
+  particles=particles.filter(p=>!p.dead);
+ }
+ addEventListener('resize',resize,{passive:true});resize();emitAt=performance.now()+200;
+ requestAnimationFrame(frame);requestAnimationFrame(animateElectrons);
+})();
+</script>
+\n</body></html>
