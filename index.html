@@ -74,7 +74,7 @@ html[data-theme=caramel]{--bg:#24160d;--panel:#392312;--panel2:#452a15;--text:#f
 #contactText{white-space:pre-line}
 
 /* VARON atom: stable elliptical electron paths */
-.atom{transform:translateY(-34px);animation:varonAtomFloat 4.2s ease-in-out infinite;will-change:transform}
+.atom{animation:varonAtomFloat 4.2s ease-in-out infinite;will-change:transform}
 .atom .core{width:178px;height:178px;isolation:isolate;overflow:visible;
  background:radial-gradient(circle at 34% 27%,#253d5c 0%,#111d31 38%,#080e19 72%);
  border:1px solid rgba(92,220,255,.72);
@@ -90,7 +90,7 @@ html[data-theme=caramel]{--bg:#24160d;--panel:#392312;--panel2:#452a15;--text:#f
 .atom .orbit.o3{width:420px;height:146px;transform:rotate(28deg);border-color:rgba(43,231,255,.24)}
 .atom .orbLabel{position:absolute;top:0;left:0;right:auto;bottom:auto;
  z-index:6;will-change:transform;transform-origin:center;backface-visibility:hidden;animation:none!important}
-@keyframes varonAtomFloat{0%,100%{transform:translateY(-34px)}50%{transform:translateY(-43px)}}
+@keyframes varonAtomFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
 @media(prefers-reduced-motion:reduce){.atom{animation:none!important}.atom .orbLabel{animation:none!important}}
 #varonRadiationCanvas{image-rendering:auto}</style>
 
