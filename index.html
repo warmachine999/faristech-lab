@@ -429,7 +429,7 @@ function updateStatus(m){$('iOut').textContent=m.current.toFixed(2);$('brightnes
  else if(!switchOn&&Math.abs(capV)>m.led.vf+.03){$('capStatus').innerHTML=`<h3 class="warn">${m.isSuper?(lang==='ar'?'المكثف الفائق: يفرغ':'Supercapacitor: Discharging'):t('capDischarging')}</h3><p>${m.isSuper?(lang==='ar'?'يفرغ بسرعة أقل بحوالي 75% من المكثف العادي في هذا النموذج.':'It discharges about 75% more slowly than the normal capacitor in this model.'):t('capDischargingText')}</p>`}
  else if(switchOn&&Math.abs(capV)>0){$('capStatus').innerHTML=`<h3 class="good">${t('capCharged')}</h3><p>${t('capChargedText')}</p>`}
  else{$('capStatus').innerHTML=`<h3>${t('capEmpty')}</h3><p>${t('capEmptyText')}</p>`}}
-function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;let m=model();updatePhysics(dt,m);m=model();updateCircuitLabels();updateStatus(m);drawCircuit(m);requestAnimationFrame(tick)}
+function tick(now){requestAnimationFrame(tick);if(now-last<32)return;const dt=Math.min(.05,(now-last)/1000);last=now;let m=model();updatePhysics(dt,m);m=model();updateCircuitLabels();updateStatus(m);drawCircuit(m)}
 [voltage,capacitance,capRating,capPolarity].forEach(x=>x.oninput=()=>updateCircuitLabels());variableResistance.oninput=()=>{resistance.value=variableResistance.value;updateCircuitLabels()};$('fixedResistorMode').onclick=()=>{resistorMode='fixed';renderResistorChoices();updateCircuitLabels()};$('variableResistorMode').onclick=()=>{resistorMode='variable';variableResistance.value=resistance.value;renderResistorChoices();updateCircuitLabels()};$('switchBtn').onclick=()=>{if(!batteryFailed){switchOn=!switchOn;$('switchBtn').classList.toggle('on',switchOn);updateCircuitLabels()}};$('pauseBtn').onclick=()=>{animating=!animating;$('pauseBtn').textContent=animating?t('pauseElectrons'):t('resumeElectrons')};$('resetBtn').onclick=()=>{voltage.value=9;resistance.value=330;capacitance.value=2200;capRating.value=16;capPolarity.value='correct';ledKey='red';resistorMode='fixed';variableResistance.value=330;switchOn=true;animating=true;capV=0;electronDrift=0;chargeAnimPhase=0;flowElectrons.forEach((e,i)=>e.u=i/flowElectrons.length);ledFailed=capFailed=batteryFailed=false;ledStress=batteryStress=capStress=0;$('switchBtn').classList.add('on');renderLedChoices();renderResistorChoices();updateCircuitLabels();$('pauseBtn').textContent=t('pauseElectrons')};
 let tradeValues={fast:100,cheap:50,good:0};
 const TRADE_MAX=200;
@@ -509,7 +509,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   traces.forEach((s,i)=>{trace(s,i%4===0?'rgba(0,238,155,.14)':'rgba(0,215,244,.125)',1.05);s.forEach((p,j)=>{if(j&&j<s.length-1){g.fillStyle=i%4===0?'rgba(0,238,155,.24)':'rgba(0,215,244,.22)';g.beginPath();g.arc(p.x,p.y,2.1,0,7);g.fill()}})});
   movers.forEach((m,i)=>{let p=pathPoint(traces[m.tr],m.u+t*m.sp);g.shadowBlur=11;g.shadowColor=i%3===0?'#00ee9b':'#00d7f4';g.fillStyle=i%3===0?'rgba(0,238,155,.82)':'rgba(0,215,244,.84)';g.beginPath();g.arc(p.x,p.y,2.6,0,7);g.fill();g.shadowBlur=0});cubes.forEach((o,i)=>cube(o,t,i%3===0?'0,238,155':'0,215,244',.12));
  }
- function draw(now){requestAnimationFrame(draw);t=now/1000;g.clearRect(0,0,W,H);const th=document.documentElement.dataset.theme||'dark';if(th==='dark')darkBackground();else if(th==='light')lightBackground();else if(th==='caramel')caramelBackground();else techBackground()}
+ let lastDraw=0;function draw(now){requestAnimationFrame(draw);if(now-lastDraw<40)return;lastDraw=now;t=now/1000;g.clearRect(0,0,W,H);const th=document.documentElement.dataset.theme||'dark';if(th==='dark')darkBackground();else if(th==='light')lightBackground();else if(th==='caramel')caramelBackground();else techBackground()}
  addEventListener('resize',rebuild);rebuild();requestAnimationFrame(draw);
 })();
 </script>
@@ -604,12 +604,12 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   }
  }
  function backgroundHit(p){
+  if(p.travel-p.travelAtMark<105)return;
   const sx=p.x-scrollX,sy=p.y-scrollY;
   if(cardAt(sx,sy))return;
-  if(p.travel-p.travelAtMark<105)return;
   p.travelAtMark=p.travel;
   backgroundMarks.push({x:p.x,y:p.y,color:p.type.color,radius:35+Math.random()*55});
-  if(backgroundMarks.length>450)backgroundMarks.shift();
+  if(backgroundMarks.length>180)backgroundMarks.shift();
  }
  function move(p,dt){
   const t=p.type,step=t.speed*dt/1000;
