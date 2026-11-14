@@ -206,15 +206,21 @@ body{overflow-x:hidden}
 }
 </style>
 <style>
-/* Radiation effect on the original homepage atom */
+/* VARON: persistent radiation effects on the original homepage */
 #varonRadiationCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;mix-blend-mode:screen}
 .atom{position:relative;z-index:auto}
 .atom .core,.atom .orbLabel{z-index:5}
 .header{z-index:4}
+.varon-ray-label{position:fixed;z-index:3;pointer-events:none;font:800 9px system-ui,sans-serif;letter-spacing:.8px;text-shadow:0 0 9px currentColor;white-space:nowrap;transform:translate(-50%,-100%)}
+.varon-caption{position:absolute;left:50%;bottom:-43px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px;white-space:nowrap;pointer-events:none;text-align:center}
+.varon-caption strong{font-size:1.2rem;letter-spacing:4px;color:var(--cyan);text-shadow:0 0 16px rgba(43,231,255,.55)}
+.varon-caption span{font-size:.72rem;font-weight:800;letter-spacing:1.4px;color:var(--muted);text-transform:uppercase}
+.atom .core span{font-size:3.2rem;letter-spacing:2px;font-weight:950;color:#e8faff;filter:drop-shadow(0 0 18px rgba(43,231,255,.8))}
 .radiation-hit{position:relative!important;overflow:hidden!important}
-.radiation-hit>.radiation-ink{position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;opacity:0;background:radial-gradient(circle at var(--hit-x,50%) var(--hit-y,50%),var(--hit-color) 0%,transparent 66%);transform:scale(.12);animation:radiationInk 2.8s ease-out forwards}
-.radiation-hit>*:not(.radiation-ink){position:relative;z-index:1}
-@keyframes radiationInk{0%{opacity:.78;transform:scale(.12)}55%{opacity:.42;transform:scale(1.35)}100%{opacity:.12;transform:scale(2.1)}}
+.radiation-accumulation{position:absolute;inset:0;z-index:0!important;pointer-events:none;border-radius:inherit;mix-blend-mode:screen;opacity:.9}
+.radiation-meter{position:absolute;right:9px;top:9px;z-index:3!important;pointer-events:none;padding:4px 7px;border:1px solid rgba(255,255,255,.22);border-radius:999px;background:rgba(5,8,15,.72);color:#fff;font:800 9px/1.2 system-ui,sans-serif;letter-spacing:.4px}
+.radiation-hit>.radiation-ink{display:none!important}
+.radiation-hit>*:not(.radiation-accumulation):not(.radiation-meter){position:relative;z-index:1}
 </style>
 </head>
 <body><canvas id="themeBg" aria-hidden="true"></canvas>
@@ -227,7 +233,7 @@ body{overflow-x:hidden}
 <div class="controls"><button id="themeBtn" class="controlBtn"><span id="themeIcon">🌙</span> <span id="themeText" class="themeText">Dark</span></button><button id="langBtn" class="controlBtn">العربية</button><button id="accountBtn" class="controlBtn accountBtn" aria-label="Private friends chat" title="Private friends chat">👤</button><button id="menuBtn" class="menu" aria-label="Menu"><span></span><span></span><span></span></button></div>
 </header>
 <main class="wrap">
-<section id="home" class="hero"><div><div class="eyebrow" data-i18n="heroEyebrow"></div><h1><span id="heroTitleA"></span><br><span class="gradient" id="heroTitleB"></span></h1><p id="heroText"></p><p class="note" style="margin-top:-12px">Official website of <strong>Faris Ahmed</strong> • Inventor • Fast Learner • Taif, Saudi Arabia • Age 16</p><div class="actions"><a class="btn primary" href="projects.html" data-i18n="explore"></a><a class="btn" href="#contact" data-i18n="workWithMe"></a></div><div class="banners"><span class="banner" data-i18n="banner1"></span><span class="banner" data-i18n="banner2"></span><span class="banner" data-i18n="banner3"></span><span class="banner" data-i18n="banner4"></span></div></div><div class="atom"><div class="orbit o1"></div><div class="orbit o2"></div><div class="orbit o3"></div><div class="core"><span>⚡</span></div><button class="orbLabel l1 orbAsk" type="button" data-topic="3D">3D</button><button class="orbLabel l2 orbAsk" type="button" data-topic="PCB">PCB</button><button class="orbLabel l3 orbAsk" type="button" data-topic="ESP32">ESP32</button><button class="orbLabel l4 orbAsk" type="button" data-topic="Arduino">Arduino</button><button class="orbLabel l5 orbAsk" type="button" data-topic="Sensors">Sensors</button><button class="orbLabel l6 orbAsk" type="button" data-topic="Motors">Motors</button><button class="orbLabel l7 orbAsk" type="button" data-topic="Displays">Displays</button><button class="orbLabel l8 orbAsk" type="button" data-topic="RFID">RFID</button><button class="orbLabel l9 orbAsk" type="button" data-topic="LEDs">LEDs</button><button class="orbLabel l10 orbAsk" type="button" data-topic="Servos">Servos</button><button class="orbLabel l11 orbAsk" type="button" data-topic="IoT">IoT</button><button class="orbLabel l12 orbAsk" type="button" data-topic="Robotics">Robotics</button></div></section>
+<section id="home" class="hero"><div><div class="eyebrow" data-i18n="heroEyebrow"></div><h1><span id="heroTitleA"></span><br><span class="gradient" id="heroTitleB"></span></h1><p id="heroText"></p><p class="note" style="margin-top:-12px">Official website of <strong>Faris Ahmed</strong> • Inventor • Fast Learner • Taif, Saudi Arabia • Age 16</p><div class="actions"><a class="btn primary" href="projects.html" data-i18n="explore"></a><a class="btn" href="#contact" data-i18n="workWithMe"></a></div><div class="banners"><span class="banner" data-i18n="banner1"></span><span class="banner" data-i18n="banner2"></span><span class="banner" data-i18n="banner3"></span><span class="banner" data-i18n="banner4"></span></div></div><div class="atom"><div class="orbit o1"></div><div class="orbit o2"></div><div class="orbit o3"></div><div class="core"><span>VR</span></div><button class="orbLabel l1 orbAsk" type="button" data-topic="3D">3D</button><button class="orbLabel l2 orbAsk" type="button" data-topic="PCB">PCB</button><button class="orbLabel l3 orbAsk" type="button" data-topic="ESP32">ESP32</button><button class="orbLabel l4 orbAsk" type="button" data-topic="Arduino">Arduino</button><button class="orbLabel l5 orbAsk" type="button" data-topic="Sensors">Sensors</button><button class="orbLabel l6 orbAsk" type="button" data-topic="Motors">Motors</button><button class="orbLabel l7 orbAsk" type="button" data-topic="Displays">Displays</button><button class="orbLabel l8 orbAsk" type="button" data-topic="RFID">RFID</button><button class="orbLabel l9 orbAsk" type="button" data-topic="LEDs">LEDs</button><button class="orbLabel l10 orbAsk" type="button" data-topic="Servos">Servos</button><button class="orbLabel l11 orbAsk" type="button" data-topic="IoT">IoT</button><button class="orbLabel l12 orbAsk" type="button" data-topic="Robotics">Robotics</button><div class="varon-caption"><strong>VR</strong><span>The Element of Inventions</span></div></div></section>
 <section id="projects" class="section"><div class="head"><div><div class="eyebrow" data-i18n="projectEyebrow"></div><h2 data-i18n="projectTitle"></h2></div><p data-i18n="projectLead"></p></div><div class="grid" id="projectsGrid"></div><div style="display:flex;justify-content:center;margin-top:22px"><a class="btn primary" href="projects.html">Browse All Projects ↗</a></div></section>
 <section id="services" class="section"><div class="head"><div><div class="eyebrow" data-i18n="servicesEyebrow"></div><h2 data-i18n="servicesTitle"></h2></div><p data-i18n="servicesLead"></p></div><div class="pricePolicy" id="pricePolicy"></div><div class="services" id="servicesGrid"></div><div class="print"><h3 data-i18n="printTitle"></h3><p data-i18n="printText"></p><button class="btn primary ask" data-service-key="printing" data-i18n="printAsk"></button></div></section>
 <section id="about" class="section"><div class="about"><div><div class="eyebrow" data-i18n="aboutEyebrow"></div><h2><span data-i18n="aboutTitle1"></span><br><span class="gradient" data-i18n="aboutTitle2"></span></h2></div><div><p id="aboutText"></p><div class="pills"><span class="pill">Tinkercad</span><span class="pill">Shapr3D</span><span class="pill">ESP32</span><span class="pill">Arduino</span><span class="pill">Robotics</span><span class="pill" data-i18n="fastLearner"></span></div></div></div></section>
@@ -491,20 +497,18 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  const core=document.querySelector('.atom .core');
  if(!core||document.getElementById('varonRadiationCanvas'))return;
  const canvas=document.createElement('canvas');
- canvas.id='varonRadiationCanvas';
- canvas.setAttribute('aria-hidden','true');
+ canvas.id='varonRadiationCanvas';canvas.setAttribute('aria-hidden','true');
  document.body.appendChild(canvas);
- const ctx=canvas.getContext('2d');
- if(!ctx)return;
- let w=0,h=0,dpr=1,last=0,emitAt=0,particles=[];
- const cycle=40000,active=20000;
- const cycleStart=performance.now();
+ const ctx=canvas.getContext('2d');if(!ctx)return;
+ let w=0,h=0,dpr=1,last=0,emitAt=0,particles=[],backgroundMarks=[];
+ const cycle=40000,active=20000,cycleStart=performance.now();
  const types=[
-  {name:'ALPHA',color:'#ff3b45',speed:72,frequency:.0018,amplitude:13,tail:28,maxHits:1},
-  {name:'BETA',color:'#2795ff',speed:142,frequency:.0042,amplitude:23,tail:48,maxHits:3},
-  {name:'GAMMA',color:'#32e875',speed:235,frequency:.0085,amplitude:34,tail:76,maxHits:Infinity}
+  {name:'ALPHA',color:'#ff3b45',speed:72,frequency:.0018,amplitude:13,trailLife:1,maxHits:1},
+  {name:'BETA',color:'#2795ff',speed:142,frequency:.0042,amplitude:23,trailLife:1,maxHits:0},
+  {name:'GAMMA',color:'#32e875',speed:235,frequency:.0085,amplitude:34,trailLife:1,maxHits:Infinity}
  ];
  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const cardState=new WeakMap();
  function resize(){
   dpr=Math.min(2,window.devicePixelRatio||1);w=innerWidth;h=innerHeight;
   canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
@@ -516,38 +520,67 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   return{x:r.left+r.width/2+scrollX,y:r.top+r.height/2+scrollY};
  }
  function choose(){return types[Math.floor(Math.random()*types.length)]}
+ function addRayLabel(p){
+  const el=document.createElement('span');el.className='varon-ray-label';el.textContent=p.type.name;
+  el.style.color=p.type.color;document.body.appendChild(el);p.label=el;
+ }
+ function removeRay(p){p.dead=true;if(p.label){p.label.remove();p.label=null}}
  function emit(now){
-  const s=source(),type=choose(),angle=Math.random()*Math.PI*2;
-  particles.push({
-   type,x:s.x,y:s.y,startX:s.x,startY:s.y,angle,
-   phase:Math.random()*Math.PI*2,age:0,travel:0,
-   maxHits:type.name==='BETA'?2+Math.floor(Math.random()*3):type.name==='GAMMA'?Infinity:1,
-   hits:0,hitCards:new Set(),trail:[],dead:false
-  });
-  emitAt=now+260+Math.random()*620;
+  const s=source(),type=choose();
+  const angle=Math.random()*Math.PI*2;
+  const p={type,x:s.x,y:s.y,startX:s.x,startY:s.y,angle,phase:Math.random()*Math.PI*2,
+   age:0,travel:0,travelAtMark:0,maxHits:type.name==='ALPHA'?1:type.name==='BETA'?2+Math.floor(Math.random()*3):Infinity,
+   hits:0,hitCards:new Set(),path:[],dead:false,label:null};
+  addRayLabel(p);particles.push(p);
+  emitAt=now+300+Math.random()*650;
  }
- function ink(card,x,y,color){
-  const r=card.getBoundingClientRect(),layer=document.createElement('span');
-  layer.className='radiation-ink';
-  layer.style.setProperty('--hit-x',Math.max(0,Math.min(100,(x-(r.left+scrollX))/Math.max(1,r.width)*100))+'%');
-  layer.style.setProperty('--hit-y',Math.max(0,Math.min(100,(y-(r.top+scrollY))/Math.max(1,r.height)*100))+'%');
-  layer.style.setProperty('--hit-color',color+'88');
-  card.classList.add('radiation-hit');card.appendChild(layer);
-  setTimeout(()=>layer.remove(),3000);
+ function rgba(hex,alpha){
+  const n=parseInt(hex.slice(1),16);
+  return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+alpha+')';
  }
- function hitTest(p){
-  const x=p.x-scrollX,y=p.y-scrollY;
+ function cardHit(card,p){
+  let state=cardState.get(card);
+  if(!state){
+   card.classList.add('radiation-hit');
+   const wash=document.createElement('span');wash.className='radiation-accumulation';
+   const meter=document.createElement('span');meter.className='radiation-meter';
+   meter.textContent='VR EXPOSURE 0% · 0 HITS';
+   card.prepend(wash);card.appendChild(meter);
+   state={hits:0,colors:[],wash,meter};cardState.set(card,state);
+  }
+  state.hits++;
+  const r=card.getBoundingClientRect();
+  state.colors.push({color:p.type.color,x:Math.max(0,Math.min(100,((p.x-scrollX)-r.left)/Math.max(1,r.width)*100)),y:Math.max(0,Math.min(100,((p.y-scrollY)-r.top)/Math.max(1,r.height)*100))});
+  if(state.colors.length>24)state.colors.shift();
+  const layers=state.colors.map((c,i)=>'radial-gradient(circle at '+c.x.toFixed(1)+'% '+c.y.toFixed(1)+'%, '+rgba(c.color,.38)+' 0%, '+rgba(c.color,.14)+' 23%, transparent 66%)');
+  state.wash.style.background=layers.join(',');
+  const pct=Math.min(100,state.hits*8);
+  state.meter.textContent='VR EXPOSURE '+pct+'% · '+state.hits+' HITS';
+ }
+ function cardAt(x,y){
   const targets=document.querySelectorAll('.card,.service,.labCard,.about,.contact,.print,.status,.infoItem');
   for(const card of targets){
    const r=card.getBoundingClientRect();
-   if(!p.hitCards.has(card)&&x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom){
-    p.hitCards.add(card);
-    ink(card,p.x,p.y,p.type.color);
-    p.hits++;
-    if(p.hits>=p.maxHits)p.dead=true;
-    return;
-   }
+   if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return card;
   }
+  return null;
+ }
+ function hitTest(p){
+  const sx=p.x-scrollX,sy=p.y-scrollY;
+  const card=cardAt(sx,sy);
+  if(card&&!p.hitCards.has(card)){
+   p.hitCards.add(card);cardHit(card,p);
+   p.hits++;
+   if(p.hits>=p.maxHits)removeRay(p);
+  }
+ }
+ function backgroundHit(p){
+  const sx=p.x-scrollX,sy=p.y-scrollY;
+  if(sx<0||sx>w||sy<0||sy>h||cardAt(sx,sy))return;
+  if(p.travel-p.travelAtMark<105)return;
+  p.travelAtMark=p.travel;
+  backgroundMarks.push({x:p.x,y:p.y,color:p.type.color,radius:35+Math.random()*55});
+  if(backgroundMarks.length>450)backgroundMarks.shift();
  }
  function move(p,dt){
   const t=p.type,step=t.speed*dt/1000;
@@ -556,41 +589,50 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   const wave=Math.sin(p.age*t.frequency+p.phase)*t.amplitude;
   p.x=p.startX+Math.cos(p.angle)*p.travel+Math.cos(perp)*wave;
   p.y=p.startY+Math.sin(p.angle)*p.travel+Math.sin(perp)*wave;
-  p.trail.push({x:p.x,y:p.y});
-  if(p.trail.length>t.tail)p.trail.shift();
-  hitTest(p);
+  p.path.push({x:p.x,y:p.y});
+  if(p.path.length>900)p.path.shift();
+  hitTest(p);backgroundHit(p);
   const maxX=document.documentElement.scrollWidth+scrollX;
   const maxY=document.documentElement.scrollHeight+scrollY;
-  if(p.x<-80||p.x>maxX+80||p.y<-80||p.y>maxY+80||p.age>24000)p.dead=true;
+  if(p.x<-100||p.x>maxX+100||p.y<-100||p.y>maxY+100||p.age>60000)removeRay(p);
+ }
+ function drawBackgroundMarks(){
+  for(const m of backgroundMarks){
+   const x=m.x-scrollX,y=m.y-scrollY;
+   if(x<-m.radius||x>w+m.radius||y<-m.radius||y>h+m.radius)continue;
+   const g=ctx.createRadialGradient(x,y,1,x,y,m.radius);
+   g.addColorStop(0,rgba(m.color,.18));g.addColorStop(.45,rgba(m.color,.08));g.addColorStop(1,rgba(m.color,0));
+   ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,m.radius,0,Math.PI*2);ctx.fill();
+  }
  }
  function draw(p){
-  if(p.trail.length<2)return;
-  ctx.beginPath();
-  p.trail.forEach((pt,i)=>{
-   const x=pt.x-scrollX,y=pt.y-scrollY;
-   if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-  });
-  ctx.strokeStyle=p.type.color;ctx.lineWidth=p.type.name==='GAMMA'?2.5:p.type.name==='BETA'?2:1.5;
-  ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowColor=p.type.color;ctx.shadowBlur=p.type.name==='GAMMA'?17:11;ctx.globalAlpha=.9;ctx.stroke();
-  ctx.globalAlpha=1;ctx.shadowBlur=0;
-  const head=p.trail[p.trail.length-1],hx=head.x-scrollX,hy=head.y-scrollY;
+  if(p.path.length<2)return;
+  for(let i=1;i<p.path.length;i++){
+   const a=p.path[i-1],b=p.path[i],fade=i/p.path.length;
+   ctx.beginPath();ctx.moveTo(a.x-scrollX,a.y-scrollY);ctx.lineTo(b.x-scrollX,b.y-scrollY);
+   ctx.strokeStyle=rgba(p.type.color,.08+.78*fade);
+   ctx.lineWidth=p.type.name==='GAMMA'?2.5:p.type.name==='BETA'?2:1.5;
+   ctx.lineCap='round';ctx.shadowColor=p.type.color;ctx.shadowBlur=8+10*fade;ctx.stroke();
+  }
+  const hx=p.x-scrollX,hy=p.y-scrollY;
+  if(p.label){
+   p.label.style.left=hx+'px';p.label.style.top=(hy-12)+'px';
+  }
   ctx.beginPath();ctx.arc(hx,hy,p.type.name==='GAMMA'?3.2:2.5,0,Math.PI*2);
   ctx.fillStyle=p.type.color;ctx.shadowColor=p.type.color;ctx.shadowBlur=16;ctx.fill();ctx.shadowBlur=0;
-  ctx.font='800 9px system-ui,sans-serif';ctx.textAlign='center';ctx.fillStyle=p.type.color;ctx.fillText(p.type.name,hx,hy-11);
  }
  function frame(now){
   requestAnimationFrame(frame);
   const elapsed=(now-cycleStart)%cycle,enabled=!reduced&&elapsed<active;
+  ctx.clearRect(0,0,w,h);
   if(!enabled){
-   particles=[];ctx.clearRect(0,0,w,h);last=now;emitAt=now+400;return;
+   particles.forEach(removeRay);particles=[];drawBackgroundMarks();last=now;emitAt=now+400;return;
   }
-  // Fade old light gradually to leave a flowing luminous trail.
-  ctx.globalCompositeOperation='destination-out';ctx.fillStyle='rgba(0,0,0,.095)';ctx.fillRect(0,0,w,h);
-  ctx.globalCompositeOperation='source-over';
-  if(now>=emitAt)emit(now);
   const dt=Math.min(40,Math.max(0,now-(last||now)));last=now;
-  for(const p of particles){if(!p.dead)move(p,dt);draw(p)}
+  if(now>=emitAt)emit(now);
+  particles.forEach(p=>{if(!p.dead)move(p,dt);draw(p)});
   particles=particles.filter(p=>!p.dead);
+  drawBackgroundMarks();
  }
  addEventListener('resize',resize,{passive:true});
  resize();emitAt=performance.now()+250;requestAnimationFrame(frame);
