@@ -524,9 +524,9 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  let w=0,h=0,dpr=1,last=0,emitAt=0,particles=[];
  const cycle=40000,active=20000,cycleStart=performance.now();
  const types=[
-  {name:'ALPHA',color:'#ff3b45',speed:58,amplitude:3,trailLength:92,trailAlpha:.88,trailWidth:2.5,ionization:18,maxHits:1},
-  {name:'BETA',color:'#2795ff',speed:138,amplitude:1.5,trailLength:42,trailAlpha:.58,trailWidth:1.8,ionization:9,maxHits:2},
-  {name:'GAMMA',color:'#32e875',speed:270,amplitude:0,trailLength:9,trailAlpha:.25,trailWidth:1.1,ionization:3,maxHits:Infinity}
+  {name:'ALPHA',color:'#ff3b45',speed:58,amplitude:3,trailLength:92,trailAlpha:.88,trailWidth:2.5,ionization:18,maxDistance:430,maxHits:1},
+  {name:'BETA',color:'#2795ff',speed:138,amplitude:1.5,trailLength:42,trailAlpha:.58,trailWidth:1.8,ionization:9,maxDistance:1250,maxHits:2},
+  {name:'GAMMA',color:'#32e875',speed:270,amplitude:0,trailLength:9,trailAlpha:.25,trailWidth:1.1,ionization:3,maxDistance:Infinity,maxHits:Infinity}
  ];
  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const orbitLabels=[...document.querySelectorAll('.atom .orbLabel')];
@@ -625,13 +625,16 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   hitTest(p);
   const maxX=document.documentElement.scrollWidth+scrollX;
   const maxY=document.documentElement.scrollHeight+scrollY;
-  if(p.x<-100||p.x>maxX+100||p.y<-100||p.y>maxY+100||p.age>60000)removeRay(p);
+  if(p.x<-100||p.x>maxX+100||p.y<-100||p.y>maxY+100||p.travel>t.maxDistance||p.age>60000)removeRay(p);
  }
  function draw(p){
   if(p.path.length<2)return;
   ctx.beginPath();
   for(let i=0;i<p.path.length;i++){const q=p.path[i],x=q.x-scrollX,y=q.y-scrollY;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
-  ctx.strokeStyle=rgba(p.type.color,p.type.trailAlpha);
+  const first=p.path[0],lastPoint=p.path[p.path.length-1];
+  const trailGradient=ctx.createLinearGradient(first.x-scrollX,first.y-scrollY,lastPoint.x-scrollX,lastPoint.y-scrollY);
+  trailGradient.addColorStop(0,rgba(p.type.color,0));trailGradient.addColorStop(1,rgba(p.type.color,p.type.trailAlpha));
+  ctx.strokeStyle=trailGradient;
   ctx.lineWidth=p.type.trailWidth;ctx.lineCap='round';ctx.lineJoin='round';
   ctx.shadowColor=p.type.color;ctx.shadowBlur=p.type.name==='ALPHA'?5:p.type.name==='BETA'?2:0;ctx.stroke();ctx.shadowBlur=0;
   const hx=p.x-scrollX,hy=p.y-scrollY;
