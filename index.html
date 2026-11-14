@@ -73,25 +73,29 @@ html[data-theme=caramel]{--bg:#24160d;--panel:#392312;--panel2:#452a15;--text:#f
 [dir=rtl] .hero h1,[dir=rtl] .head h2,[dir=rtl] .about h2,[dir=rtl] .contact h2{letter-spacing:0}[dir=rtl] .nav,[dir=rtl] .controls{direction:rtl}
 #contactText{white-space:pre-line}
 
-/* VARON atom: stable elliptical electron paths */
-.atom{animation:varonAtomFloat 4.2s ease-in-out infinite;will-change:transform}
+/* VARON atom: fixed nucleus and labels tied to measured orbital geometry */
+.atom{animation:none!important;transform:none!important;will-change:auto}
 .atom .core{width:178px;height:178px;isolation:isolate;overflow:visible;
  background:radial-gradient(circle at 34% 27%,#253d5c 0%,#111d31 38%,#080e19 72%);
  border:1px solid rgba(92,220,255,.72);
  box-shadow:0 0 0 7px rgba(43,231,255,.045),0 0 0 15px rgba(147,87,255,.035),0 0 48px rgba(43,231,255,.24),inset 0 0 35px rgba(43,231,255,.12);
- animation:none}
+ animation:none!important;transform:none!important}
 .atom .core:before,.atom .core:after{content:"";position:absolute;inset:10px;border-radius:50%;border:1px solid rgba(43,231,255,.22);pointer-events:none}
 .atom .core:after{inset:-8px;border-color:rgba(147,87,255,.24);border-style:dashed;animation:none}
 .atom .core span{position:relative;z-index:1;display:block;font-size:3.55rem;font-weight:950;letter-spacing:3px;line-height:1;
- color:#f4fbff;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 12px rgba(43,231,255,.52),0 0 30px rgba(43,231,255,.22);filter:none;animation:none}
-.atom .orbit{position:absolute;border:1px solid rgba(92,220,255,.22);border-radius:50%;opacity:.9;animation:none!important}
-.atom .orbit.o1{width:500px;height:130px;transform:rotate(-18deg);border-color:rgba(43,231,255,.30)}
-.atom .orbit.o2{width:500px;height:130px;transform:rotate(58deg);border-color:rgba(147,87,255,.28)}
-.atom .orbit.o3{width:420px;height:146px;transform:rotate(28deg);border-color:rgba(43,231,255,.24)}
+ color:#f4fbff;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 12px rgba(43,231,255,.52),0 0 30px rgba(43,231,255,.22);filter:none;animation:none!important;transform:none!important}
+.atom .orbit{position:absolute;top:50%;left:50%;border:1px solid rgba(92,220,255,.22);border-radius:50%;opacity:.9;animation:none!important}
+.atom .orbit.o1{width:500px;height:130px;transform:translate(-50%,-50%) rotate(-18deg);border-color:rgba(43,231,255,.30)}
+.atom .orbit.o2{width:500px;height:130px;transform:translate(-50%,-50%) rotate(58deg);border-color:rgba(147,87,255,.28)}
+.atom .orbit.o3{width:420px;height:146px;transform:translate(-50%,-50%) rotate(28deg);border-color:rgba(43,231,255,.24)}
 .atom .orbLabel{position:absolute;top:0;left:0;right:auto;bottom:auto;
  z-index:6;will-change:transform;transform-origin:center;backface-visibility:hidden;animation:none!important}
-@keyframes varonAtomFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
-@media(prefers-reduced-motion:reduce){.atom{animation:none!important}.atom .orbLabel{animation:none!important}}
+@media(max-width:760px){
+ .atom .orbit.o1{width:350px;height:165px}
+ .atom .orbit.o2{width:355px;height:160px}
+ .atom .orbit.o3{width:310px;height:205px}
+}
+@media(prefers-reduced-motion:reduce){.atom,.atom .orbLabel{animation:none!important}}
 #varonRadiationCanvas{image-rendering:auto}</style>
 
 <style id="responsiveHeaderFix">
@@ -540,29 +544,35 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  ];
  types.forEach(t=>t.wavelength=t.speed/t.frequency);
  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- const orbitLabels=[...document.querySelectorAll('.atom .orbLabel')];
- const orbitTracks=[
-  {rx:250,ry:65,plane:-18,period:28},
-  {rx:250,ry:65,plane:58,period:33},
-  {rx:210,ry:73,plane:28,period:38}
+ const orbitElements=[
+  document.querySelector('.atom .orbit.o1'),
+  document.querySelector('.atom .orbit.o2'),
+  document.querySelector('.atom .orbit.o3')
  ];
+ const orbitTracks=orbitElements.map((el,i)=>{
+  const box=el.getBoundingClientRect();
+  const style=getComputedStyle(el);
+  return{rx:el.offsetWidth/2,ry:el.offsetHeight/2,plane:[-18,58,28][i],period:[80,95,110][i]};
+ });
+ const orbitLabels=[...document.querySelectorAll('.atom .orbLabel')];
  orbitLabels.forEach((el,i)=>{el.dataset.track=String(i%3);el.dataset.phase=String(Math.floor(i/3)*Math.PI/2)});
  let orbitLast=0;
  function animateElectrons(now){
   requestAnimationFrame(animateElectrons);
-  if(reduced||now-orbitLast<32)return;
+  if(reduced||now-orbitLast<48)return;
   orbitLast=now;
   const atomRect=atom.getBoundingClientRect(),coreRect=core.getBoundingClientRect();
   const centerX=coreRect.left-atomRect.left+coreRect.width/2;
   const centerY=coreRect.top-atomRect.top+coreRect.height/2;
   for(const el of orbitLabels){
-   const track=orbitTracks[Number(el.dataset.track)||0],a=now/1000*(Math.PI*2/track.period)+Number(el.dataset.phase||0),p=track.plane*Math.PI/180;
+   const track=orbitTracks[Number(el.dataset.track)||0];
+   if(!track)continue;
+   const a=now/1000*(Math.PI*2/track.period)+Number(el.dataset.phase||0),p=track.plane*Math.PI/180;
    const ex=track.rx*Math.cos(a),ey=track.ry*Math.sin(a);
    const x=ex*Math.cos(p)-ey*Math.sin(p),y=ex*Math.sin(p)+ey*Math.cos(p);
-   const depth=.94+.06*(.5+.5*Math.sin(a));
    el.style.left=(centerX+x).toFixed(2)+'px';
    el.style.top=(centerY+y).toFixed(2)+'px';
-   el.style.transform='translate3d(-50%,-50%,0) scale('+depth.toFixed(3)+')';
+   el.style.transform='translate3d(-50%,-50%,0)';
   }
  }
  const cardState=new WeakMap(),backgroundMarks=[];
