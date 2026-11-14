@@ -94,8 +94,8 @@ ctx.clearRect(0,0,innerWidth,innerHeight);drawMarks();const scroll=scrollY;const
 particles=particles.filter(p=>p.age<p.life&&p.y<height+innerHeight*.2);
 for(const p of particles){p.age+=dt;p.y+=p.cfg.speed*dt;const progress=p.age*p.cfg.speed;p.x=p.originX+p.dx*progress+Math.sin(p.age*4.3+p.phase)*p.wave;const sy=p.y-scroll;if(sy>-35&&sy<innerHeight+35){const cardHit=hitTest(p,sy);if(!cardHit&&Math.random()<.0018&&sy>100){backgroundMarks.push({x:p.x,y:p.y,color:p.cfg.color,time:now})}drawParticle(p,sy)}}
 }
-document.getElementById('pauseBtn').addEventListener('click',()=>{paused=!paused;last=performance.now()});
-document.getElementById('restartBtn').addEventListener('click',()=>{particles=[];backgroundMarks=[];cycleStart=performance.now();lastEmit=0;paused=false;last=performance.now()});
+document.getElementById('pauseBtn').addEventListener('click',()=>{paused=!paused;last=performance.now();document.getElementById('pauseBtn').textContent=paused?'Resume':'Pause';document.getElementById('radiationStatus').textContent=paused?'Animation paused':(active?'Radiation active':'Radiation paused — 20-second break')});
+document.getElementById('restartBtn').addEventListener('click',()=>{particles=[];backgroundMarks=[];cycleStart=performance.now();lastEmit=0;paused=false;last=performance.now();document.getElementById('pauseBtn').textContent='Pause';document.getElementById('radiationStatus').textContent='Radiation active'});
 addEventListener('resize',()=>{resize();positionOrbit()});addEventListener('scroll',()=>{});
 makeOrbit();resize();last=performance.now();if(reduced){document.querySelector('.stage-caption').textContent='24 technologies • elliptical orbital paths • reduced motion setting enabled'}else{raf=requestAnimationFrame(tick)}
 })();
