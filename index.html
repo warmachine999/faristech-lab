@@ -549,17 +549,15 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   document.querySelector('.atom .orbit.o2'),
   document.querySelector('.atom .orbit.o3')
  ];
- const orbitTracks=orbitElements.map((el,i)=>{
-  const box=el.getBoundingClientRect();
-  const style=getComputedStyle(el);
-  return{rx:el.offsetWidth/2,ry:el.offsetHeight/2,plane:[-18,58,28][i],period:[80,95,110][i]};
- });
+ const orbitTracks=orbitElements.map((el,i)=>(
+  {rx:el.offsetWidth/2,ry:el.offsetHeight/2,plane:[-18,58,28][i],period:[80,95,110][i]}
+ ));
  const orbitLabels=[...document.querySelectorAll('.atom .orbLabel')];
  orbitLabels.forEach((el,i)=>{el.dataset.track=String(i%3);el.dataset.phase=String(Math.floor(i/3)*Math.PI/2)});
  let orbitLast=0;
  function animateElectrons(now){
   requestAnimationFrame(animateElectrons);
-  if(reduced||now-orbitLast<48)return;
+  if(reduced||(orbitLast&&now-orbitLast<48))return;
   orbitLast=now;
   const atomRect=atom.getBoundingClientRect(),coreRect=core.getBoundingClientRect();
   const centerX=coreRect.left-atomRect.left+coreRect.width/2;
