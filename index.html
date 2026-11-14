@@ -530,9 +530,9 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const orbitLabels=[...document.querySelectorAll('.atom .orbLabel')];
  const orbitTracks=[
-  {rx:250,ry:65,plane:-18,period:16},
-  {rx:250,ry:65,plane:58,period:21},
-  {rx:210,ry:73,plane:28,period:26}
+  {rx:250,ry:65,plane:-18,period:28},
+  {rx:250,ry:65,plane:58,period:33},
+  {rx:210,ry:73,plane:28,period:38}
  ];
  orbitLabels.forEach((el,i)=>{el.dataset.track=String(i%3);el.dataset.phase=String(Math.floor(i/3)*Math.PI/2)});
  let orbitLast=0;
