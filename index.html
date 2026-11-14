@@ -205,14 +205,21 @@ body{overflow-x:hidden}
   .nav{top:100%!important}
 }
 </style>
-</head>
+<style>
+/* VARON radiation effect — layered onto the existing homepage only */
+#varonRadiationCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;mix-blend-mode:screen}
+.radiation-hit{position:relative!important;overflow:hidden!important}
+.radiation-hit>.radiation-ink{position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;opacity:0;background:radial-gradient(circle at var(--hit-x,50%) var(--hit-y,50%),var(--hit-color) 0%,transparent 66%);transform:scale(.12);animation:radiationInk 2.8s ease-out forwards}
+.radiation-hit>*:not(.radiation-ink){position:relative;z-index:1}
+@keyframes radiationInk{0%{opacity:.78;transform:scale(.12)}55%{opacity:.42;transform:scale(1.35)}100%{opacity:.12;transform:scale(2.1)}}
+</style>\n</head>
 <body><canvas id="themeBg" aria-hidden="true"></canvas>
 <header class="header wrap">
 <div class="brandWrap">
 <a href="#home" class="brandLogo" aria-label="FarisTech X home"><svg class="logoMark" viewBox="0 0 64 64"><circle cx="32" cy="32" r="8" fill="var(--text)"/><ellipse cx="32" cy="32" rx="28" ry="10" fill="none" stroke="var(--text)" stroke-width="3"/><ellipse cx="32" cy="32" rx="10" ry="28" fill="none" stroke="var(--cyan)" stroke-width="3" transform="rotate(32 32 32)"/><path d="M39 10 28 29h7L25 54l18-23h-8Z" fill="var(--orange)"/></svg></a>
 <div class="brandCopy"><div class="brandLine"><a href="#home" class="brandName"><b>FARIS<em>TECH</em><span class="brandX"> X</span></b></a><span class="identityBadge">Faris Ahmed • Official</span></div><small class="tagline" data-i18n="tagline"></small></div>
 </div>
-<nav class="nav"><a href="#home" data-i18n="navHome"></a><a href="projects.html" data-i18n="navProjects"></a><a href="#services" data-i18n="navServices"></a><a href="#about" data-i18n="navAbout"></a><a href="#lab" data-i18n="navLab"></a><a href="varon.html">VARON (VR)</a><a href="#contact" data-i18n="navContact"></a></nav>
+<nav class="nav"><a href="#home" data-i18n="navHome"></a><a href="projects.html" data-i18n="navProjects"></a><a href="#services" data-i18n="navServices"></a><a href="#about" data-i18n="navAbout"></a><a href="#lab" data-i18n="navLab"></a><a href="#contact" data-i18n="navContact"></a></nav>
 <div class="controls"><button id="themeBtn" class="controlBtn"><span id="themeIcon">🌙</span> <span id="themeText" class="themeText">Dark</span></button><button id="langBtn" class="controlBtn">العربية</button><button id="accountBtn" class="controlBtn accountBtn" aria-label="Private friends chat" title="Private friends chat">👤</button><button id="menuBtn" class="menu" aria-label="Menu"><span></span><span></span><span></span></button></div>
 </header>
 <main class="wrap">
@@ -474,4 +481,80 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
 <script id="mobile-header-autohide-v3">
 (()=>{const h=document.querySelector('.header');if(!h)return;let lastY=window.scrollY||0,ticking=false;function update(){const y=window.scrollY||0;if(window.innerWidth<=520){if(y>lastY&&y>90)h.classList.add('mobileHeaderHidden');else if(y<lastY-2||y<30)h.classList.remove('mobileHeaderHidden')}else h.classList.remove('mobileHeaderHidden');lastY=y;ticking=false}addEventListener('scroll',()=>{if(!ticking){requestAnimationFrame(update);ticking=true}},{passive:true});addEventListener('resize',()=>{if(innerWidth>520)h.classList.remove('mobileHeaderHidden')});})();
 </script>
-</body></html>
+
+<script id="varon-radiation-effect">
+(()=>{
+ const core=document.querySelector('.atom .core');
+ if(!core||document.getElementById('varonRadiationCanvas'))return;
+ const canvas=document.createElement('canvas');
+ canvas.id='varonRadiationCanvas';
+ document.body.appendChild(canvas);
+ const ctx=canvas.getContext('2d');
+ if(!ctx)return;
+ let w=0,h=0,dpr=1,last=0,emitAt=0,particles=[],marks=[];
+ const cycle=40000,active=20000;
+ const types=[
+  {name:'ALPHA',color:'#ff3b45',speed:82,weight:1},
+  {name:'BETA',color:'#2795ff',speed:158,weight:1},
+  {name:'GAMMA',color:'#32e875',speed:245,weight:1}
+ ];
+ const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function resize(){dpr=Math.min(2,window.devicePixelRatio||1);w=innerWidth;h=innerHeight;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0)}
+ function source(){const r=core.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2+scrollY}}
+ function choose(){const n=Math.random()*3;return types[Math.floor(n)]}
+ function emit(now){
+  const s=source(),type=choose(),life=Math.max(1,(document.documentElement.scrollHeight-s.y+h)/type.speed);
+  particles.push({x:s.x+(Math.random()-.5)*22,y:s.y,originX:s.x,dx:(Math.random()-.5)*Math.min(170,w*.24),phase:Math.random()*Math.PI*2,wave:18+Math.random()*32,type,age:0,life,hit:false});
+  emitAt=now+450+Math.random()*750;
+ }
+ function ink(card,x,y,color){
+  const r=card.getBoundingClientRect();
+  const layer=document.createElement('span');layer.className='radiation-ink';
+  layer.style.setProperty('--hit-x',Math.max(0,Math.min(100,(x-r.left)/Math.max(1,r.width)*100))+'%');
+  layer.style.setProperty('--hit-y',Math.max(0,Math.min(100,(y-r.top)/Math.max(1,r.height)*100))+'%');
+  layer.style.setProperty('--hit-color',color+'66');
+  card.classList.add('radiation-hit');card.appendChild(layer);
+  setTimeout(()=>layer.remove(),3000);
+ }
+ function collide(p,screenY){
+  if(p.hit)return;
+  const targets=document.querySelectorAll('.card,.service,.labCard,.about,.contact,.print,.status,.infoItem');
+  for(const card of targets){
+   const r=card.getBoundingClientRect();
+   if(p.x>=r.left&&p.x<=r.right&&screenY>=r.top&&screenY<=r.bottom){
+    ink(card,p.x,screenY,p.type.color);p.hit=true;return;
+   }
+  }
+ }
+ function drawParticle(p){
+  const y=p.y-scrollY;
+  if(y < -90 || y > h+90)return;
+  const progress=Math.min(1,p.age/p.life);
+  const x=p.originX+p.dx*progress+Math.sin(p.age*.012+p.phase)*p.wave;
+  p.x=x;
+  const tail= p.type.name==='ALPHA'?22:p.type.name==='BETA'?34:48;
+  const grad=ctx.createLinearGradient(x,y-tail,x,y+5);
+  grad.addColorStop(0,'rgba(0,0,0,0)');grad.addColorStop(1,p.type.color);
+  ctx.strokeStyle=grad;ctx.lineWidth=p.type.name==='GAMMA'?2.7:2;ctx.beginPath();ctx.moveTo(x,y-tail);ctx.lineTo(x,y+4);ctx.stroke();
+  ctx.fillStyle=p.type.color;ctx.shadowColor=p.type.color;ctx.shadowBlur=15;ctx.beginPath();ctx.arc(x,y,3.2,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.font='800 10px system-ui, sans-serif';ctx.textAlign='center';ctx.fillStyle=p.type.color;ctx.fillText(p.type.name,x,y-tail-7);
+  collide(p,y);
+ }
+ function frame(now){
+  requestAnimationFrame(frame);
+  const elapsed=now%cycle,enabled=!reduced&&elapsed<active;
+  ctx.clearRect(0,0,w,h);
+  if(!enabled){particles=[];emitAt=now+700;return}
+  if(now>=emitAt)emit(now);
+  const dt=Math.min(40,now-(last||now));last=now;
+  particles=particles.filter(p=>p.age<p.life&&!p.hit);
+  for(const p of particles){p.age+=dt;p.y+=p.type.speed*dt/1000;drawParticle(p)}
+  if(Math.random()<.002){const s=source();marks.push({x:s.x+(Math.random()-.5)*w*.7,y:Math.random()*h,life:1,color:choose().color})}
+  marks=marks.filter(m=>m.life>0);
+  for(const m of marks){m.life-=.003;const g=ctx.createRadialGradient(m.x,m.y,1,m.x,m.y,42);g.addColorStop(0,m.color+'22');g.addColorStop(1,m.color+'00');ctx.fillStyle=g;ctx.fillRect(m.x-42,m.y-42,84,84)}
+ }
+ addEventListener('resize',resize,{passive:true});
+ resize();emitAt=performance.now()+350;requestAnimationFrame(frame);
+})();
+</script>
+\n</body></html>
