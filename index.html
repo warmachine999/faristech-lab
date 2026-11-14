@@ -206,13 +206,16 @@ body{overflow-x:hidden}
 }
 </style>
 <style>
-/* VARON radiation effect — layered onto the existing homepage only */
-body>main{z-index:auto!important}\n#varonRadiationCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;mix-blend-mode:screen}
+/* Radiation effect on the original homepage atom */
+#varonRadiationCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;mix-blend-mode:screen}
+.atom{position:relative;z-index:3}
+.header{z-index:4}
 .radiation-hit{position:relative!important;overflow:hidden!important}
 .radiation-hit>.radiation-ink{position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;opacity:0;background:radial-gradient(circle at var(--hit-x,50%) var(--hit-y,50%),var(--hit-color) 0%,transparent 66%);transform:scale(.12);animation:radiationInk 2.8s ease-out forwards}
 .radiation-hit>*:not(.radiation-ink){position:relative;z-index:1}
 @keyframes radiationInk{0%{opacity:.78;transform:scale(.12)}55%{opacity:.42;transform:scale(1.35)}100%{opacity:.12;transform:scale(2.1)}}
-</style>\n</head>
+</style>
+</head>
 <body><canvas id="themeBg" aria-hidden="true"></canvas>
 <header class="header wrap">
 <div class="brandWrap">
