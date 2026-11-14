@@ -72,6 +72,30 @@ html[data-theme=caramel]{--bg:#24160d;--panel:#392312;--panel2:#452a15;--text:#f
 @media(max-width:460px){.identityBadge{font-size:.68rem;padding:6px 8px}.brandWrap{gap:6px}.controlGrid{grid-template-columns:1fr}.labStats{grid-template-columns:1fr}.meterRow{grid-template-columns:58px 1fr 42px 40px}.brand b{font-size:.78rem}.canvasWrap{margin-inline:-10px}}
 [dir=rtl] .hero h1,[dir=rtl] .head h2,[dir=rtl] .about h2,[dir=rtl] .contact h2{letter-spacing:0}[dir=rtl] .nav,[dir=rtl] .controls{direction:rtl}
 #contactText{white-space:pre-line}
+
+/* VARON atom refinement and low-cost orbit animation */
+.atom{transform:translateY(-34px);will-change:transform}
+.atom .core{width:178px;height:178px;isolation:isolate;overflow:visible;
+ background:radial-gradient(circle at 34% 27%,#253d5c 0%,#111d31 38%,#080e19 72%);
+ border:1px solid rgba(92,220,255,.72);
+ box-shadow:0 0 0 7px rgba(43,231,255,.045),0 0 0 15px rgba(147,87,255,.035),0 0 48px rgba(43,231,255,.24),inset 0 0 35px rgba(43,231,255,.12);
+ animation:varonNucleusFloat 4.2s ease-in-out infinite}
+.atom .core:before,.atom .core:after{content:"";position:absolute;inset:10px;border-radius:50%;border:1px solid rgba(43,231,255,.22);pointer-events:none}
+.atom .core:after{inset:-8px;border-color:rgba(147,87,255,.24);border-style:dashed;animation:varonRingTurn 34s linear infinite}
+.atom .core span{position:relative;z-index:1;display:block;font-size:3.55rem;font-weight:950;letter-spacing:3px;line-height:1;
+ color:#f4fbff;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 12px rgba(43,231,255,.52),0 0 30px rgba(43,231,255,.22);
+ filter:none;animation:none}
+.atom .orbit{opacity:.9}
+.atom .orbLabel{top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;
+ z-index:6;will-change:transform;animation:varonElectronOrbit 28s linear infinite;
+ animation-delay:calc(var(--orbit-phase,0)* -1s)}
+@keyframes varonNucleusFloat{0%,100%{translate:0 0}50%{translate:0 -9px}}
+@keyframes varonRingTurn{to{rotate:360deg}}
+@keyframes varonElectronOrbit{from{transform:translate(-50%,-50%) rotate(0deg) translateX(var(--orbit-radius,205px)) rotate(0deg)}
+ to{transform:translate(-50%,-50%) rotate(360deg) translateX(var(--orbit-radius,205px)) rotate(-360deg)}}
+@media(prefers-reduced-motion:reduce){.atom,.atom .core,.atom .core:after,.atom .orbLabel{animation:none!important}}
+#varonRadiationCanvas{image-rendering:auto}
+
 </style>
 
 <style id="responsiveHeaderFix">
@@ -509,9 +533,12 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   {name:'GAMMA',color:'#32e875',speed:235,frequency:.0085,amplitude:34,trailLife:1,maxHits:Infinity}
  ];
  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const orbitLabels=[...document.querySelectorAll('.atom .orbLabel')];
+ orbitLabels.forEach((el,i)=>{el.style.setProperty('--orbit-phase',(i/Math.max(1,orbitLabels.length))*28);el.style.setProperty('--orbit-radius',((i%3)===0?176:(i%3)===1?214:246)+'px')});
+
  const cardState=new WeakMap();
  function resize(){
-  dpr=Math.min(2,window.devicePixelRatio||1);w=innerWidth;h=innerHeight;
+  dpr=Math.min(1.25,window.devicePixelRatio||1);w=innerWidth;h=innerHeight;
   canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
   canvas.style.width=w+'px';canvas.style.height=h+'px';
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -533,7 +560,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
    age:0,travel:0,travelAtMark:0,maxHits:type.name==='ALPHA'?1:type.name==='BETA'?2+Math.floor(Math.random()*3):Infinity,
    hits:0,hitCards:new Set(),path:[],dead:false,label:null};
   addRayLabel(p);particles.push(p);
-  emitAt=now+300+Math.random()*650;
+  emitAt=now+650+Math.random()*550;
  }
  function rgba(hex,alpha){
   const n=parseInt(hex.slice(1),16);
@@ -567,11 +594,12 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   return null;
  }
  function hitTest(p){
+  const now=performance.now();if(now<(p.nextHitCheck||0))return;
+  p.nextHitCheck=now+85;
   const sx=p.x-scrollX,sy=p.y-scrollY;
   const card=cardAt(sx,sy);
   if(card&&!p.hitCards.has(card)){
-   p.hitCards.add(card);cardHit(card,p);
-   p.hits++;
+   p.hitCards.add(card);cardHit(card,p);p.hits++;
    if(p.hits>=p.maxHits)removeRay(p);
   }
  }
@@ -591,7 +619,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   p.x=p.startX+Math.cos(p.angle)*p.travel+Math.cos(perp)*wave;
   p.y=p.startY+Math.sin(p.angle)*p.travel+Math.sin(perp)*wave;
   p.path.push({x:p.x,y:p.y});
-  if(p.path.length>900)p.path.shift();
+  if(p.path.length>260)p.path.shift();
   hitTest(p);backgroundHit(p);
   const maxX=document.documentElement.scrollWidth+scrollX;
   const maxY=document.documentElement.scrollHeight+scrollY;
@@ -608,30 +636,29 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  }
  function draw(p){
   if(p.path.length<2)return;
-  for(let i=1;i<p.path.length;i++){
-   const a=p.path[i-1],b=p.path[i],fade=i/p.path.length;
-   ctx.beginPath();ctx.moveTo(a.x-scrollX,a.y-scrollY);ctx.lineTo(b.x-scrollX,b.y-scrollY);
-   ctx.strokeStyle=rgba(p.type.color,.08+.78*fade);
-   ctx.lineWidth=p.type.name==='GAMMA'?2.5:p.type.name==='BETA'?2:1.5;
-   ctx.lineCap='round';ctx.shadowColor=p.type.color;ctx.shadowBlur=8+10*fade;ctx.stroke();
-  }
+  ctx.beginPath();
+  for(let i=0;i<p.path.length;i++){const q=p.path[i],x=q.x-scrollX,y=q.y-scrollY;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+  ctx.strokeStyle=rgba(p.type.color,.72);
+  ctx.lineWidth=p.type.name==='GAMMA'?2.4:p.type.name==='BETA'?1.9:1.5;
+  ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowColor=p.type.color;ctx.shadowBlur=7;ctx.stroke();ctx.shadowBlur=0;
   const hx=p.x-scrollX,hy=p.y-scrollY;
-  if(p.label){
-   p.label.style.left=hx+'px';p.label.style.top=(hy-12)+'px';
-  }
+  if(p.label){p.label.style.left=hx+'px';p.label.style.top=(hy-12)+'px'}
   ctx.beginPath();ctx.arc(hx,hy,p.type.name==='GAMMA'?3.2:2.5,0,Math.PI*2);
-  ctx.fillStyle=p.type.color;ctx.shadowColor=p.type.color;ctx.shadowBlur=16;ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle=p.type.color;ctx.shadowColor=p.type.color;ctx.shadowBlur=12;ctx.fill();ctx.shadowBlur=0;
  }
  function frame(now){
   requestAnimationFrame(frame);
   const elapsed=(now-cycleStart)%cycle,enabled=!reduced&&elapsed<active;
-  ctx.clearRect(0,0,w,h);
   if(!enabled){
-   particles.forEach(removeRay);particles=[];drawBackgroundMarks();last=now;emitAt=now+400;return;
+   if(particles.length){particles.forEach(removeRay);particles=[]}
+   if(now-last>160){ctx.clearRect(0,0,w,h);drawBackgroundMarks();last=now}
+   emitAt=now+400;return;
   }
+  if(now-last<32)return;
   const dt=Math.min(40,Math.max(0,now-(last||now)));last=now;
-  if(now>=emitAt)emit(now);
-  particles.forEach(p=>{if(!p.dead)move(p,dt);draw(p)});
+  ctx.clearRect(0,0,w,h);
+  if(now>=emitAt&&particles.length<11)emit(now);
+  particles.forEach(p=>{if(!p.dead)move(p,dt);if(!p.dead)draw(p)});
   particles=particles.filter(p=>!p.dead);
   drawBackgroundMarks();
  }
