@@ -73,23 +73,14 @@ html[data-theme=caramel]{--bg:#24160d;--panel:#392312;--panel2:#452a15;--text:#f
 [dir=rtl] .hero h1,[dir=rtl] .head h2,[dir=rtl] .about h2,[dir=rtl] .contact h2{letter-spacing:0}[dir=rtl] .nav,[dir=rtl] .controls{direction:rtl}
 #contactText{white-space:pre-line}
 
-/* VARON atom: stable elliptical electron paths */
+/* VARON: keep the existing nucleus; refine only the orbit paths and motion */
 .atom{transform:translateY(-34px);animation:varonAtomFloat 4.2s ease-in-out infinite;will-change:transform}
-.atom .core{width:178px;height:178px;isolation:isolate;overflow:visible;
- background:radial-gradient(circle at 34% 27%,#253d5c 0%,#111d31 38%,#080e19 72%);
- border:1px solid rgba(92,220,255,.72);
- box-shadow:0 0 0 7px rgba(43,231,255,.045),0 0 0 15px rgba(147,87,255,.035),0 0 48px rgba(43,231,255,.24),inset 0 0 35px rgba(43,231,255,.12);
- animation:none}
-.atom .core:before,.atom .core:after{content:"";position:absolute;inset:10px;border-radius:50%;border:1px solid rgba(43,231,255,.22);pointer-events:none}
-.atom .core:after{inset:-8px;border-color:rgba(147,87,255,.24);border-style:dashed;animation:none}
-.atom .core span{position:relative;z-index:1;display:block;font-size:3.55rem;font-weight:950;letter-spacing:3px;line-height:1;
- color:#f4fbff;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 12px rgba(43,231,255,.52),0 0 30px rgba(43,231,255,.22);filter:none;animation:none}
+.atom .core span{animation:none!important}
 .atom .orbit{position:absolute;border:1px solid rgba(92,220,255,.22);border-radius:50%;opacity:.9;animation:none!important}
 .atom .orbit.o1{width:500px;height:130px;transform:rotate(-18deg);border-color:rgba(43,231,255,.30)}
 .atom .orbit.o2{width:500px;height:130px;transform:rotate(58deg);border-color:rgba(147,87,255,.28)}
 .atom .orbit.o3{width:420px;height:146px;transform:rotate(28deg);border-color:rgba(43,231,255,.24)}
-.atom .orbLabel{top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;
- z-index:6;will-change:transform;animation:none!important}
+.atom .orbLabel{top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;z-index:6;will-change:transform;animation:none!important}
 @keyframes varonAtomFloat{0%,100%{transform:translateY(-34px)}50%{transform:translateY(-43px)}}
 @media(prefers-reduced-motion:reduce){.atom{animation:none!important}.atom .orbLabel{animation:none!important}}
 #varonRadiationCanvas{image-rendering:auto}</style>
@@ -245,12 +236,9 @@ body>main{position:relative;z-index:2!important}
 </style>
 
 <style id="varon-radiation-refinement">
-/* Continuous, visible VARON waves; only their labels use the 20-second display cycle. */
 #varonRadiationCanvas{z-index:1!important;mix-blend-mode:screen;pointer-events:none}
 .varon-ray-label{z-index:3!important;font-size:10px!important;letter-spacing:1px!important;padding:3px 6px;border:1px solid currentColor;border-radius:999px;background:rgba(4,8,14,.78);box-shadow:0 0 13px currentColor}
-.atom .orbit{animation:none!important;border-width:1px}
-.atom .orbLabel{transition:none!important;will-change:transform;backface-visibility:hidden}
-.radiation-hit h1,.radiation-hit h2,.radiation-hit h3,.radiation-hit p,.radiation-hit strong,.radiation-hit b,.radiation-hit .banner,.radiation-hit .pill{text-shadow:0 0 12px rgba(255,255,255,.22),0 0 18px rgba(43,231,255,.16)}
+.atom .orbLabel{transition:none!important;will-change:transform}
 .radiation-hit>.radiation-accumulation{opacity:1!important}
 </style>
 </head>
@@ -550,27 +538,26 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  let orbitLast=0;
  function animateElectrons(now){
   requestAnimationFrame(animateElectrons);
-  if(reduced||now-orbitLast<16)return;
+  if(reduced||now-orbitLast<32)return;
   orbitLast=now;
   const r=core.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
   for(const el of orbitLabels){
    const track=orbitTracks[Number(el.dataset.track)||0],a=now/1000*(Math.PI*2/track.period)+Number(el.dataset.phase||0),p=track.plane*Math.PI/180;
    const ex=track.rx*Math.cos(a),ey=track.ry*Math.sin(a);
    const x=ex*Math.cos(p)-ey*Math.sin(p),y=ex*Math.sin(p)+ey*Math.cos(p);
-   const depth=.94+.06*(.5+.5*Math.sin(a));
-   el.style.transform='translate(-50%,-50%) translate('+x.toFixed(2)+'px,'+y.toFixed(2)+'px) scale('+depth.toFixed(3)+')';
+   el.style.transform='translate(-50%,-50%) translate('+(cx-r.left-r.width/2+x).toFixed(1)+'px,'+(cy-r.top-r.height/2+y).toFixed(1)+'px)';
   }
  }
  const cardState=new WeakMap(),backgroundMarks=[];
  function addBackgroundMark(p,now){
-  backgroundMarks.push({x:p.x,y:p.y,color:p.type.color,at:now,strength:p.type.name==='ALPHA'?.32:p.type.name==='BETA'?.25:.19});
-  if(backgroundMarks.length>320)backgroundMarks.splice(0,backgroundMarks.length-320);
+  backgroundMarks.push({x:p.x,y:p.y,color:p.type.color,at:now,strength:p.type.name==='ALPHA'?.25:p.type.name==='BETA'?.19:.14});
+  if(backgroundMarks.length>90)backgroundMarks.splice(0,backgroundMarks.length-90);
  }
  function drawBackgroundMarks(now){
   for(let i=backgroundMarks.length-1;i>=0;i--){
    const m=backgroundMarks[i],age=now-m.at;
-   if(age>90000){backgroundMarks.splice(i,1);continue}
-   const fade=Math.max(0,1-age/90000),x=m.x-scrollX,y=m.y-scrollY,radius=145;
+   if(age>45000){backgroundMarks.splice(i,1);continue}
+   const fade=Math.max(0,1-age/45000),x=m.x-scrollX,y=m.y-scrollY,radius=92;
    const glow=ctx.createRadialGradient(x,y,1,x,y,radius);
    glow.addColorStop(0,rgba(m.color,m.strength*fade));
    glow.addColorStop(.3,rgba(m.color,m.strength*.48*fade));
@@ -579,7 +566,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   }
  }
  function resize(){
-  dpr=Math.min(1.5,window.devicePixelRatio||1);w=innerWidth;h=innerHeight;
+  dpr=Math.min(1.1,window.devicePixelRatio||1);w=innerWidth;h=innerHeight;
   canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
   canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);
  }
@@ -601,11 +588,11 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  function removeRay(p){p.dead=true;if(p.label){p.label.remove();p.label=null}}
  function emit(now){
   const s=source(),type=types[Math.floor(Math.random()*types.length)];
-  const angle=(Math.random()-.5)*.10;
+  const angle=Math.random()*Math.PI*2;
   const p={type,x:s.x,y:s.y,startX:s.x,startY:s.y,angle,phase:Math.random()*Math.PI*2,
    age:0,travel:0,maxHits:type.name==='ALPHA'?1:type.name==='BETA'?2+Math.floor(Math.random()*3):Infinity,
    hits:0,hitCards:new Set(),path:[],dead:false,label:null,nextMarkAt:95};
-  addRayLabel(p,now);particles.push(p);emitAt=now+430+Math.random()*360;
+  addRayLabel(p,now);particles.push(p);emitAt=now+650+Math.random()*500;
  }
  function cardHit(card,p){
   let state=cardState.get(card);
@@ -646,13 +633,13 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  }
  function move(p,dt,now){
   const old=p.travel,step=p.type.speed*dt/1000;p.age+=dt;p.travel+=step;
-  const segments=Math.max(2,Math.ceil(step/3));
+  const segments=Math.max(2,Math.ceil(step/7));
   for(let i=1;i<=segments;i++){
    const q=wavePoint(p,old+(p.travel-old)*i/segments);
    p.path.push({x:q.x,y:q.y,travel:old+(p.travel-old)*i/segments});
   }
   while(p.path.length>2&&p.travel-p.path[0].travel>p.type.trailLength)p.path.shift();
-  while(p.travel>=p.nextMarkAt){addBackgroundMark(p,now);p.nextMarkAt+=135}
+  while(p.travel>=p.nextMarkAt){addBackgroundMark(p,now);p.nextMarkAt+=230}
   const head=wavePoint(p,p.travel);p.x=head.x;p.y=head.y;
   hitTest(p,now);
   const rightEdge=Math.max(document.documentElement.scrollWidth,innerWidth)+scrollX+80;
@@ -674,12 +661,12 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  }
  function frame(now){
   requestAnimationFrame(frame);
-  if(now-last<16)return;
-  const dt=Math.min(28,Math.max(0,now-(last||now)));last=now;
+  if(now-last<32)return;
+  const dt=Math.min(40,Math.max(0,now-(last||now)));last=now;
   ctx.clearRect(0,0,w,h);drawBackgroundMarks(now);
   const showLabels=labelsVisible(now);
   for(const p of particles){if(p.label&&!showLabels){p.label.remove();p.label=null}}
-  if(now>=emitAt&&particles.length<15)emit(now);
+  if(now>=emitAt&&particles.length<8)emit(now);
   particles.forEach(p=>{if(!p.dead)move(p,dt,now);if(!p.dead)draw(p)});
   particles=particles.filter(p=>!p.dead);
  }
