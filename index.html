@@ -502,7 +502,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  const types=[
   {name:'ALPHA',color:'#ff3b45',speed:72,frequency:.0018,amplitude:13,tail:28,maxHits:1},
   {name:'BETA',color:'#2795ff',speed:142,frequency:.0042,amplitude:23,tail:48,maxHits:3},
-  {name:'GAMMA',color:'#32e875',speed:235,frequency:.0085,amplitude:34,tail:76,maxHits:11}
+  {name:'GAMMA',color:'#32e875',speed:235,frequency:.0085,amplitude:34,tail:76,maxHits:Infinity}
  ];
  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  function resize(){
@@ -521,7 +521,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   particles.push({
    type,x:s.x,y:s.y,startX:s.x,startY:s.y,angle,
    phase:Math.random()*Math.PI*2,age:0,travel:0,
-   maxHits:type.name==='BETA'?2+Math.floor(Math.random()*3):type.name==='GAMMA'?10+Math.floor(Math.random()*2):1,
+   maxHits:type.name==='BETA'?2+Math.floor(Math.random()*3):type.name==='GAMMA'?Infinity:1,
    hits:0,hitCards:new Set(),trail:[],dead:false
   });
   emitAt=now+260+Math.random()*620;
