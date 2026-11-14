@@ -524,13 +524,13 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  let w=0,h=0,dpr=1,last=0,emitAt=0,particles=[];
  const cycle=40000,active=20000,cycleStart=performance.now();
  const types=[
-  {name:'ALPHA',color:'#ff3b45',speed:58,amplitude:3,trailLength:92,trailAlpha:.88,trailWidth:2.5,ionization:18,maxDistance:430,maxHits:1},
-  {name:'BETA',color:'#2795ff',speed:138,amplitude:1.5,trailLength:42,trailAlpha:.58,trailWidth:1.8,ionization:9,maxDistance:1250,maxHits:2},
-  {name:'GAMMA',color:'#32e875',speed:270,amplitude:0,trailLength:9,trailAlpha:.25,trailWidth:1.1,ionization:3,maxDistance:Infinity,maxHits:Infinity}
+  {name:'ALPHA',color:'#ff3b45',speed:105,amplitude:34,wavelength:150,frequency:'0.7 Hz',trailLength:650,trailAlpha:.92,trailWidth:2.8,ionization:18,maxDistance:2400,maxHits:1},
+  {name:'BETA',color:'#2795ff',speed:210,amplitude:26,wavelength:100,frequency:'2.1 Hz',trailLength:420,trailAlpha:.72,trailWidth:2.1,ionization:9,maxDistance:3600,maxHits:2},
+  {name:'GAMMA',color:'#32e875',speed:320,amplitude:19,wavelength:60,frequency:'5.3 Hz',trailLength:240,trailAlpha:.52,trailWidth:1.5,ionization:3,maxDistance:Infinity,maxHits:Infinity}
  ];
  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const orbitLabels=[...document.querySelectorAll('.atom .orbLabel')];
- const orbitTracks=[{rx:250,ry:65,plane:-18,speed:Math.PI*2/28},{rx:250,ry:65,plane:58,speed:Math.PI*2/33},{rx:210,ry:73,plane:28,speed:Math.PI*2/38}];
+ const orbitTracks=[{rx:250,ry:65,plane:-18,speed:Math.PI*2/12},{rx:250,ry:65,plane:58,speed:Math.PI*2/15},{rx:210,ry:73,plane:28,speed:Math.PI*2/18}];
  orbitLabels.forEach((el,i)=>{el.dataset.track=String(i%3);el.dataset.phase=String(Math.floor(i/3)*Math.PI/2+(i%2)*.12)});
  let orbitLast=0;
  function animateElectrons(now){
@@ -547,6 +547,13 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  }
 
  const cardState=new WeakMap();
+ const backgroundMarks=[];
+ function addBackgroundMark(p){backgroundMarks.push({x:p.x,y:p.y,color:p.type.color,at:performance.now(),strength:p.type.name==='ALPHA'?.24:p.type.name==='BETA'?.17:.12});if(backgroundMarks.length>120)backgroundMarks.splice(0,backgroundMarks.length-120)}
+ function drawBackgroundMarks(now){
+  for(let i=backgroundMarks.length-1;i>=0;i--){const m=backgroundMarks[i],age=now-m.at;if(age>55000){backgroundMarks.splice(i,1);continue}const fade=Math.max(0,1-age/55000),x=m.x-scrollX,y=m.y-scrollY,radius=105;
+   const glow=ctx.createRadialGradient(x,y,1,x,y,radius);glow.addColorStop(0,rgba(m.color,m.strength*fade));glow.addColorStop(.34,rgba(m.color,m.strength*.38*fade));glow.addColorStop(1,rgba(m.color,0));ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
+  }
+ }
  function resize(){
   dpr=Math.min(1.25,window.devicePixelRatio||1);w=innerWidth;h=innerHeight;
   canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
@@ -559,7 +566,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  }
  function choose(){return types[Math.floor(Math.random()*types.length)]}
  function addRayLabel(p){
-  const el=document.createElement('span');el.className='varon-ray-label';el.textContent=p.type.name;
+  const el=document.createElement('span');el.className='varon-ray-label';el.textContent=p.type.name+' · '+p.type.frequency;
   el.style.color=p.type.color;document.body.appendChild(el);p.label=el;
  }
  function removeRay(p){p.dead=true;if(p.label){p.label.remove();p.label=null}}
@@ -617,9 +624,10 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   const t=p.type,step=t.speed*dt/1000;
   p.age+=dt;p.travel+=step;
   const perp=p.angle+Math.PI/2;
-  const wave=t.amplitude?Math.sin(p.age*.004+p.phase)*t.amplitude:0;
+  const wave=t.amplitude?Math.sin((p.travel/t.wavelength)*Math.PI*2+p.phase)*t.amplitude:0;
   p.x=p.startX+Math.cos(p.angle)*p.travel+Math.cos(perp)*wave;
   p.y=p.startY+Math.sin(p.angle)*p.travel+Math.sin(perp)*wave;
+  if(p.travel>=(p.nextMarkAt||115)){addBackgroundMark(p);p.nextMarkAt=(p.nextMarkAt||115)+150}
   p.path.push({x:p.x,y:p.y,travel:p.travel});
   while(p.path.length>2&&p.travel-p.path[0].travel>t.trailLength)p.path.shift();
   hitTest(p);
@@ -647,12 +655,13 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   const elapsed=(now-cycleStart)%cycle,enabled=!reduced&&elapsed<active;
   if(!enabled){
    if(particles.length){particles.forEach(removeRay);particles=[]}
-   if(now-last>160){ctx.clearRect(0,0,w,h);last=now}
+   if(now-last>32){ctx.clearRect(0,0,w,h);drawBackgroundMarks(now);last=now}
    emitAt=now+400;return;
   }
   if(now-last<32)return;
   const dt=Math.min(40,Math.max(0,now-(last||now)));last=now;
   ctx.clearRect(0,0,w,h);
+  drawBackgroundMarks(now);
   if(now>=emitAt&&particles.length<11)emit(now);
   particles.forEach(p=>{if(!p.dead)move(p,dt);if(!p.dead)draw(p)});
   particles=particles.filter(p=>!p.dead);
