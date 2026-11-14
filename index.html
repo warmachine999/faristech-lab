@@ -73,30 +73,26 @@ html[data-theme=caramel]{--bg:#24160d;--panel:#392312;--panel2:#452a15;--text:#f
 [dir=rtl] .hero h1,[dir=rtl] .head h2,[dir=rtl] .about h2,[dir=rtl] .contact h2{letter-spacing:0}[dir=rtl] .nav,[dir=rtl] .controls{direction:rtl}
 #contactText{white-space:pre-line}
 
-/* VARON atom refinement and low-cost orbit animation */
-.atom{transform:translateY(-34px);will-change:transform}
+/* VARON atom: stable elliptical electron paths */
+.atom{transform:translateY(-34px);animation:varonAtomFloat 4.2s ease-in-out infinite;will-change:transform}
 .atom .core{width:178px;height:178px;isolation:isolate;overflow:visible;
  background:radial-gradient(circle at 34% 27%,#253d5c 0%,#111d31 38%,#080e19 72%);
  border:1px solid rgba(92,220,255,.72);
  box-shadow:0 0 0 7px rgba(43,231,255,.045),0 0 0 15px rgba(147,87,255,.035),0 0 48px rgba(43,231,255,.24),inset 0 0 35px rgba(43,231,255,.12);
- animation:varonNucleusFloat 4.2s ease-in-out infinite}
+ animation:none}
 .atom .core:before,.atom .core:after{content:"";position:absolute;inset:10px;border-radius:50%;border:1px solid rgba(43,231,255,.22);pointer-events:none}
-.atom .core:after{inset:-8px;border-color:rgba(147,87,255,.24);border-style:dashed;animation:varonRingTurn 34s linear infinite}
+.atom .core:after{inset:-8px;border-color:rgba(147,87,255,.24);border-style:dashed;animation:none}
 .atom .core span{position:relative;z-index:1;display:block;font-size:3.55rem;font-weight:950;letter-spacing:3px;line-height:1;
- color:#f4fbff;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 12px rgba(43,231,255,.52),0 0 30px rgba(43,231,255,.22);
- filter:none;animation:none}
-.atom .orbit{opacity:.9}
+ color:#f4fbff;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 12px rgba(43,231,255,.52),0 0 30px rgba(43,231,255,.22);filter:none;animation:none}
+.atom .orbit{position:absolute;border:1px solid rgba(92,220,255,.22);border-radius:50%;opacity:.9;animation:none!important}
+.atom .orbit.o1{width:500px;height:130px;transform:rotate(-18deg);border-color:rgba(43,231,255,.30)}
+.atom .orbit.o2{width:500px;height:130px;transform:rotate(58deg);border-color:rgba(147,87,255,.28)}
+.atom .orbit.o3{width:420px;height:146px;transform:rotate(28deg);border-color:rgba(43,231,255,.24)}
 .atom .orbLabel{top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;
- z-index:6;will-change:transform;animation:varonElectronOrbit 28s linear infinite;
- animation-delay:calc(var(--orbit-phase,0)* -1s)}
-@keyframes varonNucleusFloat{0%,100%{translate:0 0}50%{translate:0 -9px}}
-@keyframes varonRingTurn{to{rotate:360deg}}
-@keyframes varonElectronOrbit{from{transform:translate(-50%,-50%) rotate(0deg) translateX(var(--orbit-radius,205px)) rotate(0deg)}
- to{transform:translate(-50%,-50%) rotate(360deg) translateX(var(--orbit-radius,205px)) rotate(-360deg)}}
-@media(prefers-reduced-motion:reduce){.atom,.atom .core,.atom .core:after,.atom .orbLabel{animation:none!important}}
-#varonRadiationCanvas{image-rendering:auto}
-
-</style>
+ z-index:6;will-change:transform;animation:none!important}
+@keyframes varonAtomFloat{0%,100%{transform:translateY(-34px)}50%{transform:translateY(-43px)}}
+@media(prefers-reduced-motion:reduce){.atom{animation:none!important}.atom .orbLabel{animation:none!important}}
+#varonRadiationCanvas{image-rendering:auto}</style>
 
 <style id="responsiveHeaderFix">
 /* Responsive header refinement */
@@ -525,16 +521,30 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  canvas.id='varonRadiationCanvas';canvas.setAttribute('aria-hidden','true');
  document.body.appendChild(canvas);
  const ctx=canvas.getContext('2d');if(!ctx)return;
- let w=0,h=0,dpr=1,last=0,emitAt=0,particles=[],backgroundMarks=[];
+ let w=0,h=0,dpr=1,last=0,emitAt=0,particles=[];
  const cycle=40000,active=20000,cycleStart=performance.now();
  const types=[
-  {name:'ALPHA',color:'#ff3b45',speed:72,frequency:.0018,amplitude:13,trailLife:1,maxHits:1},
-  {name:'BETA',color:'#2795ff',speed:142,frequency:.0042,amplitude:23,trailLife:1,maxHits:0},
-  {name:'GAMMA',color:'#32e875',speed:235,frequency:.0085,amplitude:34,trailLife:1,maxHits:Infinity}
+  {name:'ALPHA',color:'#ff3b45',speed:58,amplitude:3,trailLength:92,trailAlpha:.88,trailWidth:2.5,ionization:18,maxHits:1},
+  {name:'BETA',color:'#2795ff',speed:138,amplitude:1.5,trailLength:42,trailAlpha:.58,trailWidth:1.8,ionization:9,maxHits:2},
+  {name:'GAMMA',color:'#32e875',speed:270,amplitude:0,trailLength:9,trailAlpha:.25,trailWidth:1.1,ionization:3,maxHits:Infinity}
  ];
  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const orbitLabels=[...document.querySelectorAll('.atom .orbLabel')];
- orbitLabels.forEach((el,i)=>{el.style.setProperty('--orbit-phase',(i/Math.max(1,orbitLabels.length))*28);el.style.setProperty('--orbit-radius',((i%3)===0?176:(i%3)===1?214:246)+'px')});
+ const orbitTracks=[{rx:250,ry:65,plane:-18,speed:Math.PI*2/28000},{rx:250,ry:65,plane:58,speed:Math.PI*2/33000},{rx:210,ry:73,plane:28,speed:Math.PI*2/38000}];
+ orbitLabels.forEach((el,i)=>{el.dataset.track=String(i%3);el.dataset.phase=String(Math.floor(i/3)*Math.PI/2+(i%2)*.12)});
+ let orbitLast=0;
+ function animateElectrons(now){
+  requestAnimationFrame(animateElectrons);
+  if(reduced||now-orbitLast<32)return;
+  orbitLast=now;
+  const r=core.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  for(const el of orbitLabels){
+   const track=orbitTracks[Number(el.dataset.track)||0],a=now*track.speed/1000+Number(el.dataset.phase||0),p=track.plane*Math.PI/180;
+   const ex=track.rx*Math.cos(a),ey=track.ry*Math.sin(a);
+   const x=ex*Math.cos(p)-ey*Math.sin(p),y=ex*Math.sin(p)+ey*Math.cos(p);
+   el.style.transform='translate(-50%,-50%) translate('+(cx-r.left-r.width/2+x).toFixed(1)+'px,'+(cy-r.top-r.height/2+y).toFixed(1)+'px)';
+  }
+ }
 
  const cardState=new WeakMap();
  function resize(){
@@ -574,15 +584,15 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
    const meter=document.createElement('span');meter.className='radiation-meter';
    meter.textContent='VR EXPOSURE 0% · 0 HITS';
    card.prepend(wash);card.appendChild(meter);
-   state={hits:0,colors:[],wash,meter};cardState.set(card,state);
+   state={hits:0,ionization:0,colors:[],wash,meter};cardState.set(card,state);
   }
-  state.hits++;
+  state.hits++;state.ionization+=p.type.ionization;
   const r=card.getBoundingClientRect();
   state.colors.push({color:p.type.color,x:Math.max(0,Math.min(100,((p.x-scrollX)-r.left)/Math.max(1,r.width)*100)),y:Math.max(0,Math.min(100,((p.y-scrollY)-r.top)/Math.max(1,r.height)*100))});
   if(state.colors.length>24)state.colors.shift();
   const layers=state.colors.map((c,i)=>'radial-gradient(circle at '+c.x.toFixed(1)+'% '+c.y.toFixed(1)+'%, '+rgba(c.color,.38)+' 0%, '+rgba(c.color,.14)+' 23%, transparent 66%)');
   state.wash.style.background=layers.join(',');
-  const pct=Math.min(100,state.hits*8);
+  const pct=Math.min(100,state.ionization);
   state.meter.textContent='VR EXPOSURE '+pct+'% · '+state.hits+' HITS';
  }
  function cardAt(x,y){
@@ -603,55 +613,38 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
    if(p.hits>=p.maxHits)removeRay(p);
   }
  }
- function backgroundHit(p){
-  if(p.travel-p.travelAtMark<105)return;
-  const sx=p.x-scrollX,sy=p.y-scrollY;
-  if(cardAt(sx,sy))return;
-  p.travelAtMark=p.travel;
-  backgroundMarks.push({x:p.x,y:p.y,color:p.type.color,radius:35+Math.random()*55});
-  if(backgroundMarks.length>180)backgroundMarks.shift();
- }
  function move(p,dt){
   const t=p.type,step=t.speed*dt/1000;
   p.age+=dt;p.travel+=step;
   const perp=p.angle+Math.PI/2;
-  const wave=Math.sin(p.age*t.frequency+p.phase)*t.amplitude;
+  const wave=t.amplitude?Math.sin(p.age*.004+p.phase)*t.amplitude:0;
   p.x=p.startX+Math.cos(p.angle)*p.travel+Math.cos(perp)*wave;
   p.y=p.startY+Math.sin(p.angle)*p.travel+Math.sin(perp)*wave;
-  p.path.push({x:p.x,y:p.y});
-  if(p.path.length>260)p.path.shift();
-  hitTest(p);backgroundHit(p);
+  p.path.push({x:p.x,y:p.y,travel:p.travel});
+  while(p.path.length>2&&p.travel-p.path[0].travel>t.trailLength)p.path.shift();
+  hitTest(p);
   const maxX=document.documentElement.scrollWidth+scrollX;
   const maxY=document.documentElement.scrollHeight+scrollY;
   if(p.x<-100||p.x>maxX+100||p.y<-100||p.y>maxY+100||p.age>60000)removeRay(p);
- }
- function drawBackgroundMarks(){
-  for(const m of backgroundMarks){
-   const x=m.x-scrollX,y=m.y-scrollY;
-   if(x<-m.radius||x>w+m.radius||y<-m.radius||y>h+m.radius)continue;
-   const g=ctx.createRadialGradient(x,y,1,x,y,m.radius);
-   g.addColorStop(0,rgba(m.color,.18));g.addColorStop(.45,rgba(m.color,.08));g.addColorStop(1,rgba(m.color,0));
-   ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,m.radius,0,Math.PI*2);ctx.fill();
-  }
  }
  function draw(p){
   if(p.path.length<2)return;
   ctx.beginPath();
   for(let i=0;i<p.path.length;i++){const q=p.path[i],x=q.x-scrollX,y=q.y-scrollY;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
-  ctx.strokeStyle=rgba(p.type.color,.72);
-  ctx.lineWidth=p.type.name==='GAMMA'?2.4:p.type.name==='BETA'?1.9:1.5;
-  ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowColor=p.type.color;ctx.shadowBlur=7;ctx.stroke();ctx.shadowBlur=0;
+  ctx.strokeStyle=rgba(p.type.color,p.type.trailAlpha);
+  ctx.lineWidth=p.type.trailWidth;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.shadowColor=p.type.color;ctx.shadowBlur=p.type.name==='ALPHA'?5:p.type.name==='BETA'?2:0;ctx.stroke();ctx.shadowBlur=0;
   const hx=p.x-scrollX,hy=p.y-scrollY;
   if(p.label){p.label.style.left=hx+'px';p.label.style.top=(hy-12)+'px'}
-  ctx.beginPath();ctx.arc(hx,hy,p.type.name==='GAMMA'?3.2:2.5,0,Math.PI*2);
-  ctx.fillStyle=p.type.color;ctx.shadowColor=p.type.color;ctx.shadowBlur=12;ctx.fill();ctx.shadowBlur=0;
+  ctx.beginPath();ctx.arc(hx,hy,p.type.name==='GAMMA'?2.2:2.6,0,Math.PI*2);
+  ctx.fillStyle=p.type.color;ctx.shadowColor=p.type.color;ctx.shadowBlur=p.type.name==='GAMMA'?3:8;ctx.fill();ctx.shadowBlur=0;
  }
  function frame(now){
   requestAnimationFrame(frame);
   const elapsed=(now-cycleStart)%cycle,enabled=!reduced&&elapsed<active;
   if(!enabled){
    if(particles.length){particles.forEach(removeRay);particles=[]}
-   if(now-last>160){ctx.clearRect(0,0,w,h);drawBackgroundMarks();last=now}
+   if(now-last>160){ctx.clearRect(0,0,w,h);last=now}
    emitAt=now+400;return;
   }
   if(now-last<32)return;
@@ -660,10 +653,9 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   if(now>=emitAt&&particles.length<11)emit(now);
   particles.forEach(p=>{if(!p.dead)move(p,dt);if(!p.dead)draw(p)});
   particles=particles.filter(p=>!p.dead);
-  drawBackgroundMarks();
  }
  addEventListener('resize',resize,{passive:true});
- resize();emitAt=performance.now()+250;requestAnimationFrame(frame);
+ resize();emitAt=performance.now()+250;requestAnimationFrame(frame);requestAnimationFrame(animateElectrons);
 })();
 </script>
 \n</body></html>
