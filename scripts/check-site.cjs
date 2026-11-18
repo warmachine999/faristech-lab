@@ -41,7 +41,7 @@ assert.ok(hitTargets, 'VARON ionization target selector missing');
 assert.ok(hitTargets[1].includes('.card') && hitTargets[1].includes('.service'), 'Project/service cards must ionize');
 assert.ok(hitTargets[1].includes('.pill') && hitTargets[1].includes('.banner'), 'Small badges and bubbles must ionize');
 assert.ok(!hitTargets[1].includes('.orbLabel'), 'Orbiting labels must never become radiation targets');
-assert.ok(hitTargets[1].includes('textIonSelector'), 'Hero/header text must participate in hit testing');
+assert.ok(html.includes(".banner,.pill,'+textIonSelector"), 'Hero/header text must participate in hit testing');
 assert.ok(html.includes("const textIonSelector='.hero .eyebrow,.hero h1,.hero #heroText"), 'Hero title and descriptive text must be ionized');
 assert.ok(html.includes('.header .brandName,.header .identityBadge,.header .tagline,.header .nav a,.header .controlBtn'), 'Navigation and header text must be ionized');
 assert.ok(html.includes("if(textTarget)textHit(el,p,now,point);else cardHit(el,p,now,point)"), 'Text hits must bypass the card layout-changing CSS class');
