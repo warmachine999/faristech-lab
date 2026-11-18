@@ -171,6 +171,29 @@ for(const color of ['#ff3b45','#2795ff','#32e875']){
 }
 assert.ok(html.includes('href="studio/games.html"'), 'Homepage Play & Learn must link to Studio games');
 assert.ok(html.includes('data-i18n="gamesLink"'), 'Game launch button needs bilingual copy');
+// Regression: the circuit must draw when its own animation loop runs.
+// The VARON pause variable is intentionally local to another script.
+const circuitStart=html.indexOf('function tick(now){requestAnimationFrame(tick);');
+const circuitEnd=html.indexOf('[voltage,capacitance,capRating,capPolarity].forEach',circuitStart);
+assert.ok(circuitStart>=0&&circuitEnd>circuitStart,'Cannot find simulator animation loop');
+assert.ok(!html.slice(circuitStart,circuitEnd).includes('if(paused)'), 'Simulator must not reference undefined VARON pause state');
+assert.ok(html.includes('updateCircuitLabels();updateStatus(model());drawCircuit(model());requestAnimationFrame(tick);'),'Simulator must draw and populate meters on page load');
+let frames=0,drawn=0,updated=0,physics=0;
+const simulatorScope={
+ requestAnimationFrame:()=>{frames++},
+ last:0,
+ model:()=>({current:21.52,V:9,R:330}),
+ updatePhysics:()=>{physics++},
+ updateCircuitLabels:()=>{updated++},
+ updateStatus:()=>{updated++},
+ drawCircuit:()=>{drawn++}
+};
+const testCircuitTick=new vm.Script(html.slice(circuitStart,circuitEnd)+'\ntick').runInNewContext(simulatorScope);
+testCircuitTick(100);
+assert.equal(frames,1,'Circuit animation must schedule another frame');
+assert.equal(drawn,1,'Circuit canvas must draw without a ReferenceError');
+assert.equal(updated,2,'Circuit meters and labels must update each frame');
+assert.equal(physics,1,'Circuit physics must run each frame');
 const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
 assert.match(wrangler, /"name"\s*:\s*"faristech-lab"/, 'Lab must not deploy as production');
 console.log('Lab validation OK: ' + checked + ' inline JavaScript scripts and VARON controls.');

@@ -158,7 +158,7 @@ assert.match(elements.reactionStatus.textContent,/Wait/);
 elements.reactionBtn.click();
 assert.match(elements.reactionStatus.textContent,/Too early/);
 advance(5000);
-assert.notMatch(elements.reactionStatus.textContent,/GREEN/,'Cancelled timers must not start a reaction test');
+assert.doesNotMatch(elements.reactionStatus.textContent,/GREEN/,'Cancelled timers must not start a reaction test');
 elements.reactionBtn.click();
 advance(4000); // guarantee start signal regardless of randomized delay
 assert.match(elements.reactionStatus.textContent,/GREEN/);
@@ -171,7 +171,7 @@ document.hidden=true;
 (events.visibilitychange||[]).forEach(fn=>fn());
 assert.match(elements.reactionStatus.textContent,/cancelled/);
 advance(5000);
-assert.notMatch(elements.reactionStatus.textContent,/GREEN/);
+assert.doesNotMatch(elements.reactionStatus.textContent,/GREEN/);
 document.hidden=false;
 elements.reactionBtn.click();
 context.lang='ar';api.refresh();
