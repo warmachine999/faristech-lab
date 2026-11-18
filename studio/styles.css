@@ -16,7 +16,7 @@ html[data-theme="cyber"]{color-scheme:dark;--bg:#050812;--panel:rgba(8,17,34,.84
 }
 .quizchoices button:disabled{cursor:default}
 .quizchoices button.correct,.quizchoices button.correct:disabled{border-color:var(--good);background:color-mix(in srgb,var(--good) 17%,var(--panel2));opacity:1}
-.quizchoices button.incorrect,.quizchoices button.incorrect:disabled{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--panel2));opacity:1}
+.quizchoices button.incorrect,.quizchoices button.incorrect:disabled{border-color:#ff687d;background:color-mix(in srgb,#ff687d 12%,var(--panel2));opacity:1}
 #reactionBtn{touch-action:manipulation;min-width:136px;min-height:46px}
 @media(max-width:430px){
  .gamebox{padding:15px}
