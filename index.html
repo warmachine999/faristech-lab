@@ -241,16 +241,19 @@ body>main{position:relative;z-index:2!important}
 .varon-caption strong{font-size:1.2rem;letter-spacing:4px;color:var(--cyan);text-shadow:0 0 16px rgba(43,231,255,.55)}
 .varon-caption span{font-size:.72rem;font-weight:800;letter-spacing:1.4px;color:var(--muted);text-transform:uppercase}
 .atom .core span{font-size:3.2rem;letter-spacing:2px;font-weight:950;color:#e8faff;filter:drop-shadow(0 0 18px rgba(43,231,255,.8))}
-.radiation-hit{position:relative!important;overflow:hidden!important;
-  --vr-ion-color:#32e875;
-  border-color:color-mix(in srgb,var(--vr-ion-color) 64%,var(--line))!important;
-  box-shadow:inset 0 0 24px color-mix(in srgb,var(--vr-ion-color) 19%,transparent),0 0 24px color-mix(in srgb,var(--vr-ion-color) 27%,transparent)!important;
-  transition:border-color .35s ease,box-shadow .35s ease}
-.radiation-hit.radiation-compact{box-shadow:0 0 17px color-mix(in srgb,var(--vr-ion-color) 40%,transparent),inset 0 0 9px color-mix(in srgb,var(--vr-ion-color) 30%,transparent)!important}
-.varon-ion-flash{position:absolute!important;left:50%;top:50%;width:120px;height:120px;z-index:2!important;pointer-events:none;border-radius:50%;transform:translate(-50%,-50%) scale(.2);
- background:radial-gradient(circle,color-mix(in srgb,var(--vr-ion-flash-color) 62%,transparent),transparent 69%);
- animation:varon-ion-flash 1.1s ease-out forwards}
-@keyframes varon-ion-flash{0%{opacity:0;transform:translate(-50%,-50%) scale(.15)}15%{opacity:.9}100%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}}
+.radiation-hit{position:relative!important;overflow:hidden!important}
+.radiation-hit.radiation-compact{position:relative!important;overflow:hidden!important}
+.varon-ion-flash{position:absolute!important;width:24px;height:24px;z-index:2!important;pointer-events:none;border-radius:50%;
+ transform:translate(-50%,-50%) scale(.4);
+ background:radial-gradient(circle,color-mix(in srgb,var(--vr-ion-flash-color) 68%,transparent) 0%,transparent 72%);
+ animation:varon-ion-flash .72s ease-out forwards}
+@keyframes varon-ion-flash{0%{opacity:.15;transform:translate(-50%,-50%) scale(.3)}40%{opacity:.82}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
+.varon-ion-drop{position:absolute!important;z-index:2!important;pointer-events:none;border-radius:50%;
+ width:var(--vr-drop-size,8px);height:var(--vr-drop-size,8px);transform:translate(-50%,-50%);
+ background:radial-gradient(circle at 38% 35%,rgba(255,255,255,.75) 0%,var(--vr-drop-color) 34%,transparent 85%);
+ box-shadow:0 0 7px var(--vr-drop-color);mix-blend-mode:screen;will-change:opacity}
+.varon-ion-drop.varon-text-drop{z-index:3!important;box-shadow:0 0 5px var(--vr-drop-color);mix-blend-mode:screen}
+@media(prefers-reduced-motion:reduce){.varon-ion-flash{animation:none!important;opacity:0}}
 .radiation-accumulation{position:absolute;inset:0;z-index:0!important;pointer-events:none;border-radius:inherit;mix-blend-mode:screen;opacity:.9}
 .radiation-meter{position:absolute;right:9px;top:9px;z-index:3!important;pointer-events:none;padding:4px 7px;border:1px solid rgba(255,255,255,.22);border-radius:999px;background:rgba(5,8,15,.72);color:#fff;font:800 9px/1.2 system-ui,sans-serif;letter-spacing:.4px}
 /* VARON glow effects use the dedicated varon-ion-flash element. */
@@ -263,7 +266,7 @@ body>main{position:relative;z-index:2!important}
 .varon-ray-label{z-index:3!important;font-size:10px!important;letter-spacing:1px!important;padding:3px 6px;border:1px solid currentColor;border-radius:999px;background:rgba(4,8,14,.78);box-shadow:0 0 13px currentColor}
 .atom .orbit{animation:none!important;border-width:1px}
 .atom .orbLabel{transition:none!important;will-change:transform;backface-visibility:hidden}
-.radiation-hit h1,.radiation-hit h2,.radiation-hit h3,.radiation-hit p,.radiation-hit strong,.radiation-hit b,.radiation-hit .banner,.radiation-hit .pill{text-shadow:0 0 12px rgba(255,255,255,.22),0 0 18px rgba(43,231,255,.16)}
+/* Text receives small, localized ionization droplets, never a blanket text shadow. */
 .radiation-hit>.radiation-accumulation{opacity:1!important}
 </style>
 
@@ -655,16 +658,59 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   const elapsed=cycleTime(now),life=65000;
   state.colors=state.colors.filter(mark=>elapsed-mark.at<life);
   const layers=state.colors.slice().reverse().map(mark=>{
-   const alpha=Math.pow(Math.max(0,1-(elapsed-mark.at)/life),.7);
-   return 'radial-gradient(circle at '+mark.x.toFixed(1)+'% '+mark.y.toFixed(1)+'%, '+
-    rgba(mark.color,.7*alpha)+' 0%, '+rgba(mark.color,.25*alpha)+' 30%, transparent 75%)';
+   const alpha=Math.pow(Math.max(0,1-(elapsed-mark.at)/life),.9);
+   return 'radial-gradient(circle '+mark.radius+'px at '+mark.x.toFixed(1)+'% '+mark.y.toFixed(1)+'%, '+
+    rgba(mark.color,.42*alpha)+' 0%, '+rgba(mark.color,.15*alpha)+' 40%, transparent 100%)';
   });
   state.wash.style.background=layers.join(',');
+  state.drops=state.drops.filter(drop=>{
+   const fraction=Math.max(0,1-(elapsed-drop.at)/life);
+   if(fraction<=0){drop.el.remove();return false}
+   drop.el.style.opacity=String(Math.pow(fraction,.9)*.88);
+   return true;
+  });
  }
  function updateIonizedCards(now){
-  if(now-lastIonFade<220)return;
+  if(now-lastIonFade<280)return;
   lastIonFade=now;
   radiationCards.forEach(card=>{const state=cardState.get(card);if(state)updateIonGlow(card,state,now)});
+ }
+ function addIonDrop(card,state,p,now,px,py,size,textDrop){
+  const r=card.getBoundingClientRect(),elapsed=cycleTime(now);
+  const x=Math.max(2,Math.min(r.width-2,px)),y=Math.max(2,Math.min(r.height-2,py));
+  const xPercent=100*x/Math.max(1,r.width),yPercent=100*y/Math.max(1,r.height);
+  const el=document.createElement('span');
+  el.className='varon-ion-drop'+(textDrop?' varon-text-drop':'');
+  el.style.left=xPercent+'%';el.style.top=yPercent+'%';
+  el.style.setProperty('--vr-drop-color',p.type.color);
+  el.style.setProperty('--vr-drop-size',size+'px');
+  card.appendChild(el);
+  state.drops.push({el,at:elapsed});
+  state.colors.push({color:p.type.color,x:xPercent,y:yPercent,radius:Math.max(8,size*1.8),at:elapsed});
+  while(state.drops.length>48){state.drops.shift().el.remove()}
+  if(state.colors.length>48)state.colors.splice(0,state.colors.length-48);
+ }
+ function placeTextDrops(card,state,p,now,contactX,contactY,rect){
+  // Only stain nearby letters; never recolor every line or the entire card.
+  const candidates=[...card.querySelectorAll('h1,h2,h3,h4,p,strong,b,small,a,span')]
+   .filter(el=>!el.closest('.radiation-meter,.radiation-accumulation,.varon-ion-drop,.varon-ion-flash')&&
+      el.childElementCount===0&&(el.textContent||'').trim().length>0)
+   .slice(0,32);
+  let nearest=null,nearestDistance=65;
+  for(const el of candidates){
+   const r=el.getBoundingClientRect();
+   if(r.width===0||r.height===0)continue;
+   const dx=Math.max(r.left-(rect.left+contactX),0,(rect.left+contactX)-r.right);
+   const dy=Math.max(r.top-(rect.top+contactY),0,(rect.top+contactY)-r.bottom);
+   const distance=Math.hypot(dx,dy);
+   if(distance<nearestDistance){nearestDistance=distance;nearest=r}
+  }
+  if(!nearest)return;
+  for(let i=0;i<2;i++){
+   const tx=Math.max(nearest.left+2,Math.min(nearest.right-2,rect.left+contactX+(Math.random()-.5)*18));
+   const ty=nearest.top+Math.random()*Math.max(2,nearest.height);
+   addIonDrop(card,state,p,now,tx-rect.left,ty-rect.top,3+Math.random()*3,true);
+  }
  }
  function cardHit(card,p,now,point){
   let state=cardState.get(card);
@@ -679,25 +725,28 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
     meter=document.createElement('span');meter.className='radiation-meter';
     meter.textContent='VR EXPOSURE 0% · 0 HITS';card.appendChild(meter);
    }
-   state={hits:0,ionization:0,colors:[],wash,meter};
+   state={hits:0,ionization:0,colors:[],drops:[],wash,meter};
    cardState.set(card,state);
   }
   state.hits++;state.ionization=Math.min(100,state.ionization+p.type.ionization);
   const r=card.getBoundingClientRect();
-  const x=Math.max(0,Math.min(100,((point.x-scrollX)-r.left)/Math.max(1,r.width)*100));
-  const y=Math.max(0,Math.min(100,((point.y-scrollY)-r.top)/Math.max(1,r.height)*100));
-  state.colors.push({color:p.type.color,x,y,at:cycleTime(now)});
-  if(state.colors.length>24)state.colors.shift();
-  card.style.setProperty('--vr-ion-color',p.type.color);
+  const x=Math.max(0,Math.min(r.width,(point.x-scrollX)-r.left));
+  const y=Math.max(0,Math.min(r.height,(point.y-scrollY)-r.top));
+  // Deposit a few colored drops at the impact, not a glow over the whole card.
+  for(let i=0;i<3;i++){
+   const dx=(Math.random()-.5)*27,dy=(Math.random()-.25)*26;
+   addIonDrop(card,state,p,now,x+dx,y+dy,5+Math.random()*8,false);
+  }
+  if(!card.matches('.banner,.pill'))placeTextDrops(card,state,p,now,x,y,r);
   if(state.meter){
    state.meter.textContent='VR EXPOSURE '+state.ionization+'% · '+state.hits+' HITS';
    state.meter.style.borderColor=p.type.color;
-   state.meter.style.boxShadow='0 0 12px '+p.type.color+'66';
   }
   updateIonGlow(card,state,now);
   if(!reduced){
    const flash=document.createElement('span');flash.className='varon-ion-flash';
-   flash.style.left=x+'%';flash.style.top=y+'%';
+   flash.style.left=(100*x/Math.max(1,r.width))+'%';
+   flash.style.top=(100*y/Math.max(1,r.height))+'%';
    flash.style.setProperty('--vr-ion-flash-color',p.type.color);
    card.appendChild(flash);
    flash.addEventListener('animationend',()=>flash.remove(),{once:true});
@@ -714,6 +763,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   return ionTargetCache;
  }
  function hitTest(p,now,points){
+  if(now<(p.nextIonAt||0))return;
   const targets=visibleIonTargets(now);
   for(const point of points){
    const x=point.x-scrollX,y=point.y-scrollY;
@@ -721,8 +771,9 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
    for(const {el,r} of targets){
     if(p.hitCards.has(el)||x<r.left-4||x>r.right+4||y<r.top-4||y>r.bottom+4)continue;
     p.hitCards.add(el);cardHit(el,p,now,point);p.hits++;
-    if(p.hits>=p.maxHits){removeRay(p);return}
-    break;
+    p.nextIonAt=now+260;
+    if(p.hits>=p.maxHits)removeRay(p);
+    return;
    }
   }
  }
@@ -815,7 +866,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  });
  resetButton?.addEventListener('click',()=>{
   particles.forEach(removeRay);particles=[];backgroundMarks.length=0;ctx.clearRect(0,0,w,h);
-  radiationCards.forEach(card=>{card.classList.remove('radiation-hit','radiation-compact');card.style.removeProperty('--vr-ion-color');card.querySelectorAll('.radiation-accumulation,.radiation-meter,.varon-ion-flash').forEach(el=>el.remove())});
+  radiationCards.forEach(card=>{card.classList.remove('radiation-hit','radiation-compact');card.style.removeProperty('--vr-ion-color');card.querySelectorAll('.radiation-accumulation,.radiation-meter,.varon-ion-flash,.varon-ion-drop').forEach(el=>el.remove())});
   radiationCards.clear();cardState=new WeakMap();ionTargetCache=[];nextIonTargetRefresh=0;emitAt=performance.now()+200;
   updateControls(performance.now());
  });
