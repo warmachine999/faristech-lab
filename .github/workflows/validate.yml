@@ -18,3 +18,22 @@ jobs:
         run: node scripts/check-site.cjs
       - name: Validate Studio game logic and interaction regressions
         run: node scripts/check-studio-games.cjs
+      - name: Browser smoke test homepage and all Studio games
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8173 --bind 127.0.0.1 >/tmp/faristech-server.log 2>&1 &
+          for i in 1 2 3 4 5; do
+            if curl -fsS http://127.0.0.1:8173/studio/games.html >/dev/null; then break; fi
+            sleep 1
+          done
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          "$CHROME" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --virtual-time-budget=2000 --dump-dom http://127.0.0.1:8173/studio/games.html >/tmp/faristech-games-dom.html 2>/tmp/faristech-chrome.log
+          grep -q 'class="memorytile"' /tmp/faristech-games-dom.html
+          grep -q 'data-v="' /tmp/faristech-games-dom.html
+          grep -q 'id="reactionBtn"' /tmp/faristech-games-dom.html
+          "$CHROME" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --virtual-time-budget=2000 --dump-dom http://127.0.0.1:8173/ >/tmp/faristech-home-dom.html 2>>/tmp/faristech-chrome.log
+          grep -q 'data-symbol="' /tmp/faristech-home-dom.html
+          grep -q 'href="#games"' /tmp/faristech-home-dom.html
+          echo 'Headless browser rendered the homepage game and all three Studio games.'
