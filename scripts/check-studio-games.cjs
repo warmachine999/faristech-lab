@@ -11,6 +11,12 @@ new vm.Script(source,{filename:'studio/app.js'});
 assert.match(page,/id="memoryGrid"/);
 assert.match(page,/id="ohmScore"/);
 assert.match(page,/id="reactionBest"/);
+for(const id of ['memory','ohm','reaction']) {
+ assert.ok(page.includes('class="gamebox" id="'+id+'"'), 'Missing deep link target #'+id);
+}
+const shortRoute=fs.readFileSync('games.html','utf8');
+assert.ok(shortRoute.includes('./studio/games.html'), 'Easy /games.html address must route to the full Studio games');
+
 assert.ok((page.match(/aria-live="polite"/g)||[]).length>=3);
 assert.match(css,/\.quizchoices button\.correct/);
 assert.match(css,/\.quizchoices button\.incorrect/);
