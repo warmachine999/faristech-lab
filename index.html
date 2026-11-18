@@ -317,50 +317,27 @@ body>main{position:relative;z-index:2!important}
  .header .tagline{font-size:.51rem}
  .header .controlBtn{padding:7px 9px}
 }
-.varon-text-ion{position:relative!important;isolation:isolate}
-.varon-text-water,.varon-text-ink,.varon-text-drop{
- position:absolute!important;pointer-events:none!important;border-radius:50%;
- left:0;top:0;transform:translate(-50%,-50%);
- mix-blend-mode:screen;will-change:transform,opacity;
-}
-.varon-text-water{
- z-index:4!important;width:var(--vr-text-wave-size,80px);height:var(--vr-text-wave-size,80px);
- border:1.2px solid var(--vr-text-color);
- box-shadow:0 0 9px color-mix(in srgb,var(--vr-text-color) 40%,transparent);
- animation:varon-text-ripple 2.2s cubic-bezier(.19,.5,.29,1) forwards;
-}
-.varon-text-ink{
- z-index:3!important;width:var(--vr-text-ink-size,42px);height:var(--vr-text-ink-size,42px);
+/* Letter-only radiation; CSS Highlight recolors the actual glyph ink. */
+::highlight(varon-heat-alpha){color:#ff6470;text-shadow:0 0 10px rgba(255,59,69,.83),0 0 20px rgba(255,59,69,.42)}
+::highlight(varon-heat-beta){color:#73bcff;text-shadow:0 0 10px rgba(39,149,255,.83),0 0 20px rgba(39,149,255,.42)}
+::highlight(varon-heat-gamma){color:#77ffac;text-shadow:0 0 10px rgba(50,232,117,.83),0 0 20px rgba(50,232,117,.42)}
+.varon-text-haze{
+ position:fixed!important;left:0;top:0;z-index:110!important;pointer-events:none!important;
+ width:var(--varon-haze-size,120px);height:var(--varon-haze-size,120px);
+ transform:translate(-50%,-50%);border:none!important;border-radius:50%;
  background:radial-gradient(circle,
-  color-mix(in srgb,var(--vr-text-color) 53%,transparent) 0%,
-  color-mix(in srgb,var(--vr-text-color) 20%,transparent) 38%,transparent 75%);
- animation:varon-text-diffuse 8s ease-out forwards;
+ color-mix(in srgb,var(--varon-haze-color) 46%,transparent) 0%,
+ color-mix(in srgb,var(--varon-haze-color) 24%,transparent) 33%,
+ color-mix(in srgb,var(--varon-haze-color) 9%,transparent) 60%,transparent 82%);
+ filter:blur(18px);mix-blend-mode:screen;opacity:0;
+ animation:varon-text-heat-bloom 7s ease-out forwards;will-change:transform,opacity,filter;
 }
-.varon-text-drop{
- z-index:5!important;width:var(--vr-text-drop-size,8px);height:var(--vr-text-drop-size,8px);
- background:radial-gradient(circle at 38% 35%,rgba(255,255,255,.65),var(--vr-text-color) 40%,transparent 90%);
- box-shadow:0 0 7px var(--vr-text-color);
- animation:varon-text-droplet 7s ease-out forwards;
+@keyframes varon-text-heat-bloom{
+ 0%{opacity:.38;transform:translate(-50%,-50%) scale(.62);filter:blur(12px)}
+ 27%{opacity:.31}65%{opacity:.17;filter:blur(20px)}
+ 100%{opacity:0;transform:translate(-50%,-50%) scale(2.3);filter:blur(27px)}
 }
-@keyframes varon-text-ripple{
- 0%{opacity:.66;transform:translate(-50%,-50%) scale(.06)}
- 34%{opacity:.42}
- 100%{opacity:0;transform:translate(-50%,-50%) scale(1)}
-}
-@keyframes varon-text-diffuse{
- 0%{opacity:.58;transform:translate(-50%,-50%) scale(.2)}
- 55%{opacity:.33}
- 100%{opacity:0;transform:translate(-50%,-50%) scale(2.8)}
-}
-@keyframes varon-text-droplet{
- 0%{opacity:.87;transform:translate(-50%,-50%) scale(.7)}
- 50%{opacity:.65}
- 100%{opacity:0;transform:translate(-50%,-50%) scale(2.1)}
-}
-@media(prefers-reduced-motion:reduce){
- .varon-text-water{display:none!important}
- .varon-text-ink,.varon-text-drop{animation:none!important;opacity:.13!important}
-}
+@media(prefers-reduced-motion:reduce){.varon-text-haze{display:none!important}}
 </style>
 </head>
 <body><canvas id="themeBg" aria-hidden="true"></canvas>
@@ -683,7 +660,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  let cardState=new WeakMap(),backgroundMarks=[];
  const radiationCards=new Set();
  let ionTargetCache=[],nextIonTargetRefresh=0,lastIonFade=0;
- const textIonState=new WeakMap(),textIonized=new Set();
+ let textIonState=new WeakMap();const textIonized=new Set(),textGlows=new Set(),textHeatMarks=[],textGlyphCache=new WeakMap();let glyphCacheEpoch=0,lastTextHeatFade=0;
  function addBackgroundMark(p,now){
   backgroundMarks.push({x:p.x,y:p.y,color:p.type.color,at:cycleTime(now),strength:p.type.name==='ALPHA'?.32:p.type.name==='BETA'?.25:.19});
   if(backgroundMarks.length>64)backgroundMarks.splice(0,backgroundMarks.length-64);
@@ -847,44 +824,86 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
    flash.addEventListener('animationend',()=>flash.remove(),{once:true});
   }
  }
- function textHit(el,p,now,point){
-  // Add animated pigment and water rings without altering text nodes, layout or links.
-  let state=textIonState.get(el);
-  if(!state){state={lastAt:-Infinity,effects:[]};textIonState.set(el,state)}
-  if(now-state.lastAt<1100)return;
-  state.lastAt=now;
-  textIonized.add(el);el.classList.add('varon-text-ion');
-  const r=el.getBoundingClientRect();
-  const x=Math.max(2,Math.min(r.width-2,point.x-scrollX-r.left));
-  const y=Math.max(2,Math.min(r.height-2,point.y-scrollY-r.top));
-  const header=!!el.closest('.header');
-  const waveSize=header?76:Math.min(168,Math.max(100,Math.min(r.width,r.height)*2.4));
-  const inkSize=header?27:Math.min(70,Math.max(43,r.height*.35));
-  function addEffect(cls,dx,dy,sizeName,size){
-   const part=document.createElement('span');part.className=cls;
-   part.style.left=(x+dx)+'px';part.style.top=(y+dy)+'px';
-   part.style.setProperty('--vr-text-color',p.type.color);
-   if(sizeName)part.style.setProperty(sizeName,size+'px');
-   el.appendChild(part);state.effects.push(part);
-   part.addEventListener('animationend',()=>{part.remove();state.effects=state.effects.filter(e=>e!==part)},{once:true});
-  }
-  if(!reduced)addEffect('varon-text-water',0,0,'--vr-text-wave-size',waveSize);
-  addEffect('varon-text-ink',0,0,'--vr-text-ink-size',inkSize);
-  for(let i=0;i<2;i++){
-   addEffect('varon-text-drop',(Math.random()-.5)*20,(Math.random()-.5)*13,'--vr-text-drop-size',(header?5:7)+Math.random()*4);
-  }
-  while(state.effects.length>12)state.effects.shift().remove();
- }
+ // Only visible text lines and then the actual characters can receive ray hits.
  const textIonSelector='.hero .eyebrow,.hero h1,.hero #heroText,.hero .note,.hero .actions .btn,.header .brandName,.header .identityBadge,.header .tagline,.header .nav a,.header .controlBtn';
- const ionTargetSelector='.card,.service,.labCard,.about,.contact,.print,.status,.infoItem,.statBox,.banner,.pill,'+textIonSelector;
+ const ionTargetSelector='.card,.service,.labCard,.about,.contact,.print,.status,.infoItem,.statBox,.banner,.pill';
+ const textHeatNames={ALPHA:'varon-heat-alpha',BETA:'varon-heat-beta',GAMMA:'varon-heat-gamma'};
  function visibleIonTargets(now){
   if(now>=nextIonTargetRefresh){
-   ionTargetCache=[...document.querySelectorAll(ionTargetSelector)].map(el=>({el,r:el.getBoundingClientRect()}))
+   const blocks=[...document.querySelectorAll(ionTargetSelector)].map(el=>({el,r:el.getBoundingClientRect(),textTarget:false}));
+   const textLines=[];
+   for(const el of document.querySelectorAll(textIonSelector)){
+    const root=el.getBoundingClientRect();
+    if(root.width<4||root.height<4||root.bottom<0||root.top>h||root.right<0||root.left>w)continue;
+    const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
+    let node;
+    while((node=walker.nextNode())){
+     if(!(node.textContent||'').trim())continue;
+     const range=document.createRange();range.selectNodeContents(node);
+     for(const rect of range.getClientRects())if(rect.width>=2&&rect.height>=2)textLines.push({el,r:rect,textTarget:true,node});
+    }
+   }
+   ionTargetCache=[...blocks,...textLines]
     .filter(item=>item.r.width>0&&item.r.height>0&&item.r.bottom>=-12&&item.r.top<=h+12&&item.r.right>=-12&&item.r.left<=w+12)
     .sort((a,b)=>a.r.width*a.r.height-b.r.width*b.r.height);
-   nextIonTargetRefresh=now+160;
+   nextIonTargetRefresh=now+240;
   }
   return ionTargetCache;
+ }
+ function glyphAtPoint(node,x,y){
+  let entry=textGlyphCache.get(node);
+  if(!entry||entry.epoch!==glyphCacheEpoch){
+   const glyphs=[],value=node.textContent||'';
+   for(let offset=0;offset<value.length;){
+    const char=String.fromCodePoint(value.codePointAt(offset)),step=char.length;
+    if(char.trim()){
+     const range=document.createRange();range.setStart(node,offset);range.setEnd(node,offset+step);
+     for(const r of range.getClientRects())if(r.width>1&&r.height>2)glyphs.push({range,r,char});
+    }
+    offset+=step;
+   }
+   entry={epoch:glyphCacheEpoch,glyphs};textGlyphCache.set(node,entry);
+  }
+  for(const glyph of entry.glyphs){
+   const r=glyph.r,padX=Math.min(1.6,r.width*.12),padY=Math.min(3,r.height*.14);
+   if(x>=r.left+padX&&x<=r.right-padX&&y>=r.top+padY&&y<=r.bottom-padY)return glyph;
+  }
+  return null;
+ }
+ function textHit(el,p,now,glyph){
+  let state=textIonState.get(el);
+  if(!state){state={lastAt:-Infinity};textIonState.set(el,state)}
+  if(now-state.lastAt<1050)return;
+  state.lastAt=now;textIonized.add(el);
+  const r=glyph.r,cx=(r.left+r.right)/2,cy=(r.top+r.bottom)/2;
+  if(!reduced){
+   const haze=document.createElement('span');haze.className='varon-text-haze';
+   haze.setAttribute('aria-hidden','true');
+   haze.style.left=cx+'px';haze.style.top=cy+'px';
+   haze.style.setProperty('--varon-haze-color',p.type.color);
+   haze.style.setProperty('--varon-haze-size',(el.closest('.header')?88:Math.min(185,Math.max(112,r.height*3.2)))+'px');
+   document.body.appendChild(haze);textGlows.add(haze);
+   haze.addEventListener('animationend',()=>{haze.remove();textGlows.delete(haze)},{once:true});
+   while(textGlows.size>22){const oldest=textGlows.values().next().value;oldest.remove();textGlows.delete(oldest)}
+  }
+  const name=textHeatNames[p.type.name];
+  if(name&&typeof CSS!=='undefined'&&CSS.highlights&&typeof Highlight!=='undefined'){
+   let highlight=CSS.highlights.get(name);
+   if(!highlight){highlight=new Highlight();CSS.highlights.set(name,highlight)}
+   highlight.add(glyph.range);textHeatMarks.push({name,range:glyph.range,at:cycleTime(now)});
+   while(textHeatMarks.length>90){const old=textHeatMarks.shift();CSS.highlights.get(old.name)?.delete(old.range)}
+  }
+ }
+ function updateTextHeats(now){
+  if(now-lastTextHeatFade<260)return;lastTextHeatFade=now;
+  const time=cycleTime(now);
+  for(let i=textHeatMarks.length-1;i>=0;i--){
+   const mark=textHeatMarks[i];
+   if(time-mark.at>=8000){
+    if(typeof CSS!=='undefined'&&CSS.highlights)CSS.highlights.get(mark.name)?.delete(mark.range);
+    textHeatMarks.splice(i,1);
+   }
+  }
  }
  function hitTest(p,now,points){
   if(now<(p.nextIonAt||0))return;
@@ -892,14 +911,15 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   for(const point of points){
    const x=point.x-scrollX,y=point.y-scrollY;
    if(x<-12||x>w+12||y<-12||y>h+12)continue;
-   for(const {el,r} of targets){
-    if(p.hitCards.has(el)||x<r.left-4||x>r.right+4||y<r.top-4||y>r.bottom+4)continue;
-    const textTarget=el.matches?.(textIonSelector);
-    if(textTarget&&now-(textIonState.get(el)?.lastAt??-Infinity)<1100)continue;
+   for(const target of targets){
+    const {el,r,textTarget}=target;
+    if(p.hitCards.has(el)||x<r.left||x>r.right||y<r.top||y>r.bottom)continue;
+    if(textTarget&&now-(textIonState.get(el)?.lastAt??-Infinity)<1050)continue;
+    const glyph=textTarget?glyphAtPoint(target.node,x,y):null;
+    if(textTarget&&!glyph)continue;
     p.hitCards.add(el);
-    if(textTarget)textHit(el,p,now,point);else cardHit(el,p,now,point);
-    p.hits++;
-    p.nextIonAt=now+260;
+    if(textTarget)textHit(el,p,now,glyph);else cardHit(el,p,now,point);
+    p.hits++;p.nextIonAt=now+260;
     if(p.hits>=p.maxHits)removeRay(p);
     return;
    }
@@ -957,6 +977,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   ctx.clearRect(0,0,w,h);
   drawBackgroundMarks(cycleTime(now));
   updateIonizedCards(now);
+  updateTextHeats(now);
   const showLabels=labelsVisible(now);
   updateControls(now);
   for(const p of particles){
@@ -996,13 +1017,18 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   particles.forEach(removeRay);particles=[];backgroundMarks.length=0;ctx.clearRect(0,0,w,h);
   radiationCards.forEach(card=>{card.classList.remove('radiation-hit','radiation-compact');card.style.removeProperty('--vr-ion-color');card.querySelectorAll('.radiation-accumulation,.radiation-meter,.varon-ion-flash,.varon-ion-drop,.varon-water-ripple').forEach(el=>el.remove())});
   radiationCards.clear();cardState=new WeakMap();
-  textIonized.forEach(el=>{el.classList.remove('varon-text-ion');el.querySelectorAll('.varon-text-water,.varon-text-ink,.varon-text-drop').forEach(part=>part.remove());});
-  textIonized.clear();ionTargetCache=[];nextIonTargetRefresh=0;emitAt=performance.now()+200;
+  textGlows.forEach(el=>el.remove());textGlows.clear();
+  if(typeof CSS!=='undefined'&&CSS.highlights)Object.values(textHeatNames).forEach(key=>CSS.highlights.delete(key));
+  textHeatMarks.length=0;textIonized.clear();textIonState=new WeakMap();
+  ionTargetCache=[];nextIonTargetRefresh=0;glyphCacheEpoch++;emitAt=performance.now()+200;
   updateControls(performance.now());
  });
  if(reduced){paused=true;pauseStarted=performance.now();}
  updateControls(performance.now());
- addEventListener('resize',resize,{passive:true});addEventListener('scroll',()=>{nextIonTargetRefresh=0},{passive:true});resize();emitAt=performance.now()+200;
+ addEventListener('resize',resize,{passive:true});
+ addEventListener('resize',()=>{nextIonTargetRefresh=0;glyphCacheEpoch++},{passive:true});
+ addEventListener('scroll',()=>{nextIonTargetRefresh=0;glyphCacheEpoch++},{passive:true});
+ resize();emitAt=performance.now()+200;
  requestAnimationFrame(frame);requestAnimationFrame(animateElectrons);
 })();
 </script>
