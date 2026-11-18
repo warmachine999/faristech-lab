@@ -521,7 +521,7 @@ function updateStatus(m){$('iOut').textContent=m.current.toFixed(2);$('brightnes
  else if(!switchOn&&Math.abs(capV)>m.led.vf+.03){$('capStatus').innerHTML=`<h3 class="warn">${m.isSuper?(lang==='ar'?'المكثف الفائق: يفرغ':'Supercapacitor: Discharging'):t('capDischarging')}</h3><p>${m.isSuper?(lang==='ar'?'يفرغ بسرعة أقل بحوالي 75% من المكثف العادي في هذا النموذج.':'It discharges about 75% more slowly than the normal capacitor in this model.'):t('capDischargingText')}</p>`}
  else if(switchOn&&Math.abs(capV)>0){$('capStatus').innerHTML=`<h3 class="good">${t('capCharged')}</h3><p>${t('capChargedText')}</p>`}
  else{$('capStatus').innerHTML=`<h3>${t('capEmpty')}</h3><p>${t('capEmptyText')}</p>`}}
-function tick(now){requestAnimationFrame(tick);if(paused)return;
+function tick(now){requestAnimationFrame(tick);
   if(now-last<32)return;const dt=Math.min(.05,(now-last)/1000);last=now;let m=model();updatePhysics(dt,m);m=model();updateCircuitLabels();updateStatus(m);drawCircuit(m)}
 [voltage,capacitance,capRating,capPolarity].forEach(x=>x.oninput=()=>updateCircuitLabels());variableResistance.oninput=()=>{resistance.value=variableResistance.value;updateCircuitLabels()};$('fixedResistorMode').onclick=()=>{resistorMode='fixed';renderResistorChoices();updateCircuitLabels()};$('variableResistorMode').onclick=()=>{resistorMode='variable';variableResistance.value=resistance.value;renderResistorChoices();updateCircuitLabels()};$('switchBtn').onclick=()=>{if(!batteryFailed){switchOn=!switchOn;$('switchBtn').classList.toggle('on',switchOn);updateCircuitLabels()}};$('pauseBtn').onclick=()=>{animating=!animating;$('pauseBtn').textContent=animating?t('pauseElectrons'):t('resumeElectrons')};$('resetBtn').onclick=()=>{voltage.value=9;resistance.value=330;capacitance.value=2200;capRating.value=16;capPolarity.value='correct';ledKey='red';resistorMode='fixed';variableResistance.value=330;switchOn=true;animating=true;capV=0;electronDrift=0;chargeAnimPhase=0;flowElectrons.forEach((e,i)=>e.u=i/flowElectrons.length);ledFailed=capFailed=batteryFailed=false;ledStress=batteryStress=capStress=0;$('switchBtn').classList.add('on');renderLedChoices();renderResistorChoices();updateCircuitLabels();$('pauseBtn').textContent=t('pauseElectrons')};
 let tradeValues={fast:100,cheap:50,good:0};
@@ -553,7 +553,9 @@ function toggleTrade(k){
 document.querySelectorAll('.tradeToggle').forEach(b=>b.onclick=()=>toggleTrade(b.dataset.choice));
 for(const k of ['fast','cheap','good']){const cap=k[0].toUpperCase()+k.slice(1);$('m'+cap).oninput=e=>{makeRoom(k,+e.target.value);updateTrade()}}
 
-const sections=[...document.querySelectorAll('main section[id]')],navs=[...document.querySelectorAll('.nav a')];const observer=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){navs.forEach(n=>n.classList.remove('active'));document.querySelector(`.nav a[href="#${e.target.id}"]`)?.classList.add('active')}}),{rootMargin:'-35% 0px -55% 0px'});sections.forEach(s=>observer.observe(s));$('year').textContent=new Date().getFullYear();applyLanguage();renderResistorChoices();updateTrade();requestAnimationFrame(tick);
+const sections=[...document.querySelectorAll('main section[id]')],navs=[...document.querySelectorAll('.nav a')];const observer=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){navs.forEach(n=>n.classList.remove('active'));document.querySelector(`.nav a[href="#${e.target.id}"]`)?.classList.add('active')}}),{rootMargin:'-35% 0px -55% 0px'});sections.forEach(s=>observer.observe(s));$('year').textContent=new Date().getFullYear();applyLanguage();renderResistorChoices();updateTrade();
+// Paint immediately so the circuit never appears as an empty black canvas while waiting for animation frames.
+updateCircuitLabels();updateStatus(model());drawCircuit(model());requestAnimationFrame(tick);
 
 </script>
 <script>
