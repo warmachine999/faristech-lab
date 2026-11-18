@@ -298,6 +298,70 @@ body>main{position:relative;z-index:2!important}
 @media(max-width:460px){.varon-stats{grid-template-columns:1fr 1fr 1fr}.varon-console{padding:11px}.varon-stat{padding:7px 5px}.varon-stat small{font-size:.58rem}}
 @media(prefers-reduced-motion:reduce){.atom .core span{animation:none!important}}
 </style>
+
+<style id="varon-header-hero-refinement">
+/* Calm floating navigation. Mobile retains its existing responsive layout. */
+@media(min-width:761px){
+ .header.wrap{
+  position:sticky;top:8px;width:min(1360px,94vw);margin:8px auto 0;
+  min-height:62px;padding:7px 17px;gap:14px;border-radius:17px;
+  border:1px solid color-mix(in srgb,var(--line) 74%,transparent);
+  background:color-mix(in srgb,var(--panel) 69%,transparent);
+  -webkit-backdrop-filter:blur(16px) saturate(125%);
+  backdrop-filter:blur(16px) saturate(125%);
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
+ }
+ .header .logoMark{width:36px;height:36px}
+ .header .nav{gap:clamp(12px,1.3vw,19px);font-size:.83rem}
+ .header .identityBadge{font-size:.66rem;padding:4px 7px}
+ .header .tagline{font-size:.51rem}
+ .header .controlBtn{padding:7px 9px}
+}
+.varon-text-ion{position:relative!important;isolation:isolate}
+.varon-text-water,.varon-text-ink,.varon-text-drop{
+ position:absolute!important;pointer-events:none!important;border-radius:50%;
+ left:0;top:0;transform:translate(-50%,-50%);
+ mix-blend-mode:screen;will-change:transform,opacity;
+}
+.varon-text-water{
+ z-index:4!important;width:var(--vr-text-wave-size,80px);height:var(--vr-text-wave-size,80px);
+ border:1.2px solid var(--vr-text-color);
+ box-shadow:0 0 9px color-mix(in srgb,var(--vr-text-color) 40%,transparent);
+ animation:varon-text-ripple 2.2s cubic-bezier(.19,.5,.29,1) forwards;
+}
+.varon-text-ink{
+ z-index:3!important;width:var(--vr-text-ink-size,42px);height:var(--vr-text-ink-size,42px);
+ background:radial-gradient(circle,
+  color-mix(in srgb,var(--vr-text-color) 53%,transparent) 0%,
+  color-mix(in srgb,var(--vr-text-color) 20%,transparent) 38%,transparent 75%);
+ animation:varon-text-diffuse 8s ease-out forwards;
+}
+.varon-text-drop{
+ z-index:5!important;width:var(--vr-text-drop-size,8px);height:var(--vr-text-drop-size,8px);
+ background:radial-gradient(circle at 38% 35%,rgba(255,255,255,.65),var(--vr-text-color) 40%,transparent 90%);
+ box-shadow:0 0 7px var(--vr-text-color);
+ animation:varon-text-droplet 7s ease-out forwards;
+}
+@keyframes varon-text-ripple{
+ 0%{opacity:.66;transform:translate(-50%,-50%) scale(.06)}
+ 34%{opacity:.42}
+ 100%{opacity:0;transform:translate(-50%,-50%) scale(1)}
+}
+@keyframes varon-text-diffuse{
+ 0%{opacity:.58;transform:translate(-50%,-50%) scale(.2)}
+ 55%{opacity:.33}
+ 100%{opacity:0;transform:translate(-50%,-50%) scale(2.8)}
+}
+@keyframes varon-text-droplet{
+ 0%{opacity:.87;transform:translate(-50%,-50%) scale(.7)}
+ 50%{opacity:.65}
+ 100%{opacity:0;transform:translate(-50%,-50%) scale(2.1)}
+}
+@media(prefers-reduced-motion:reduce){
+ .varon-text-water{display:none!important}
+ .varon-text-ink,.varon-text-drop{animation:none!important;opacity:.13!important}
+}
+</style>
 </head>
 <body><canvas id="themeBg" aria-hidden="true"></canvas>
 <header class="header wrap">
@@ -619,6 +683,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  let cardState=new WeakMap(),backgroundMarks=[];
  const radiationCards=new Set();
  let ionTargetCache=[],nextIonTargetRefresh=0,lastIonFade=0;
+ const textIonState=new WeakMap(),textIonized=new Set();
  function addBackgroundMark(p,now){
   backgroundMarks.push({x:p.x,y:p.y,color:p.type.color,at:cycleTime(now),strength:p.type.name==='ALPHA'?.32:p.type.name==='BETA'?.25:.19});
   if(backgroundMarks.length>64)backgroundMarks.splice(0,backgroundMarks.length-64);
@@ -782,7 +847,36 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
    flash.addEventListener('animationend',()=>flash.remove(),{once:true});
   }
  }
- const ionTargetSelector='.card,.service,.labCard,.about,.contact,.print,.status,.infoItem,.statBox,.banner,.pill';
+ function textHit(el,p,now,point){
+  // Add animated pigment and water rings without altering text nodes, layout or links.
+  let state=textIonState.get(el);
+  if(!state){state={lastAt:-Infinity,effects:[]};textIonState.set(el,state)}
+  if(now-state.lastAt<1100)return;
+  state.lastAt=now;
+  textIonized.add(el);el.classList.add('varon-text-ion');
+  const r=el.getBoundingClientRect();
+  const x=Math.max(2,Math.min(r.width-2,point.x-scrollX-r.left));
+  const y=Math.max(2,Math.min(r.height-2,point.y-scrollY-r.top));
+  const header=!!el.closest('.header');
+  const waveSize=header?76:Math.min(168,Math.max(100,Math.min(r.width,r.height)*2.4));
+  const inkSize=header?27:Math.min(70,Math.max(43,r.height*.35));
+  function addEffect(cls,dx,dy,sizeName,size){
+   const part=document.createElement('span');part.className=cls;
+   part.style.left=(x+dx)+'px';part.style.top=(y+dy)+'px';
+   part.style.setProperty('--vr-text-color',p.type.color);
+   if(sizeName)part.style.setProperty(sizeName,size+'px');
+   el.appendChild(part);state.effects.push(part);
+   part.addEventListener('animationend',()=>{part.remove();state.effects=state.effects.filter(e=>e!==part)},{once:true});
+  }
+  if(!reduced)addEffect('varon-text-water',0,0,'--vr-text-wave-size',waveSize);
+  addEffect('varon-text-ink',0,0,'--vr-text-ink-size',inkSize);
+  for(let i=0;i<2;i++){
+   addEffect('varon-text-drop',(Math.random()-.5)*20,(Math.random()-.5)*13,'--vr-text-drop-size',(header?5:7)+Math.random()*4);
+  }
+  while(state.effects.length>12)state.effects.shift().remove();
+ }
+ const textIonSelector='.hero .eyebrow,.hero h1,.hero #heroText,.hero .note,.hero .actions .btn,.header .brandName,.header .identityBadge,.header .tagline,.header .nav a,.header .controlBtn';
+ const ionTargetSelector='.card,.service,.labCard,.about,.contact,.print,.status,.infoItem,.statBox,.banner,.pill,'+textIonSelector;
  function visibleIonTargets(now){
   if(now>=nextIonTargetRefresh){
    ionTargetCache=[...document.querySelectorAll(ionTargetSelector)].map(el=>({el,r:el.getBoundingClientRect()}))
@@ -800,7 +894,11 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
    if(x<-12||x>w+12||y<-12||y>h+12)continue;
    for(const {el,r} of targets){
     if(p.hitCards.has(el)||x<r.left-4||x>r.right+4||y<r.top-4||y>r.bottom+4)continue;
-    p.hitCards.add(el);cardHit(el,p,now,point);p.hits++;
+    const textTarget=el.matches?.(textIonSelector);
+    if(textTarget&&now-(textIonState.get(el)?.lastAt??-Infinity)<1100)continue;
+    p.hitCards.add(el);
+    if(textTarget)textHit(el,p,now,point);else cardHit(el,p,now,point);
+    p.hits++;
     p.nextIonAt=now+260;
     if(p.hits>=p.maxHits)removeRay(p);
     return;
@@ -897,7 +995,9 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  resetButton?.addEventListener('click',()=>{
   particles.forEach(removeRay);particles=[];backgroundMarks.length=0;ctx.clearRect(0,0,w,h);
   radiationCards.forEach(card=>{card.classList.remove('radiation-hit','radiation-compact');card.style.removeProperty('--vr-ion-color');card.querySelectorAll('.radiation-accumulation,.radiation-meter,.varon-ion-flash,.varon-ion-drop,.varon-water-ripple').forEach(el=>el.remove())});
-  radiationCards.clear();cardState=new WeakMap();ionTargetCache=[];nextIonTargetRefresh=0;emitAt=performance.now()+200;
+  radiationCards.clear();cardState=new WeakMap();
+  textIonized.forEach(el=>{el.classList.remove('varon-text-ion');el.querySelectorAll('.varon-text-water,.varon-text-ink,.varon-text-drop').forEach(part=>part.remove());});
+  textIonized.clear();ionTargetCache=[];nextIonTargetRefresh=0;emitAt=performance.now()+200;
   updateControls(performance.now());
  });
  if(reduced){paused=true;pauseStarted=performance.now();}
