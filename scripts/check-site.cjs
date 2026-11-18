@@ -53,6 +53,11 @@ assert.ok(html.includes('state.drops=state.drops.filter'), 'Droplets must fade o
 assert.ok(!html.includes('box-shadow:inset 0 0 24px'), 'Entire cards must not glow on first impact');
 assert.ok(!html.includes('.radiation-hit h1,.radiation-hit h2'), 'All text must not glow at once');
 assert.ok(html.includes('varon-text-drop'), 'Small text droplets must be visually distinct');
+assert.ok(html.includes('width:var(--vr-drop-size,14px)'), 'Medium droplet default size must be 14px');
+assert.ok(html.includes('6+Math.random()*5,true'), 'Text speckles should be 6-11px');
+assert.ok(html.includes('10+Math.random()*12,false'), 'Card impact drops should be 10-22px');
+assert.ok(html.includes('width:38px;height:38px'), 'Proportional impact flash should be 38px');
+
 assert.ok(html.includes('.radiation-meter,.varon-ion-flash,.varon-ion-drop'), 'Reset must clear individual drops');
 
 assert.ok(html.includes('const point={x:q.x,y:q.y,travel:'), 'Collision must sample the traveled wave path');
