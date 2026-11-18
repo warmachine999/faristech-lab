@@ -41,18 +41,22 @@ assert.ok(hitTargets, 'VARON ionization target selector missing');
 assert.ok(hitTargets[1].includes('.card') && hitTargets[1].includes('.service'), 'Project/service cards must ionize');
 assert.ok(hitTargets[1].includes('.pill') && hitTargets[1].includes('.banner'), 'Small badges and bubbles must ionize');
 assert.ok(!hitTargets[1].includes('.orbLabel'), 'Orbiting labels must never become radiation targets');
-assert.ok(html.includes(".banner,.pill,'+textIonSelector"), 'Hero/header text must participate in hit testing');
+assert.ok(html.includes('for(const el of document.querySelectorAll(textIonSelector))'), 'Text targets must be independently measured as rendered text nodes');
 assert.ok(html.includes("const textIonSelector='.hero .eyebrow,.hero h1,.hero #heroText"), 'Hero title and descriptive text must be ionized');
 assert.ok(html.includes('.header .brandName,.header .identityBadge,.header .tagline,.header .nav a,.header .controlBtn'), 'Navigation and header text must be ionized');
-assert.ok(html.includes("if(textTarget)textHit(el,p,now,point);else cardHit(el,p,now,point)"), 'Text hits must bypass the card layout-changing CSS class');
-assert.ok(html.includes("el.classList.add('varon-text-ion')"), 'Text overlay must use its own style class');
-assert.ok(!html.includes('.varon-text-ion{position:relative!important;overflow:hidden'), 'Text ionization must not clip or reflow headings');
+assert.ok(html.includes("if(textTarget)textHit(el,p,now,glyph);else cardHit(el,p,now,point)"), 'Only actual glyphs should receive text ionization');
+assert.ok(html.includes("haze.className='varon-text-haze'"), 'Text heat should be a soft blur, not decorative dots');
+assert.ok(!html.includes("el.classList.add('varon-text-ion')"), 'Text ionization must not change any heading or link class');
 assert.ok(html.includes('.header.wrap{') && html.includes('width:min(1360px,94vw)'), 'The desktop header should be a compact floating toolbar');
 assert.ok(html.includes('backdrop-filter:blur(16px) saturate(125%)'), 'The top bar should have a translucent frosted appearance');
-assert.ok(html.includes("addEffect('varon-text-water'"), 'Text hits need water ripples');
-assert.ok(html.includes("addEffect('varon-text-ink'"), 'Text hits need mixed-color diffusing stains');
-assert.ok(html.includes("addEffect('varon-text-drop'"), 'Text hits need small colored drops');
-assert.ok(html.includes("textIonized.forEach(el=>{el.classList.remove('varon-text-ion')"), 'Reset must clean up hero and header effects');
+assert.ok(html.includes("::highlight(varon-heat-alpha)") && html.includes("::highlight(varon-heat-beta)") && html.includes("::highlight(varon-heat-gamma)"), 'Alpha, Beta and Gamma must color the actual rendered glyphs');
+assert.ok(html.includes("const range=document.createRange();range.setStart(node,offset);range.setEnd(node,offset+step)"), 'Glyph hit tests must measure each non-space character, not a whole text box');
+assert.ok(html.includes('if(textTarget&&!glyph)continue'), 'Ray must pass through invisible whitespace without a text hit');
+assert.ok(html.includes('filter:blur(18px);mix-blend-mode:screen'), 'Heat should resemble the site's background blur');
+assert.ok(!html.includes('.varon-text-water{') && !html.includes('.varon-text-ink{'), 'Old circle/drop text effects must be gone');
+assert.ok(html.includes('textGlows.forEach(el=>el.remove())'), 'Reset must remove text haze');
+assert.ok(html.includes('CSS.highlights.delete(key)'), 'Reset must clear highlighted glyphs');
+assert.ok(html.includes("addEventListener('scroll',()=>{nextIonTargetRefresh=0;glyphCacheEpoch++}"), 'Glyph position cache must follow scrolling');
 
 assert.ok(html.includes("el.style.setProperty('--vr-drop-color',p.type.color)"), 'Each droplet must match the ray color');
 assert.ok(html.includes("flash.style.setProperty('--vr-ion-flash-color',p.type.color)"), 'Impact flash must use the ray color');
@@ -118,23 +122,44 @@ const hitContext = {
   removeRay:(ray)=>{ray.dead=true},scrollX:0,scrollY:0,w:100,h:100
 };
 const testHit = new vm.Script(html.slice(hitStart,hitEnd)+'\nhitTest').runInNewContext(hitContext);
-const textElement={
-  matches:selector=>selector.includes('.hero h1')
-};
+const textElement={};
 const textImpacts=[];
+const textNode={textContent:'A B'};
+const fakeGlyph={range:{},r:{left:48,right:58,top:20,bottom:60}};
 const textContext={
-  visibleIonTargets:()=>[{el:textElement,r:{left:40,right:70,top:20,bottom:60}}],
-  textIonSelector:'.hero h1,.header .nav a',
+  visibleIonTargets:()=>[{el:textElement,node:textNode,textTarget:true,r:{left:40,right:70,top:20,bottom:60}}],
+  glyphAtPoint:(node,x,y)=>x>=48&&x<=58?fakeGlyph:null,
   textIonState:new WeakMap(),
-  textHit:(el,ray,time,point)=>textImpacts.push({el,color:ray.type.color}),
-  cardHit:()=>{throw new Error('Text must not be routed to cardHit')},
+  textHit:(el,ray,time,glyph)=>textImpacts.push({el,color:ray.type.color,glyph}),
+  cardHit:()=>{throw new Error('Text hits must not use cardHit')},
   removeRay:(ray)=>{ray.dead=true},scrollX:0,scrollY:0,w:100,h:100
 };
 const testTextHit = new vm.Script(html.slice(hitStart,hitEnd)+'\nhitTest').runInNewContext(textContext);
 const textRay={type:{color:'#32e875'},hits:0,maxHits:1,hitCards:new Set()};
-testTextHit(textRay,100,[{x:45,y:30},{x:52,y:40}]);
-assert.equal(textImpacts.length,1,'Hero/nav text should receive exactly one color ripple on contact');
-assert.equal(textImpacts[0].color,'#32e875','Text ripple must use the incoming ray color');
+testTextHit(textRay,100,[{x:44,y:30}]);
+assert.equal(textImpacts.length,0,'Empty space inside text rectangle must NOT ionize');
+assert.equal(textRay.hits,0,'Empty space must not stop the ray');
+testTextHit(textRay,120,[{x:51,y:40}]);
+assert.equal(textImpacts.length,1,'Real glyph should ionize after the ray hits a letter');
+assert.equal(textImpacts[0].color,'#32e875','Glyph heat must inherit the ray color');
+assert.equal(textImpacts[0].glyph,fakeGlyph,'Impact must target the measured glyph, not the box');
+const glyphStart=html.indexOf(' function glyphAtPoint(node,x,y){');
+const glyphEnd=html.indexOf(' function textHit(el,p,now,glyph){',glyphStart);
+assert.ok(glyphStart>=0&&glyphEnd>glyphStart,'Actual glyph hit test function must exist');
+const fakeDocument={createRange:()=>{
+ let start=0,end=0;
+ return {
+  setStart:(node,i)=>{start=i},setEnd:(node,i)=>{end=i},
+  getClientRects:()=>[{left:start*10,right:end*10,top:0,bottom:18,width:(end-start)*10,height:18}]
+ };
+}};
+const realGlyphAtPoint=new vm.Script(html.slice(glyphStart,glyphEnd)+'\nglyphAtPoint').runInNewContext({
+ textGlyphCache:new WeakMap(),glyphCacheEpoch:0,document:fakeDocument
+});
+const demoTextNode={textContent:'A B'};
+assert.ok(realGlyphAtPoint(demoTextNode,5,9),'A rendered character must be hit-testable');
+assert.equal(realGlyphAtPoint(demoTextNode,15,9),null,'Space character must never be ionized');
+assert.ok(realGlyphAtPoint(demoTextNode,25,9),'A second rendered character must be hit-testable');
 
 for(const color of ['#ff3b45','#2795ff','#32e875']){
   const ray={type:{color},hits:0,maxHits:1,hitCards:new Set()};
