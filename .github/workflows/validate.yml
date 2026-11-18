@@ -30,7 +30,7 @@ jobs:
           CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           test -n "$CHROME"
           "$CHROME" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --virtual-time-budget=1600 --dump-dom http://127.0.0.1:8173/ >/tmp/faristech-circuit-dom.html 2>/tmp/faristech-circuit-chrome.log
-          grep -Eq 'id="iOut">2[0-9]\\.[0-9]{2}<' /tmp/faristech-circuit-dom.html
+          grep -Eq 'id="iOut">2[0-9]\.[0-9]{2}<' /tmp/faristech-circuit-dom.html
           grep -Eq 'id="brightnessOut">[1-9][0-9]*<' /tmp/faristech-circuit-dom.html
           grep -q 'id="circuitStatus" class="status"><h3' /tmp/faristech-circuit-dom.html
           echo "Circuit simulator initializes and computes current in a real browser."
