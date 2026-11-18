@@ -26,7 +26,7 @@ const services=[
 const $=s=>document.querySelector(s),langKey='ftx-studio-lang',themeKey='ftx-studio-theme';let lang=localStorage.getItem(langKey)||'en',theme=localStorage.getItem(themeKey)||'dark';
 const wa=(message)=>'https://wa.me/966509347473?text='+encodeURIComponent(message+(lang==='en'?'\n\nStarting prices are minimums. Final price depends on complexity, materials, size and revisions.':'\n\nالأسعار المعروضة أسعار بداية وحد أدنى. السعر النهائي يعتمد على التعقيد والخامات والحجم والتعديلات.'));
 function setTheme(next){theme=themes.includes(next)?next:'dark';document.documentElement.dataset.theme=theme;localStorage.setItem(themeKey,theme);const i=themes.indexOf(theme);const b=$('#themeBtn');if(b)b.textContent=(themeNames[lang][i]||theme)+' ◈'}
-function setLang(next){lang=next==='ar'?'ar':'en';localStorage.setItem(langKey,lang);document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';document.querySelectorAll('[data-en]').forEach(el=>{const val=el.dataset[lang];if(val!==undefined)el.innerHTML=val});const l=$('#langBtn');if(l)l.textContent=lang==='en'?'حجازي':'English';l.title=lang==='en'?'Switch to Hijazi Arabic':'التبديل إلى الإنجليزية';setTheme(theme);renderPage()}
+function setLang(next){lang=next==='ar'?'ar':'en';localStorage.setItem(langKey,lang);document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';document.querySelectorAll('[data-en]').forEach(el=>{const val=el.dataset[lang];if(val!==undefined)el.innerHTML=val});const l=$('#langBtn');if(l)l.textContent=lang==='en'?'حجازي':'English';l.title=lang==='en'?'Switch to Hijazi Arabic':'التبديل إلى الإنجليزية';setTheme(theme);renderPage();refreshGamesLanguage()}
 function header(){const current=document.body.dataset.page;document.querySelectorAll('.navlinks a').forEach(a=>a.classList.toggle('active',a.dataset.nav===current));$('#themeBtn')?.addEventListener('click',()=>setTheme(themes[(themes.indexOf(theme)+1)%themes.length]));$('#langBtn')?.addEventListener('click',()=>setLang(lang==='en'?'ar':'en'));$('#menuBtn')?.addEventListener('click',()=>$('.navlinks')?.classList.toggle('open'));document.querySelectorAll('.navlinks a').forEach(a=>a.addEventListener('click',()=>$('.navlinks')?.classList.remove('open')));setTheme(theme)}
 function projectCards(){const root=$('#projectGrid');if(!root)return;root.innerHTML=projects.map((p,i)=>'<a class="card" href="project.html?id='+i+'"><div class="projectmeta"><span>PROJECT / '+String(i+1).padStart(2,'0')+'</span><span class="tag">'+p.level[lang==='ar'?1:0]+'</span></div><div class="cardicon">'+p.icon+'</div><h3>'+p.name[lang==='ar'?1:0]+'</h3><p>'+p.desc[lang==='ar'?1:0]+'</p><p class="mono" style="margin-top:16px">'+p.tools+'</p><span class="btn soft">'+(lang==='ar'?'التفاصيل ↗':'Explore project ↗')+'</span></a>').join('')}
 function serviceCards(){const root=$('#serviceGrid');if(!root)return;root.innerHTML=services.map((s,i)=>'<article class="card"><div class="cardicon">'+s.icon+'</div><h3>'+s.name[lang==='ar'?1:0]+'</h3><p>'+s.desc[lang==='ar'?1:0]+'</p><div class="price">'+s.price[lang==='ar'?1:0]+'<small>'+(lang==='ar'?'سعر بداية':'Starting price')+'</small></div><a class="btn primary" target="_blank" rel="noopener" href="'+wa(s.message[lang==='ar'?1:0]+' ')+'">'+(lang==='ar'?'اسأل عن الخدمة ↗':'Ask about this ↗')+'</a></article>').join('')}
@@ -34,10 +34,187 @@ function projectDetail(){const root=$('#projectDetail');if(!root)return;const id
 function renderPage(){projectCards();serviceCards();projectDetail();document.querySelectorAll('[data-wa]').forEach(a=>a.href=wa(a.dataset.wa))}
 function setupReveal(){if(!('IntersectionObserver'in window)){document.querySelectorAll('.reveal').forEach(e=>e.classList.add('visible'));return}const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target)}}),{threshold:.1});document.querySelectorAll('.reveal').forEach(e=>io.observe(e))}
 function background(){const c=$('#themeBg');if(!c)return;const g=c.getContext('2d');let w=0,h=0,t=0,pts=[];function resize(){const d=Math.min(devicePixelRatio||1,1.5);w=innerWidth;h=innerHeight;c.width=w*d;c.height=h*d;c.style.width=w+'px';c.style.height=h+'px';g.setTransform(d,0,0,d,0,0);pts=Array.from({length:Math.max(35,Math.floor(w*h/19000))},(_,i)=>({x:Math.random()*w,y:Math.random()*h,r:1+Math.random()*2,v:.15+Math.random()*.35,p:Math.random()*6.28}))}function frame(){t+=.008;g.clearRect(0,0,w,h);const light=theme==='light'||theme==='matcha',caramel=theme==='caramel',cyber=theme==='cyber';pts.forEach((p,i)=>{p.y+=Math.sin(t+p.p)*p.v*.25;if(!light&&!caramel){p.x+=Math.cos(t*.6+p.p)*p.v*.35}const color=cyber?(i%2?'0,229,255':'189,92,255'):matchaColor();g.fillStyle='rgba('+color+','+(light?.13:caramel?.22:.32)+')';g.beginPath();g.arc(p.x,p.y,p.r,0,Math.PI*2);g.fill();if(cyber&&i%4===0){g.strokeStyle='rgba(0,229,255,.08)';g.beginPath();g.moveTo(p.x,p.y);g.lineTo(p.x+28,p.y-18);g.stroke()}});if(caramel){g.font='14px Georgia';g.fillStyle='rgba(255,190,120,.12)';['V = IR','P = VI','F = ma','E = mc²'].forEach((s,i)=>g.fillText(s,(i*237+t*8)%(w+80),80+i*130))}if(matcha){g.strokeStyle='rgba(83,130,77,.10)';for(let i=0;i<7;i++){g.beginPath();g.ellipse(w*(i+.5)/7,h*.5,55+Math.sin(t+i)*9,18,Math.sin(t*.2+i),0,Math.PI*2);g.stroke()}}requestAnimationFrame(frame)}function matchaColor(){return theme==='matcha'?'75,123,75':theme==='light'?'54,118,146':caramel?'255,173,98':'100,120,255'}resize();addEventListener('resize',resize);requestAnimationFrame(frame)}
-function games(){if($('#memoryGrid')){const symbols=['Ω','Ω','V','V','A','A','⚡','⚡','⌁','⌁','▤','▤','◈','◈','⌘','⌘'];let first=null,lock=false,matches=0;function shuffle(){return [...symbols].sort(()=>Math.random()-.5)}function draw(){const arr=shuffle();first=null;lock=false;matches=0;$('#memoryGrid').innerHTML=arr.map((s,i)=>'<button class="memorytile" data-i="'+i+'" data-s="'+s+'">?</button>').join('');$('#memoryScore').textContent='0 / 8';$('#memoryGrid').querySelectorAll('button').forEach(b=>b.onclick=()=>{if(lock||b.classList.contains('matched')||b.classList.contains('open'))return;b.textContent=b.dataset.s;b.classList.add('open');if(!first){first=b;return}if(first.dataset.s===b.dataset.s){first.classList.add('matched');b.classList.add('matched');first=null;matches++;$('#memoryScore').textContent=matches+' / 8';if(matches===8)$('#memoryStatus').textContent=lang==='ar'?'كفو! خلصت كل الأزواج.':'Excellent — all pairs matched.'}else{lock=true;const prev=first;first=null;setTimeout(()=>{prev.textContent='?';b.textContent='?';prev.classList.remove('open');b.classList.remove('open');lock=false},650)}})}$('#memoryReset').onclick=draw;draw()}
-if($('#ohmQuestion')){let answer=0;function next(){const v=2+Math.floor(Math.random()*10),r=2+Math.floor(Math.random()*9);answer=+(v/r).toFixed(2);$('#ohmQuestion').textContent=(lang==='ar'?'جهد ':'Voltage ')+v+' V · '+(lang==='ar'?'مقاومة ':'Resistance ')+r+' Ω · '+(lang==='ar'?'احسب التيار':'Find current');const opts=[answer,+(answer+.5).toFixed(2),+(Math.max(.1,answer-.7)).toFixed(2),+(answer+1.2).toFixed(2)].sort(()=>Math.random()-.5);$('#ohmChoices').innerHTML=opts.map(n=>'<button data-v="'+n+'">'+n+' A</button>').join('');$('#ohmChoices').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('#ohmStatus').textContent=Number(b.dataset.v)===answer?(lang==='ar'?'صحيح! قانون أوم: I = V ÷ R':'Correct. Ohm’s law: I = V ÷ R'):(lang==='ar'?'مو صحيح. جرّب مرة ثانية.':'Not quite. Try again.');if(Number(b.dataset.v)===answer)setTimeout(next,1100)})}$('#ohmNext').onclick=next;next()}
-if($('#reactionBtn')){let state='idle',start=0,timer;$('#reactionBtn').onclick=()=>{if(state==='idle'){state='wait';$('#reactionStatus').textContent=lang==='ar'?'استنى الإشارة الخضراء...':'Wait for the green signal…';$('#reactionBtn').textContent=lang==='ar'?'انتظر...':'Wait…';timer=setTimeout(()=>{state='go';start=performance.now();$('#reactionBtn').textContent=lang==='ar'?'اضغط الآن!':'CLICK NOW!';$('#reactionBtn').style.background='var(--good)'},1200+Math.random()*2500)}else if(state==='wait'){clearTimeout(timer);state='idle';$('#reactionStatus').textContent=lang==='ar'?'بدري! اضغط لما تتغير الإشارة.':'Too early. Wait for the signal.';$('#reactionBtn').textContent=lang==='ar'?'ابدأ الاختبار':'Start test'}else{const ms=Math.round(performance.now()-start);state='idle';$('#reactionStatus').textContent=(lang==='ar'?'زمن الاستجابة: ':'Reaction time: ')+ms+' ms';$('#reactionBtn').textContent=lang==='ar'?'جرّب مرة ثانية':'Try again';$('#reactionBtn').style.background=''}}}
+
+function shuffleGameItems(items,rng=Math.random){
+ const result=[...items];
+ for(let i=result.length-1;i>0;i--){
+  const j=Math.floor(rng()*(i+1));
+  [result[i],result[j]]=[result[j],result[i]];
+ }
+ return result;
 }
-function init(){header();setLang(lang);renderPage();setupReveal();background();games();$('#year')&&($('#year').textContent=new Date().getFullYear())}
+function ohmGameOptions(voltage,resistance,rng=Math.random){
+ const answer=Number((voltage/resistance).toFixed(2));
+ const unique=new Set([answer]);
+ for(const offset of [.5,-.55,1.2,-.3,.75,-1.05,.25]){
+  const candidate=Math.max(.01,Number((answer+offset).toFixed(2)));
+  if(candidate!==answer)unique.add(candidate);
+  if(unique.size>=4)break;
+ }
+ for(let step=1;unique.size<4;step++)unique.add(Number((answer+step*.37).toFixed(2)));
+ return {answer,choices:shuffleGameItems([...unique].slice(0,4),rng)};
+}
+let refreshGamesLanguage=()=>{};
+function games(){
+ const memoryGrid=$('#memoryGrid'),ohmQuestion=$('#ohmQuestion'),reactionBtn=$('#reactionBtn');
+ if(!memoryGrid&&!ohmQuestion&&!reactionBtn)return;
+ const txt=(english,arabic)=>lang==='ar'?arabic:english;
+ const status=(id,value)=>{const el=$(id);if(el)el.textContent=value};
+ const memorySymbols=['Ω','V','A','⚡','⌁','▤','◈','⌘'];
+ let first=null,memoryLock=false,memoryPairs=0,memoryMoves=0,memoryRound=0,memoryTimer=null,memoryPhase='ready';
+ function memoryText(){
+  const text={
+   ready:txt('Find all eight pairs.','ابحث عن الأزواج الثمانية.'),
+   first:txt('Pick a second card.','اختر البطاقة الثانية.'),
+   miss:txt('Not a match. Try another pair.','مو متطابقين، جرّب زوج ثاني.'),
+   match:txt('Nice match! Keep going.','مطابقة ممتازة! كمّل.'),
+   won:txt('Excellent! All eight pairs matched.','كفو! طابقت الأزواج الثمانية.')
+  };
+  return text[memoryPhase];
+ }
+ function renderMemory(){
+  if(!memoryGrid)return;
+  status('#memoryScore',memoryPairs+' / 8 · '+txt('Moves: ','المحاولات: ')+memoryMoves);
+  status('#memoryStatus',memoryText());
+  memoryGrid.querySelectorAll('button').forEach((button,i)=>{
+   button.setAttribute('aria-label',button.classList.contains('matched')
+    ?txt('Matched: ','تمت المطابقة: ')+button.dataset.s
+    :button.classList.contains('open')
+     ?txt('Revealed: ','مكشوف: ')+button.dataset.s
+     :txt('Hidden card ','بطاقة مخفية ')+(i+1));
+  });
+ }
+ function resetMemory(){
+  if(memoryTimer!==null){clearTimeout(memoryTimer);memoryTimer=null}
+  memoryRound++;first=null;memoryLock=false;memoryPairs=0;memoryMoves=0;memoryPhase='ready';
+  const shuffled=shuffleGameItems([...memorySymbols,...memorySymbols]);
+  memoryGrid.innerHTML=shuffled.map((symbol,i)=>'<button class="memorytile" type="button" data-i="'+i+'" data-s="'+symbol+'" aria-label="Hidden card '+(i+1)+'">?</button>').join('');
+  memoryGrid.querySelectorAll('button').forEach(button=>{
+   button.onclick=()=>{
+    if(memoryLock||button.disabled||button.classList.contains('matched')||button.classList.contains('open'))return;
+    button.classList.add('open');button.textContent=button.dataset.s;
+    if(!first){first=button;memoryPhase='first';renderMemory();return}
+    const other=first;first=null;memoryMoves++;
+    if(other.dataset.s===button.dataset.s){
+     other.classList.add('matched');button.classList.add('matched');
+     other.disabled=true;button.disabled=true;memoryPairs++;
+     memoryPhase=memoryPairs===8?'won':'match';renderMemory();
+     return;
+    }
+    memoryLock=true;memoryPhase='miss';renderMemory();
+    const round=memoryRound;
+    memoryTimer=setTimeout(()=>{
+     if(round!==memoryRound)return;
+     other.classList.remove('open');button.classList.remove('open');
+     other.textContent='?';button.textContent='?';memoryLock=false;memoryTimer=null;
+     memoryPhase='ready';renderMemory();
+    },750);
+   };
+  });
+  renderMemory();
+ }
+ if(memoryGrid){
+  $('#memoryReset').onclick=resetMemory;
+  resetMemory();
+ }
+ let ohmVoltage=0,ohmResistance=0,ohmAnswer=0,ohmQuestionNumber=0,ohmCorrect=0;
+ let ohmPhase='choose',ohmTimer=null,ohmRound=0;
+ function renderOhm(){
+  if(!ohmQuestion)return;
+  status('#ohmScore',txt('Solved: ','تم حل: ')+ohmCorrect+' · '+txt('Question ','السؤال ')+ohmQuestionNumber);
+  status('#ohmQuestion',txt('Voltage: ','الجهد: ')+ohmVoltage+' V · '+txt('Resistance: ','المقاومة: ')+ohmResistance+' Ω\n'+txt('Find current (I = V ÷ R). Round to 2 decimals.','احسب التيار (I = V ÷ R). قرّب لمنزلتين عشريتين.'));
+  status('#ohmStatus',ohmPhase==='correct'
+   ?txt('Correct! Next question coming up.','إجابة صحيحة! السؤال التالي قريب.')
+   :ohmPhase==='wrong'
+    ?txt('Not quite. Try a different choice.','مو صحيح. جرّب خيار ثاني.')
+    :txt('Choose the correct current.','اختر قيمة التيار الصحيحة.'));
+ }
+ function nextOhm(){
+  if(ohmTimer!==null){clearTimeout(ohmTimer);ohmTimer=null}
+  ohmRound++;ohmQuestionNumber++;ohmPhase='choose';
+  ohmVoltage=2+Math.floor(Math.random()*11);
+  ohmResistance=2+Math.floor(Math.random()*9);
+  const puzzle=ohmGameOptions(ohmVoltage,ohmResistance);ohmAnswer=puzzle.answer;
+  const choices=$('#ohmChoices');
+  choices.innerHTML=puzzle.choices.map(n=>'<button type="button" data-v="'+n+'">'+n.toFixed(2)+' A</button>').join('');
+  choices.querySelectorAll('button').forEach(button=>{
+   button.onclick=()=>{
+    if(ohmPhase==='correct'||button.disabled)return;
+    if(Number(button.dataset.v)===ohmAnswer){
+     ohmCorrect++;ohmPhase='correct';
+     button.classList.add('correct');
+     choices.querySelectorAll('button').forEach(b=>b.disabled=true);
+     renderOhm();
+     const round=ohmRound;
+     ohmTimer=setTimeout(()=>{if(round===ohmRound)nextOhm()},1300);
+    }else{
+     button.disabled=true;button.classList.add('incorrect');ohmPhase='wrong';
+     renderOhm();
+    }
+   };
+  });
+  renderOhm();
+ }
+ if(ohmQuestion){
+  $('#ohmNext').onclick=nextOhm;
+  nextOhm();
+ }
+ let reactionPhase='idle',reactionTimer=null,reactionStarted=0,reactionMs=0,reactionBest=0;
+ const reactionStorage='ftx-studio-reaction-best';
+ try{reactionBest=Number(localStorage.getItem(reactionStorage))||0}catch(error){reactionBest=0}
+ function showReaction(){
+  if(!reactionBtn)return;
+  const names={
+   idle:[txt('Press start when ready.','اضغط ابدأ لما تكون جاهز.'),txt('Start test','ابدأ الاختبار')],
+   waiting:[txt('Wait for the green signal…','انتظر الإشارة الخضراء…'),txt('Wait…','انتظر…')],
+   go:[txt('GREEN! Press the button now!','أخضر! اضغط الآن!'),txt('CLICK NOW!','اضغط الآن!')],
+   early:[txt('Too early! Wait for green. Try again.','بدري! انتظر اللون الأخضر وجرب مرة ثانية.'),txt('Try again','جرّب ثانية')],
+   result:[txt('Reaction time: ','وقت الاستجابة: ')+reactionMs+' ms',txt('Try again','جرّب ثانية')],
+   hidden:[txt('Test cancelled because the tab was hidden.','تم إلغاء الاختبار لأن الصفحة كانت مخفية.'),txt('Start again','ابدأ من جديد')]
+  };
+  status('#reactionStatus',names[reactionPhase][0]);
+  reactionBtn.textContent=names[reactionPhase][1];
+  reactionBtn.style.background=reactionPhase==='go'?'var(--good)':'';
+  reactionBtn.setAttribute('aria-label',names[reactionPhase][1]);
+  status('#reactionBest',reactionBest?txt('Best: ','أفضل وقت: ')+reactionBest+' ms':txt('Best: —','أفضل وقت: —'));
+ }
+ function startReaction(){
+  if(reactionTimer!==null){clearTimeout(reactionTimer);reactionTimer=null}
+  reactionPhase='waiting';showReaction();
+  reactionTimer=setTimeout(()=>{
+   reactionTimer=null;
+   if(reactionPhase!=='waiting'||document.hidden)return;
+   reactionPhase='go';reactionStarted=performance.now();showReaction();
+  },1200+Math.random()*2500);
+ }
+ if(reactionBtn){
+  reactionBtn.onclick=()=>{
+   if(reactionPhase==='waiting'){
+    if(reactionTimer!==null)clearTimeout(reactionTimer);
+    reactionTimer=null;reactionPhase='early';showReaction();return;
+   }
+   if(reactionPhase==='go'){
+    reactionMs=Math.max(0,Math.round(performance.now()-reactionStarted));
+    reactionPhase='result';
+    if(!reactionBest||reactionMs<reactionBest){
+     reactionBest=reactionMs;
+     try{localStorage.setItem(reactionStorage,String(reactionBest))}catch(error){}
+    }
+    showReaction();return;
+   }
+   startReaction();
+  };
+  document.addEventListener('visibilitychange',()=>{
+   if(document.hidden&&(reactionPhase==='waiting'||reactionPhase==='go')){
+    if(reactionTimer!==null)clearTimeout(reactionTimer);
+    reactionTimer=null;reactionPhase='hidden';showReaction();
+   }
+  });
+  showReaction();
+ }
+ refreshGamesLanguage=()=>{renderMemory();renderOhm();showReaction()};
+}
+
+function init(){header();setLang(lang);setupReveal();background();games();$('#year')&&($('#year').textContent=new Date().getFullYear())}
 document.addEventListener('DOMContentLoaded',init);
 })();

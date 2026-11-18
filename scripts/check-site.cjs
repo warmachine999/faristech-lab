@@ -169,6 +169,8 @@ for(const color of ['#ff3b45','#2795ff','#32e875']){
   assert.equal(contacts[before].color,color,'Ionization must retain its ray color');
   assert.ok(ray.dead,'Single-hit particle should stop after ionization');
 }
+assert.ok(html.includes('href="studio/games.html"'), 'Homepage Play & Learn must link to Studio games');
+assert.ok(html.includes('data-i18n="gamesLink"'), 'Game launch button needs bilingual copy');
 const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
 assert.match(wrangler, /"name"\s*:\s*"faristech-lab"/, 'Lab must not deploy as production');
 console.log('Lab validation OK: ' + checked + ' inline JavaScript scripts and VARON controls.');
