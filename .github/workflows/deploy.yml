@@ -30,3 +30,20 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Check published game pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://warmachine999.github.io/faristech-lab"
+          for attempt in 1 2 3 4 5 6; do
+            if curl --fail --silent --show-error --location --max-time 20 -o /tmp/live-studio-game.html "$BASE/studio/games.html?build=${GITHUB_SHA}&attempt=$attempt" &&
+               curl --fail --silent --show-error --location --max-time 20 -o /tmp/live-home.html "$BASE/?build=${GITHUB_SHA}&attempt=$attempt" &&
+               grep -q 'id="memoryGrid"' /tmp/live-studio-game.html &&
+               grep -q 'id="homeGameBoard"' /tmp/live-home.html; then
+              echo "Published games and homepage verified via HTTP."
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Published game route still unavailable after deploying." >&2
+          exit 1
