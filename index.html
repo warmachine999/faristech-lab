@@ -243,15 +243,15 @@ body>main{position:relative;z-index:2!important}
 .atom .core span{font-size:3.2rem;letter-spacing:2px;font-weight:950;color:#e8faff;filter:drop-shadow(0 0 18px rgba(43,231,255,.8))}
 .radiation-hit{position:relative!important;overflow:hidden!important}
 .radiation-hit.radiation-compact{position:relative!important;overflow:hidden!important}
-.varon-ion-flash{position:absolute!important;width:24px;height:24px;z-index:2!important;pointer-events:none;border-radius:50%;
+.varon-ion-flash{position:absolute!important;width:38px;height:38px;z-index:2!important;pointer-events:none;border-radius:50%;
  transform:translate(-50%,-50%) scale(.4);
  background:radial-gradient(circle,color-mix(in srgb,var(--vr-ion-flash-color) 68%,transparent) 0%,transparent 72%);
  animation:varon-ion-flash .72s ease-out forwards}
 @keyframes varon-ion-flash{0%{opacity:.15;transform:translate(-50%,-50%) scale(.3)}40%{opacity:.82}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
 .varon-ion-drop{position:absolute!important;z-index:2!important;pointer-events:none;border-radius:50%;
- width:var(--vr-drop-size,8px);height:var(--vr-drop-size,8px);transform:translate(-50%,-50%);
- background:radial-gradient(circle at 38% 35%,rgba(255,255,255,.75) 0%,var(--vr-drop-color) 34%,transparent 85%);
- box-shadow:0 0 7px var(--vr-drop-color);mix-blend-mode:screen;will-change:opacity}
+ width:var(--vr-drop-size,14px);height:var(--vr-drop-size,14px);transform:translate(-50%,-50%);
+ background:radial-gradient(circle at 38% 35%,rgba(255,255,255,.8) 0%,var(--vr-drop-color) 36%,transparent 88%);
+ box-shadow:0 0 10px var(--vr-drop-color);mix-blend-mode:screen;will-change:opacity}
 .varon-ion-drop.varon-text-drop{z-index:3!important;box-shadow:0 0 5px var(--vr-drop-color);mix-blend-mode:screen}
 @media(prefers-reduced-motion:reduce){.varon-ion-flash{animation:none!important;opacity:0}}
 .radiation-accumulation{position:absolute;inset:0;z-index:0!important;pointer-events:none;border-radius:inherit;mix-blend-mode:screen;opacity:.9}
@@ -709,7 +709,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   for(let i=0;i<2;i++){
    const tx=Math.max(nearest.left+2,Math.min(nearest.right-2,rect.left+contactX+(Math.random()-.5)*18));
    const ty=nearest.top+Math.random()*Math.max(2,nearest.height);
-   addIonDrop(card,state,p,now,tx-rect.left,ty-rect.top,3+Math.random()*3,true);
+   addIonDrop(card,state,p,now,tx-rect.left,ty-rect.top,6+Math.random()*5,true);
   }
  }
  function cardHit(card,p,now,point){
@@ -734,8 +734,8 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   const y=Math.max(0,Math.min(r.height,(point.y-scrollY)-r.top));
   // Deposit a few colored drops at the impact, not a glow over the whole card.
   for(let i=0;i<3;i++){
-   const dx=(Math.random()-.5)*27,dy=(Math.random()-.25)*26;
-   addIonDrop(card,state,p,now,x+dx,y+dy,5+Math.random()*8,false);
+   const dx=(Math.random()-.5)*30,dy=(Math.random()-.25)*28;
+   addIonDrop(card,state,p,now,x+dx,y+dy,10+Math.random()*12,false);
   }
   if(!card.matches('.banner,.pill'))placeTextDrops(card,state,p,now,x,y,r);
   if(state.meter){
