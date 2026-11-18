@@ -59,7 +59,8 @@ function element(id){
   get innerHTML(){return raw},
   set innerHTML(value){raw=value;this.buttons=[...value.matchAll(/<button\b[^>]*>/g)].map(m=>button(m[0]))},
   querySelectorAll(selector){assert.equal(selector,'button');return this.buttons},
-  setAttribute(name,value){this.attributes[name]=String(value)}
+  setAttribute(name,value){this.attributes[name]=String(value)},
+  click(){if(typeof this.onclick==='function')this.onclick()}
  };
 }
 const ids=['memoryGrid','memoryScore','memoryStatus','memoryReset','ohmQuestion','ohmScore',
