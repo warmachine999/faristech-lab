@@ -36,10 +36,38 @@ assert.ok(labelVisibility(0) && labelVisibility(19999) && !labelVisibility(20000
 
 assert.ok(html.includes('types.find(t=>!particles.some'), 'Missing beam colors must be replenished');
 
-const hitTargets = html.match(/const targets=document.querySelectorAll\('([^']+)'\)/);
-assert.ok(hitTargets, 'Radiation collision targets not found');
-assert.ok(!hitTargets[1].includes('orbLabel'), 'Radiation must never reflow electron orbit buttons');
-assert.ok(!hitTargets[1].includes('.pill') && !hitTargets[1].includes('.banner'), 'Small inline elements must never become exposure cards');
+const hitTargets = html.match(/const ionTargetSelector='([^']+)'/);
+assert.ok(hitTargets, 'VARON ionization target selector missing');
+assert.ok(hitTargets[1].includes('.card') && hitTargets[1].includes('.service'), 'Project/service cards must ionize');
+assert.ok(hitTargets[1].includes('.pill') && hitTargets[1].includes('.banner'), 'Small badges and bubbles must ionize');
+assert.ok(!hitTargets[1].includes('.orbLabel'), 'Orbiting labels must never become radiation targets');
+assert.ok(html.includes('card.style.setProperty(\'--vr-ion-color\',p.type.color)'), 'Impact glow must match each ray color');
+assert.ok(html.includes("flash.style.setProperty('--vr-ion-flash-color',p.type.color)"), 'Impact flash must use the ray color');
+assert.ok(html.includes('state.ionization+p.type.ionization'), 'Card exposure must accumulate by ray ionization');
+assert.ok(html.includes('const point={x:q.x,y:q.y,travel:'), 'Collision must sample the traveled wave path');
+assert.ok(html.includes('hitTest(p,now,recentPoints)'), 'Wave path must be checked for impact');
+assert.ok(html.includes('radiationCards.forEach(card=>{card.classList.remove'), 'Reset must clear ionization effects');
+assert.ok(!html.includes('.radiation-hit>*:not(.radiation-accumulation)'), 'Ionized cards must not reposition their children');
+
+const hitStart = html.indexOf(' function hitTest(p,now,points){');
+const hitEnd = html.indexOf(' function wavePoint(p,travel){', hitStart);
+assert.ok(hitStart >= 0 && hitEnd > hitStart, 'Cannot locate collision function for regression test');
+const contactElement = {};
+const contacts=[];
+const hitContext = {
+  visibleIonTargets: () => [{el:contactElement,r:{left:40,right:70,top:20,bottom:60}}],
+  cardHit:(card,ray,time,point)=>contacts.push({card,color:ray.type.color,point}),
+  removeRay:(ray)=>{ray.dead=true},scrollX:0,scrollY:0,w:100,h:100
+};
+const testHit = new vm.Script(html.slice(hitStart,hitEnd)+'\nhitTest').runInNewContext(hitContext);
+for(const color of ['#ff3b45','#2795ff','#32e875']){
+  const ray={type:{color},hits:0,maxHits:1,hitCards:new Set()};
+  const before=contacts.length;
+  testHit(ray,100,[{x:5,y:5},{x:49,y:35},{x:51,y:36}]);
+  assert.equal(contacts.length,before+1,'Ray must ionize exactly once when crossing a card');
+  assert.equal(contacts[before].color,color,'Ionization must retain its ray color');
+  assert.ok(ray.dead,'Single-hit particle should stop after ionization');
+}
 const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
 assert.match(wrangler, /"name"\s*:\s*"faristech-lab"/, 'Lab must not deploy as production');
 console.log('Lab validation OK: ' + checked + ' inline JavaScript scripts and VARON controls.');
