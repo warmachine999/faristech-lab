@@ -53,6 +53,35 @@ assert.ok(html.includes('state.drops=state.drops.filter'), 'Droplets must fade o
 assert.ok(!html.includes('box-shadow:inset 0 0 24px'), 'Entire cards must not glow on first impact');
 assert.ok(!html.includes('.radiation-hit h1,.radiation-hit h2'), 'All text must not glow at once');
 assert.ok(html.includes('varon-text-drop'), 'Small text droplets must be visually distinct');
+assert.ok(html.includes('background-blend-mode:screen'), 'Colored stains must mix via screen blending');
+assert.ok(html.includes('mix-blend-mode:screen'), 'Ripple rings need overlapping color mixing');
+assert.ok(html.includes('className=\'varon-water-ripple\''), 'Water ripple elements must be created at hit points');
+assert.ok(html.includes('for(let n=0;n<2;n++)'), 'Each impact needs a pair of outward ripples');
+assert.ok(html.includes("ring.style.setProperty('--vr-water-color',p.type.color)"), 'Each ripple must inherit the ray color');
+assert.ok(html.includes("ring.addEventListener('animationend',()=>ring.remove()"), 'Ripple elements must be cleaned up after animation');
+assert.ok(html.includes('const progress=Math.min(1,age/5600)'), 'Color marks should diffuse gradually over 5.6 seconds');
+assert.ok(html.includes('radius=mark.radius+(mark.spread-mark.radius)*easing'), 'Stain radius must grow instead of staying focused');
+assert.ok(html.includes('spread:Math.min(190,Math.max(85'), 'Diffusion must extend beyond the initial droplet');
+assert.ok(html.includes('.varon-ion-drop,.varon-water-ripple'), 'Reset must clear droplets and ripple rings');
+assert.ok(html.includes('@media(prefers-reduced-motion:reduce)'), 'Ripple animations must honor reduced motion');
+const ionStart=html.indexOf(' function updateIonGlow(card,state,now){');
+const ionEnd=html.indexOf(' function updateIonizedCards(now){',ionStart);
+assert.ok(ionStart>=0 && ionEnd>ionStart, 'Cannot find spreading-stain update logic');
+const spreadFunction=new vm.Script(html.slice(ionStart,ionEnd)+'\nupdateIonGlow').runInNewContext({
+  cycleTime:now=>now,rgba:(color,opacity)=>color+'@'+opacity
+});
+const sample={colors:[{color:'#ff3b45',x:30,y:45,radius:15,spread:145,at:0},
+                      {color:'#2795ff',x:36,y:43,radius:18,spread:140,at:0}],
+              drops:[],wash:{style:{}}};
+spreadFunction(null,sample,0);
+const atStart=Number(sample.wash.style.background.match(/circle ([\d.]+)px/)[1]);
+spreadFunction(null,sample,5600);
+const afterSpread=Number(sample.wash.style.background.match(/circle ([\d.]+)px/)[1]);
+assert.ok(afterSpread>atStart+95,'Water-stain radius should visibly expand during animation');
+assert.ok(sample.wash.style.background.includes('#ff3b45') && sample.wash.style.background.includes('#2795ff'), 'Overlapping colors must coexist for mixing');
+const screen=(a,b)=>255-Math.round((255-a)*(255-b)/255);
+assert.ok(screen(255,0)===255 && screen(0,55)===55 && screen(130,130)>130, 'Screen mix should brighten overlapping color channels');
+
 assert.ok(html.includes('width:var(--vr-drop-size,14px)'), 'Medium droplet default size must be 14px');
 assert.ok(html.includes('6+Math.random()*5,true'), 'Text speckles should be 6-11px');
 assert.ok(html.includes('10+Math.random()*12,false'), 'Card impact drops should be 10-22px');
