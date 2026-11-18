@@ -52,7 +52,7 @@ assert.ok(html.includes('backdrop-filter:blur(16px) saturate(125%)'), 'The top b
 assert.ok(html.includes("::highlight(varon-heat-alpha)") && html.includes("::highlight(varon-heat-beta)") && html.includes("::highlight(varon-heat-gamma)"), 'Alpha, Beta and Gamma must color the actual rendered glyphs');
 assert.ok(html.includes("const range=document.createRange();range.setStart(node,offset);range.setEnd(node,offset+step)"), 'Glyph hit tests must measure each non-space character, not a whole text box');
 assert.ok(html.includes('if(textTarget&&!glyph)continue'), 'Ray must pass through invisible whitespace without a text hit');
-assert.ok(html.includes('filter:blur(18px);mix-blend-mode:screen'), 'Heat should resemble the site's background blur');
+assert.ok(html.includes('filter:blur(18px);mix-blend-mode:screen'), 'Heat should resemble the background blur');
 assert.ok(!html.includes('.varon-text-water{') && !html.includes('.varon-text-ink{'), 'Old circle/drop text effects must be gone');
 assert.ok(html.includes('textGlows.forEach(el=>el.remove())'), 'Reset must remove text haze');
 assert.ok(html.includes('CSS.highlights.delete(key)'), 'Reset must clear highlighted glyphs');
