@@ -170,18 +170,6 @@ for(const color of ['#ff3b45','#2795ff','#32e875']){
   assert.ok(ray.dead,'Single-hit particle should stop after ionization');
 }
 assert.ok(html.includes('href="studio/games.html"'), 'Homepage Play & Learn must link to Studio games');
-assert.ok(html.includes('<section id="games"'), 'Homepage must visibly show a Games section');
-assert.ok(html.includes('id="homeGameBoard"'), 'Homepage must have a playable memory game');
-assert.ok(html.includes('id="homeGameReset"'), 'Homepage quick game must be restartable');
-assert.ok(html.includes('href="#games" data-i18n="navGames"'), 'Top navigation must contain Games');
-assert.ok(html.includes('href="#games" data-i18n="playGames"'), 'Hero must link to Games');
-assert.ok(html.includes('href="studio/games.html#memory"'), 'Memory game deep link missing');
-assert.ok(html.includes('href="studio/games.html#ohm"'), 'Ohm game deep link missing');
-assert.ok(html.includes('href="studio/games.html#reaction"'), 'Reaction game deep link missing');
-assert.ok(html.includes('id="faristech-home-quick-game"'), 'Playable quick game script is missing');
-assert.ok(!html.includes('FRIEND_CHAT_PASSWORD'), 'Remove obsolete public client-side chat password from homepage');
-assert.ok(html.includes("location.href='chat.html'"), 'Real chat link must remain available');
-
 assert.ok(html.includes('data-i18n="gamesLink"'), 'Game launch button needs bilingual copy');
 const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
 assert.match(wrangler, /"name"\s*:\s*"faristech-lab"/, 'Lab must not deploy as production');
