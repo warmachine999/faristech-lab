@@ -241,11 +241,20 @@ body>main{position:relative;z-index:2!important}
 .varon-caption strong{font-size:1.2rem;letter-spacing:4px;color:var(--cyan);text-shadow:0 0 16px rgba(43,231,255,.55)}
 .varon-caption span{font-size:.72rem;font-weight:800;letter-spacing:1.4px;color:var(--muted);text-transform:uppercase}
 .atom .core span{font-size:3.2rem;letter-spacing:2px;font-weight:950;color:#e8faff;filter:drop-shadow(0 0 18px rgba(43,231,255,.8))}
-.radiation-hit{position:relative!important;overflow:hidden!important}
+.radiation-hit{position:relative!important;overflow:hidden!important;
+  --vr-ion-color:#32e875;
+  border-color:color-mix(in srgb,var(--vr-ion-color) 64%,var(--line))!important;
+  box-shadow:inset 0 0 24px color-mix(in srgb,var(--vr-ion-color) 19%,transparent),0 0 24px color-mix(in srgb,var(--vr-ion-color) 27%,transparent)!important;
+  transition:border-color .35s ease,box-shadow .35s ease}
+.radiation-hit.radiation-compact{box-shadow:0 0 17px color-mix(in srgb,var(--vr-ion-color) 40%,transparent),inset 0 0 9px color-mix(in srgb,var(--vr-ion-color) 30%,transparent)!important}
+.varon-ion-flash{position:absolute!important;left:50%;top:50%;width:120px;height:120px;z-index:2!important;pointer-events:none;border-radius:50%;transform:translate(-50%,-50%) scale(.2);
+ background:radial-gradient(circle,color-mix(in srgb,var(--vr-ion-flash-color) 62%,transparent),transparent 69%);
+ animation:varon-ion-flash 1.1s ease-out forwards}
+@keyframes varon-ion-flash{0%{opacity:0;transform:translate(-50%,-50%) scale(.15)}15%{opacity:.9}100%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}}
 .radiation-accumulation{position:absolute;inset:0;z-index:0!important;pointer-events:none;border-radius:inherit;mix-blend-mode:screen;opacity:.9}
 .radiation-meter{position:absolute;right:9px;top:9px;z-index:3!important;pointer-events:none;padding:4px 7px;border:1px solid rgba(255,255,255,.22);border-radius:999px;background:rgba(5,8,15,.72);color:#fff;font:800 9px/1.2 system-ui,sans-serif;letter-spacing:.4px}
-.radiation-hit>.radiation-ink{display:none!important}
-.radiation-hit>*:not(.radiation-accumulation):not(.radiation-meter){position:relative;z-index:1}
+/* VARON glow effects use the dedicated varon-ion-flash element. */
+/* Keep existing child layout and orbit labels unchanged; ionization overlays are out of flow. */
 </style>
 
 <style id="varon-radiation-refinement">
@@ -593,6 +602,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  }
  let cardState=new WeakMap(),backgroundMarks=[];
  const radiationCards=new Set();
+ let ionTargetCache=[],nextIonTargetRefresh=0,lastIonFade=0;
  function addBackgroundMark(p,now){
   backgroundMarks.push({x:p.x,y:p.y,color:p.type.color,at:cycleTime(now),strength:p.type.name==='ALPHA'?.32:p.type.name==='BETA'?.25:.19});
   if(backgroundMarks.length>64)backgroundMarks.splice(0,backgroundMarks.length-64);
@@ -641,34 +651,79 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
    hits:0,hitCards:new Set(),path:[],dead:false,label:null,nextMarkAt:95};
   addRayLabel(p,now);particles.push(p);emitAt=now+420+Math.random()*250;
  }
- function cardHit(card,p){
+ function updateIonGlow(card,state,now){
+  const elapsed=cycleTime(now),life=65000;
+  state.colors=state.colors.filter(mark=>elapsed-mark.at<life);
+  const layers=state.colors.slice().reverse().map(mark=>{
+   const alpha=Math.pow(Math.max(0,1-(elapsed-mark.at)/life),.7);
+   return 'radial-gradient(circle at '+mark.x.toFixed(1)+'% '+mark.y.toFixed(1)+'%, '+
+    rgba(mark.color,.7*alpha)+' 0%, '+rgba(mark.color,.25*alpha)+' 30%, transparent 75%)';
+  });
+  state.wash.style.background=layers.join(',');
+ }
+ function updateIonizedCards(now){
+  if(now-lastIonFade<220)return;
+  lastIonFade=now;
+  radiationCards.forEach(card=>{const state=cardState.get(card);if(state)updateIonGlow(card,state,now)});
+ }
+ function cardHit(card,p,now,point){
   let state=cardState.get(card);
   if(!state){
-   card.classList.add('radiation-hit');radiationCards.add(card);
+   const compact=card.matches('.banner,.pill');
+   card.classList.add('radiation-hit');if(compact)card.classList.add('radiation-compact');
+   radiationCards.add(card);
    const wash=document.createElement('span');wash.className='radiation-accumulation';
-   const meter=document.createElement('span');meter.className='radiation-meter';
-   meter.textContent='VR EXPOSURE 0% · 0 HITS';card.prepend(wash);card.appendChild(meter);
-   state={hits:0,ionization:0,colors:[],wash,meter};cardState.set(card,state);
+   card.prepend(wash);
+   let meter=null;
+   if(!compact){
+    meter=document.createElement('span');meter.className='radiation-meter';
+    meter.textContent='VR EXPOSURE 0% · 0 HITS';card.appendChild(meter);
+   }
+   state={hits:0,ionization:0,colors:[],wash,meter};
+   cardState.set(card,state);
   }
-  state.hits++;state.ionization+=p.type.ionization;
+  state.hits++;state.ionization=Math.min(100,state.ionization+p.type.ionization);
   const r=card.getBoundingClientRect();
-  state.colors.push({color:p.type.color,x:Math.max(0,Math.min(100,((p.x-scrollX)-r.left)/Math.max(1,r.width)*100)),y:Math.max(0,Math.min(100,((p.y-scrollY)-r.top)/Math.max(1,r.height)*100))});
-  if(state.colors.length>30)state.colors.shift();
-  const layers=state.colors.map(c=>'radial-gradient(circle at '+c.x.toFixed(1)+'% '+c.y.toFixed(1)+'%, '+rgba(c.color,.46)+' 0%, '+rgba(c.color,.18)+' 25%, transparent 70%)');
-  state.wash.style.background=layers.join(',');
-  state.meter.textContent='VR EXPOSURE '+Math.min(100,state.ionization)+'% · '+state.hits+' HITS';
+  const x=Math.max(0,Math.min(100,((point.x-scrollX)-r.left)/Math.max(1,r.width)*100));
+  const y=Math.max(0,Math.min(100,((point.y-scrollY)-r.top)/Math.max(1,r.height)*100));
+  state.colors.push({color:p.type.color,x,y,at:cycleTime(now)});
+  if(state.colors.length>24)state.colors.shift();
+  card.style.setProperty('--vr-ion-color',p.type.color);
+  if(state.meter){
+   state.meter.textContent='VR EXPOSURE '+state.ionization+'% · '+state.hits+' HITS';
+   state.meter.style.borderColor=p.type.color;
+   state.meter.style.boxShadow='0 0 12px '+p.type.color+'66';
+  }
+  updateIonGlow(card,state,now);
+  if(!reduced){
+   const flash=document.createElement('span');flash.className='varon-ion-flash';
+   flash.style.left=x+'%';flash.style.top=y+'%';
+   flash.style.setProperty('--vr-ion-flash-color',p.type.color);
+   card.appendChild(flash);
+   flash.addEventListener('animationend',()=>flash.remove(),{once:true});
+  }
  }
- function cardAt(x,y){
-  const targets=document.querySelectorAll('.card,.service,.labCard,.about,.contact,.print,.status,.infoItem,.statBox');
-  for(const card of targets){const r=card.getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return card}
-  return null;
+ const ionTargetSelector='.card,.service,.labCard,.about,.contact,.print,.status,.infoItem,.statBox,.banner,.pill';
+ function visibleIonTargets(now){
+  if(now>=nextIonTargetRefresh){
+   ionTargetCache=[...document.querySelectorAll(ionTargetSelector)].map(el=>({el,r:el.getBoundingClientRect()}))
+    .filter(item=>item.r.width>0&&item.r.height>0&&item.r.bottom>=-12&&item.r.top<=h+12&&item.r.right>=-12&&item.r.left<=w+12)
+    .sort((a,b)=>a.r.width*a.r.height-b.r.width*b.r.height);
+   nextIonTargetRefresh=now+160;
+  }
+  return ionTargetCache;
  }
- function hitTest(p,now){
-  if(now<(p.nextHitCheck||0))return;p.nextHitCheck=now+45;
-  const card=cardAt(p.x-scrollX,p.y-scrollY);
-  if(card&&!p.hitCards.has(card)){
-   p.hitCards.add(card);cardHit(card,p);p.hits++;
-   if(p.hits>=p.maxHits)removeRay(p);
+ function hitTest(p,now,points){
+  const targets=visibleIonTargets(now);
+  for(const point of points){
+   const x=point.x-scrollX,y=point.y-scrollY;
+   if(x<-12||x>w+12||y<-12||y>h+12)continue;
+   for(const {el,r} of targets){
+    if(p.hitCards.has(el)||x<r.left-4||x>r.right+4||y<r.top-4||y>r.bottom+4)continue;
+    p.hitCards.add(el);cardHit(el,p,now,point);p.hits++;
+    if(p.hits>=p.maxHits){removeRay(p);return}
+    break;
+   }
   }
  }
  function wavePoint(p,travel){
@@ -680,15 +735,17 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  }
  function move(p,dt,now){
   const old=p.travel,step=p.type.speed*dt/1000;p.age+=dt;p.travel+=step;
-  const segments=Math.max(2,Math.ceil(step/3));
+  const segments=Math.max(2,Math.ceil(step/3)),recentPoints=[];
   for(let i=1;i<=segments;i++){
    const q=wavePoint(p,old+(p.travel-old)*i/segments);
-   p.path.push({x:q.x,y:q.y,travel:old+(p.travel-old)*i/segments});
+   const point={x:q.x,y:q.y,travel:old+(p.travel-old)*i/segments};
+   p.path.push(point);recentPoints.push(point);
   }
   while(p.path.length>2&&p.travel-p.path[0].travel>p.type.trailLength)p.path.shift();
   while(p.travel>=p.nextMarkAt){addBackgroundMark(p,now);p.nextMarkAt+=135}
   const head=wavePoint(p,p.travel);p.x=head.x;p.y=head.y;
-  hitTest(p,now);
+  hitTest(p,now,recentPoints);
+  if(p.dead)return;
   const limit=Math.min(p.type.maxDistance,Math.max(1200,Math.min(2300,Math.hypot(w,h)*1.35)));
   const margin=p.type.trailLength+140;
   const outside=p.x<scrollX-margin||p.x>scrollX+w+margin||p.y<scrollY-margin||p.y>scrollY+h+margin;
@@ -720,6 +777,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   const dt=Math.min(40,Math.max(0,now-(last||now)));last=now;
   ctx.clearRect(0,0,w,h);
   drawBackgroundMarks(cycleTime(now));
+  updateIonizedCards(now);
   const showLabels=labelsVisible(now);
   updateControls(now);
   for(const p of particles){
@@ -757,13 +815,13 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  });
  resetButton?.addEventListener('click',()=>{
   particles.forEach(removeRay);particles=[];backgroundMarks.length=0;ctx.clearRect(0,0,w,h);
-  radiationCards.forEach(card=>{card.classList.remove('radiation-hit');card.querySelector('.radiation-accumulation')?.remove();card.querySelector('.radiation-meter')?.remove()});
-  radiationCards.clear();cardState=new WeakMap();emitAt=performance.now()+200;
+  radiationCards.forEach(card=>{card.classList.remove('radiation-hit','radiation-compact');card.style.removeProperty('--vr-ion-color');card.querySelectorAll('.radiation-accumulation,.radiation-meter,.varon-ion-flash').forEach(el=>el.remove())});
+  radiationCards.clear();cardState=new WeakMap();ionTargetCache=[];nextIonTargetRefresh=0;emitAt=performance.now()+200;
   updateControls(performance.now());
  });
  if(reduced){paused=true;pauseStarted=performance.now();}
  updateControls(performance.now());
- addEventListener('resize',resize,{passive:true});resize();emitAt=performance.now()+200;
+ addEventListener('resize',resize,{passive:true});addEventListener('scroll',()=>{nextIonTargetRefresh=0},{passive:true});resize();emitAt=performance.now()+200;
  requestAnimationFrame(frame);requestAnimationFrame(animateElectrons);
 })();
 </script>
