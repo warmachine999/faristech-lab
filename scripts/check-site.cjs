@@ -23,6 +23,13 @@ assert.ok(html.includes("ctx.globalCompositeOperation='destination-in'"), 'VARON
 assert.ok(html.includes('class="varon-console" hidden'), 'Large VARON control panel must start hidden');
 assert.ok(html.includes('id="varonSettingsToggle"'), 'Compact VARON settings button missing');
 assert.ok(html.includes('if(paused){last=now;return}'), 'VARON pause must stop the radiation frame');
+assert.ok(html.includes('lastCycleActive=true,autoCycle=false'), 'VARON rays must start in continuous mode');
+assert.ok(html.includes('return !autoCycle ||'), 'Radiation must be continuous by default');
+assert.ok(html.includes('id="varonCycleMode"'), 'Optional 20-second cycle toggle missing');
+assert.ok(html.includes('Continuous radiation · visible until paused'), 'Continuous-mode status missing');
+assert.ok(html.includes('Math.min(p.type.maxDistance,570)'), 'Beams must recycle after leaving the VARON visual area');
+assert.ok(html.includes('types.find(t=>!particles.some'), 'Missing beam colors must be replenished');
+
 const hitTargets = html.match(/const targets=document.querySelectorAll\('([^']+)'\)/);
 assert.ok(hitTargets, 'Radiation collision targets not found');
 assert.ok(!hitTargets[1].includes('orbLabel'), 'Radiation must never reflow electron orbit buttons');
