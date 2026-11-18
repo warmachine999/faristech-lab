@@ -250,11 +250,24 @@ body>main{position:relative;z-index:2!important}
 @keyframes varon-ion-flash{0%{opacity:.15;transform:translate(-50%,-50%) scale(.3)}40%{opacity:.82}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
 .varon-ion-drop{position:absolute!important;z-index:2!important;pointer-events:none;border-radius:50%;
  width:var(--vr-drop-size,14px);height:var(--vr-drop-size,14px);transform:translate(-50%,-50%);
- background:radial-gradient(circle at 38% 35%,rgba(255,255,255,.8) 0%,var(--vr-drop-color) 36%,transparent 88%);
- box-shadow:0 0 10px var(--vr-drop-color);mix-blend-mode:screen;will-change:opacity}
-.varon-ion-drop.varon-text-drop{z-index:3!important;box-shadow:0 0 5px var(--vr-drop-color);mix-blend-mode:screen}
-@media(prefers-reduced-motion:reduce){.varon-ion-flash{animation:none!important;opacity:0}}
-.radiation-accumulation{position:absolute;inset:0;z-index:0!important;pointer-events:none;border-radius:inherit;mix-blend-mode:screen;opacity:.9}
+ background:radial-gradient(circle at 38% 35%,rgba(255,255,255,.65) 0%,var(--vr-drop-color) 30%,transparent 86%);
+ box-shadow:0 0 9px var(--vr-drop-color);mix-blend-mode:screen;
+ animation:varon-drop-diffuse 7s ease-out both;will-change:transform,opacity}
+.varon-ion-drop.varon-text-drop{z-index:3!important;box-shadow:0 0 5px var(--vr-drop-color)}
+@keyframes varon-drop-diffuse{0%{transform:translate(-50%,-50%) scale(.45)}36%{transform:translate(-50%,-50%) scale(1.05)}100%{transform:translate(-50%,-50%) scale(2.5)}}
+.varon-water-ripple{position:absolute!important;z-index:2!important;pointer-events:none;border-radius:50%;
+ width:var(--vr-water-size,250px);height:var(--vr-water-size,250px);
+ left:50%;top:50%;border:2px solid var(--vr-water-color);
+ box-shadow:0 0 12px color-mix(in srgb,var(--vr-water-color) 55%,transparent),inset 0 0 12px color-mix(in srgb,var(--vr-water-color) 22%,transparent);
+ mix-blend-mode:screen;opacity:0;transform:translate(-50%,-50%) scale(.08);
+ animation:varon-water-ripple 2.8s cubic-bezier(.18,.52,.28,1) forwards;will-change:transform,opacity}
+@keyframes varon-water-ripple{
+ 0%{opacity:.85;transform:translate(-50%,-50%) scale(.08)}
+ 28%{opacity:.62}
+ 100%{opacity:0;transform:translate(-50%,-50%) scale(1)}
+}
+@media(prefers-reduced-motion:reduce){.varon-ion-flash,.varon-water-ripple,.varon-ion-drop{animation:none!important}.varon-ion-flash,.varon-water-ripple{opacity:0!important}.varon-ion-drop{transform:translate(-50%,-50%) scale(1)}}
+.radiation-accumulation{position:absolute;inset:0;z-index:1!important;pointer-events:none;border-radius:inherit;mix-blend-mode:screen;background-blend-mode:screen;opacity:.95}
 .radiation-meter{position:absolute;right:9px;top:9px;z-index:3!important;pointer-events:none;padding:4px 7px;border:1px solid rgba(255,255,255,.22);border-radius:999px;background:rgba(5,8,15,.72);color:#fff;font:800 9px/1.2 system-ui,sans-serif;letter-spacing:.4px}
 /* VARON glow effects use the dedicated varon-ion-flash element. */
 /* Keep existing child layout and orbit labels unchanged; ionization overlays are out of flow. */
@@ -658,9 +671,14 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   const elapsed=cycleTime(now),life=65000;
   state.colors=state.colors.filter(mark=>elapsed-mark.at<life);
   const layers=state.colors.slice().reverse().map(mark=>{
-   const alpha=Math.pow(Math.max(0,1-(elapsed-mark.at)/life),.9);
-   return 'radial-gradient(circle '+mark.radius+'px at '+mark.x.toFixed(1)+'% '+mark.y.toFixed(1)+'%, '+
-    rgba(mark.color,.42*alpha)+' 0%, '+rgba(mark.color,.15*alpha)+' 40%, transparent 100%)';
+   const age=Math.max(0,elapsed-mark.at);
+   const progress=Math.min(1,age/5600);
+   const easing=1-Math.pow(1-progress,2.6);
+   const radius=mark.radius+(mark.spread-mark.radius)*easing;
+   const alpha=Math.pow(Math.max(0,1-age/life),1.15);
+   return 'radial-gradient(circle '+radius.toFixed(1)+'px at '+mark.x.toFixed(1)+'% '+mark.y.toFixed(1)+'%, '+
+    rgba(mark.color,.28*alpha)+' 0%, '+rgba(mark.color,.2*alpha)+' 32%, '+
+    rgba(mark.color,.09*alpha)+' 68%, transparent 100%)';
   });
   state.wash.style.background=layers.join(',');
   state.drops=state.drops.filter(drop=>{
@@ -686,7 +704,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   el.style.setProperty('--vr-drop-size',size+'px');
   card.appendChild(el);
   state.drops.push({el,at:elapsed});
-  state.colors.push({color:p.type.color,x:xPercent,y:yPercent,radius:Math.max(8,size*1.8),at:elapsed});
+  state.colors.push({color:p.type.color,x:xPercent,y:yPercent,radius:Math.max(9,size*1.15),spread:Math.min(190,Math.max(85,Math.min(r.width,r.height)*.7+size)),at:elapsed});
   while(state.drops.length>48){state.drops.shift().el.remove()}
   if(state.colors.length>48)state.colors.splice(0,state.colors.length-48);
  }
@@ -744,6 +762,18 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
   }
   updateIonGlow(card,state,now);
   if(!reduced){
+   // Two outward-moving water rings carry the ray color across the card.
+   for(let n=0;n<2;n++){
+    const ring=document.createElement('span');
+    ring.className='varon-water-ripple';
+    ring.style.left=(100*x/Math.max(1,r.width))+'%';
+    ring.style.top=(100*y/Math.max(1,r.height))+'%';
+    ring.style.setProperty('--vr-water-color',p.type.color);
+    ring.style.setProperty('--vr-water-size',Math.min(370,Math.max(180,Math.min(r.width,r.height)*1.75))+'px');
+    ring.style.animationDelay=(n*230)+'ms';
+    card.appendChild(ring);
+    ring.addEventListener('animationend',()=>ring.remove(),{once:true});
+   }
    const flash=document.createElement('span');flash.className='varon-ion-flash';
    flash.style.left=(100*x/Math.max(1,r.width))+'%';
    flash.style.top=(100*y/Math.max(1,r.height))+'%';
@@ -866,7 +896,7 @@ const sections=[...document.querySelectorAll('main section[id]')],navs=[...docum
  });
  resetButton?.addEventListener('click',()=>{
   particles.forEach(removeRay);particles=[];backgroundMarks.length=0;ctx.clearRect(0,0,w,h);
-  radiationCards.forEach(card=>{card.classList.remove('radiation-hit','radiation-compact');card.style.removeProperty('--vr-ion-color');card.querySelectorAll('.radiation-accumulation,.radiation-meter,.varon-ion-flash,.varon-ion-drop').forEach(el=>el.remove())});
+  radiationCards.forEach(card=>{card.classList.remove('radiation-hit','radiation-compact');card.style.removeProperty('--vr-ion-color');card.querySelectorAll('.radiation-accumulation,.radiation-meter,.varon-ion-flash,.varon-ion-drop,.varon-water-ripple').forEach(el=>el.remove())});
   radiationCards.clear();cardState=new WeakMap();ionTargetCache=[];nextIonTargetRefresh=0;emitAt=performance.now()+200;
   updateControls(performance.now());
  });
