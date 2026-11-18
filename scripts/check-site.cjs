@@ -59,7 +59,7 @@ const hitContext = {
   cardHit:(card,ray,time,point)=>contacts.push({card,color:ray.type.color,point}),
   removeRay:(ray)=>{ray.dead=true},scrollX:0,scrollY:0,w:100,h:100
 };
-const testHit = new vm.Script(html.slice(hitStart,hitEnd)+'\\nhitTest').runInNewContext(hitContext);
+const testHit = new vm.Script(html.slice(hitStart,hitEnd)+'\nhitTest').runInNewContext(hitContext);
 for(const color of ['#ff3b45','#2795ff','#32e875']){
   const ray={type:{color},hits:0,maxHits:1,hitCards:new Set()};
   const before=contacts.length;
