@@ -317,50 +317,27 @@ body>main{position:relative;z-index:2!important}
  .header .tagline{font-size:.51rem}
  .header .controlBtn{padding:7px 9px}
 }
-.varon-text-ion{position:relative!important;isolation:isolate}
-.varon-text-water,.varon-text-ink,.varon-text-drop{
- position:absolute!important;pointer-events:none!important;border-radius:50%;
- left:0;top:0;transform:translate(-50%,-50%);
- mix-blend-mode:screen;will-change:transform,opacity;
-}
-.varon-text-water{
- z-index:4!important;width:var(--vr-text-wave-size,80px);height:var(--vr-text-wave-size,80px);
- border:1.2px solid var(--vr-text-color);
- box-shadow:0 0 9px color-mix(in srgb,var(--vr-text-color) 40%,transparent);
- animation:varon-text-ripple 2.2s cubic-bezier(.19,.5,.29,1) forwards;
-}
-.varon-text-ink{
- z-index:3!important;width:var(--vr-text-ink-size,42px);height:var(--vr-text-ink-size,42px);
+/* Letter-only radiation; CSS Highlight recolors the actual glyph ink. */
+::highlight(varon-heat-alpha){color:#ff6470;text-shadow:0 0 10px rgba(255,59,69,.83),0 0 20px rgba(255,59,69,.42)}
+::highlight(varon-heat-beta){color:#73bcff;text-shadow:0 0 10px rgba(39,149,255,.83),0 0 20px rgba(39,149,255,.42)}
+::highlight(varon-heat-gamma){color:#77ffac;text-shadow:0 0 10px rgba(50,232,117,.83),0 0 20px rgba(50,232,117,.42)}
+.varon-text-haze{
+ position:fixed!important;left:0;top:0;z-index:110!important;pointer-events:none!important;
+ width:var(--varon-haze-size,120px);height:var(--varon-haze-size,120px);
+ transform:translate(-50%,-50%);border:none!important;border-radius:50%;
  background:radial-gradient(circle,
-  color-mix(in srgb,var(--vr-text-color) 53%,transparent) 0%,
-  color-mix(in srgb,var(--vr-text-color) 20%,transparent) 38%,transparent 75%);
- animation:varon-text-diffuse 8s ease-out forwards;
+ color-mix(in srgb,var(--varon-haze-color) 46%,transparent) 0%,
+ color-mix(in srgb,var(--varon-haze-color) 24%,transparent) 33%,
+ color-mix(in srgb,var(--varon-haze-color) 9%,transparent) 60%,transparent 82%);
+ filter:blur(18px);mix-blend-mode:screen;opacity:0;
+ animation:varon-text-heat-bloom 7s ease-out forwards;will-change:transform,opacity,filter;
 }
-.varon-text-drop{
- z-index:5!important;width:var(--vr-text-drop-size,8px);height:var(--vr-text-drop-size,8px);
- background:radial-gradient(circle at 38% 35%,rgba(255,255,255,.65),var(--vr-text-color) 40%,transparent 90%);
- box-shadow:0 0 7px var(--vr-text-color);
- animation:varon-text-droplet 7s ease-out forwards;
+@keyframes varon-text-heat-bloom{
+ 0%{opacity:.38;transform:translate(-50%,-50%) scale(.62);filter:blur(12px)}
+ 27%{opacity:.31}65%{opacity:.17;filter:blur(20px)}
+ 100%{opacity:0;transform:translate(-50%,-50%) scale(2.3);filter:blur(27px)}
 }
-@keyframes varon-text-ripple{
- 0%{opacity:.66;transform:translate(-50%,-50%) scale(.06)}
- 34%{opacity:.42}
- 100%{opacity:0;transform:translate(-50%,-50%) scale(1)}
-}
-@keyframes varon-text-diffuse{
- 0%{opacity:.58;transform:translate(-50%,-50%) scale(.2)}
- 55%{opacity:.33}
- 100%{opacity:0;transform:translate(-50%,-50%) scale(2.8)}
-}
-@keyframes varon-text-droplet{
- 0%{opacity:.87;transform:translate(-50%,-50%) scale(.7)}
- 50%{opacity:.65}
- 100%{opacity:0;transform:translate(-50%,-50%) scale(2.1)}
-}
-@media(prefers-reduced-motion:reduce){
- .varon-text-water{display:none!important}
- .varon-text-ink,.varon-text-drop{animation:none!important;opacity:.13!important}
-}
+@media(prefers-reduced-motion:reduce){.varon-text-haze{display:none!important}}
 </style>
 </head>
 <body><canvas id="themeBg" aria-hidden="true"></canvas>
