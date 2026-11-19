@@ -225,7 +225,7 @@ const ctxMock=new Proxy({},{
  set:(obj,key,value)=>{obj[key]=value;return true}
 });
 const drawScope={
- ctx:ctxMock,cv:{width:1100,height:590},
+ ctx:ctxMock,cv:{width:1100,height:590,dataset:{}},circuitViewMode:'schematic',
  line:(...args)=>drawnWires.push(args),
  label:(...args)=>drawnLabels.push(args),
  boom:()=>{},drawElectron:()=>{},
@@ -376,6 +376,78 @@ assert.ok(weakGlow>0 && weakGlow<normalGlow && normalGlow<strongGlow,'LED glow m
 assert.ok(normalGlow>.40,'LED must be noticeably brighter at the default 68% setting');
 assert.ok(strongGlow<=.67,'LED glow intensity must remain bounded');
 
+
+
+// CIRCUIT VIEWS: the physical renderer and the existing schematic must use the same model.
+assert.ok(html.includes('id="circuitSchematicBtn"')&&html.includes('id="circuitRealisticBtn"'),
+ 'Both real-life/schematic mode buttons must exist');
+assert.ok(html.includes('aria-pressed="true"')&&html.includes('aria-pressed="false"'),
+ 'Mode toggle must expose an accessible selected state');
+assert.ok(html.includes('circuitViewTitle:"CIRCUIT VIEW"')&&html.includes('circuitViewTitle:"طريقة عرض الدائرة"'),
+ 'View controls need English and Arabic translations');
+assert.ok(html.includes("if(circuitViewMode==='realistic'){drawRealisticCircuit(m);return;}"),
+ 'Circuit draw entry point must dispatch to real-life mode');
+assert.ok(html.includes("return localStorage.getItem('ft-circuit-view')==='realistic'?'realistic':'schematic'"),
+ 'Mode selection should persist through page reloads');
+assert.ok(html.includes("const query=new URLSearchParams(location.search).get('circuitView')"),
+ 'Realistic view must be testable through a direct URL');
+assert.ok(html.includes('drawCircuit(model());')&&!html.includes('setCircuitView(next){capV=0'),
+ 'Switching display must not reset the capacitor');
+
+const toggleStart=html.indexOf('function updateCircuitViewControls(){');
+const toggleEnd=html.indexOf("$('circuitSchematicBtn').addEventListener",toggleStart);
+assert.ok(toggleStart>=0&&toggleEnd>toggleStart,'Cannot find toggle implementation');
+const modeButtons={};
+for(const id of ['circuitSchematicBtn','circuitRealisticBtn']){
+ modeButtons[id]={active:false,attributes:{},classList:{toggle:(name,value)=>{modeButtons[id].active=value}},
+  setAttribute(name,value){this.attributes[name]=value}};
+}
+const viewHint={textContent:''};
+const sharedCircuitModel={V:9,R:330,capV:3.4,current:21.52};
+const modeRenders=[],storedViews=[];
+const viewCtx={
+ circuitViewMode:'schematic',cv:{dataset:{}},
+ $:id=>modeButtons[id]||(id==='circuitViewHint'?viewHint:null),
+ t:key=>key,model:()=>sharedCircuitModel,drawCircuit:model=>modeRenders.push(model),
+ localStorage:{setItem:(key,value)=>storedViews.push({key,value})}
+};
+const testModeSwitch=new vm.Script(html.slice(toggleStart,toggleEnd)+'\nsetCircuitView').runInNewContext(viewCtx);
+testModeSwitch('realistic');
+assert.equal(viewCtx.circuitViewMode,'realistic','The toggle must select physical mode');
+assert.equal(viewCtx.cv.dataset.view,'realistic','The canvas should expose its selected mode');
+assert.equal(modeButtons.circuitRealisticBtn.attributes['aria-pressed'],'true','Real-life mode should be selected');
+assert.equal(modeButtons.circuitSchematicBtn.attributes['aria-pressed'],'false','Schematic must be deselected');
+testModeSwitch('schematic');
+assert.equal(viewCtx.circuitViewMode,'schematic','Toggle must restore the existing schematic');
+assert.equal(modeButtons.circuitSchematicBtn.attributes['aria-pressed'],'true','Schematic should be selected');
+assert.equal(modeRenders.length,2,'Each toggle should repaint without restarting physics');
+assert.ok(modeRenders.every(m=>m===sharedCircuitModel),'Both modes must use exactly the same circuit model');
+assert.equal(storedViews.length,2,'View preference must persist on both switches');
+testModeSwitch('invalid');
+assert.equal(modeRenders.length,2,'Unknown view values must be ignored');
+
+const realStart=html.indexOf('function drawRealisticCircuit(m){');
+const realEnd=html.indexOf('function drawCircuit(m){',realStart);
+assert.ok(realStart>=0&&realEnd>realStart,'Cannot locate physical circuit renderer');
+ctxMock.createLinearGradient=()=>({addColorStop(){}});
+ctxMock.createRadialGradient=()=>({addColorStop(){}});
+const physicalLabels=[];
+drawScope.label=(...args)=>physicalLabels.push(args);
+const realistic=new vm.Script(html.slice(realStart,realEnd)+'\ndrawRealisticCircuit').runInNewContext(drawScope);
+const physModel={...sampleModel,isSuper:true,hasCap:true,polarity:'super',C:.055,baseC:.0022,rating:16,brightness:68};
+realistic(physModel);
+assert.equal(drawScope.cv.dataset.lastDraw,'realistic','Realistic renderer must complete without throwing');
+assert.ok(physicalLabels.some(q=>q[2]?.includes('SUPERCAPACITOR')),
+ 'Physical view should show the selected supercapacitor');
+assert.ok(physicalLabels.some(q=>q[2]?.includes('5 mm LED')),
+ 'Physical view should show an actual through-hole LED');
+assert.ok(physicalLabels.some(q=>q[2]?.includes('RESISTOR')),
+ 'Physical view should show a real color-banded resistor');
+physicalLabels.length=0;
+realistic({...sampleModel,brightness:0});
+assert.ok(physicalLabels.some(q=>q[2]==='CAPACITOR REMOVED'),
+ 'Physical view must hide its capacitor when the mode is removed');
+assert.equal(drawScope.cv.dataset.lastDraw,'realistic','Removed-capacitor mode must still render successfully');
 
 const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
 assert.match(wrangler, /"name"\s*:\s*"faristech-lab"/, 'Lab must not deploy as production');
