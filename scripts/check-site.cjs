@@ -22,6 +22,27 @@ assert.ok(html.includes('class="varon-console" hidden'), 'Large VARON control pa
 assert.ok(html.includes('id="varonSettingsToggle"'), 'Compact VARON settings button missing');
 assert.ok(html.includes('if(paused){last=now;return}'), 'VARON pause must stop the radiation frame');
 assert.ok(html.includes('const labelCycle=40000,labelDuration=20000'), 'VARON names must show for 20s and hide for 20s');
+
+const raySection=html.match(/const types=\[([\s\S]*?)\n \];\n types\.forEach\(t=>t\.wavelength=t\.speed\/t\.frequency\)/);
+assert.ok(raySection, 'VARON ray model must remain defined');
+const speeds={
+ ALPHA:{speed:54,frequency:.3,wavelength:180,oldSpeed:125},
+ BETA:{speed:90,frequency:.8,wavelength:112.5,oldSpeed:235},
+ GAMMA:{speed:140,frequency:2,wavelength:70,oldSpeed:370}
+};
+for(const [name,expected] of Object.entries(speeds)){
+ const rx=new RegExp("name:'"+name+"'[^\\n]*?speed:(\\d+)[^\\n]*?frequency:([\\d.]+)");
+ const match=raySection[1].match(rx);
+ assert.ok(match,name+' ray definition must exist');
+ const speed=Number(match[1]),frequency=Number(match[2]);
+ assert.equal(speed,expected.speed,name+' must stay slow enough to read');
+ assert.equal(frequency,expected.frequency,name+' visual frequency must match its display');
+ assert.ok(speed<expected.oldSpeed*.46,name+' should travel at less than 46% of its previous speed');
+ assert.ok(Math.abs(speed/frequency-expected.wavelength)<.01,name+' wavelength must stay familiar');
+}
+assert.ok(html.includes('font-size:12px!important'), 'Moving ray names should be larger and more readable');
+assert.ok(html.includes('background:rgba(4,8,14,.87)'), 'Ray labels should have a readable contrast background');
+
 assert.ok(html.includes('function labelsVisible(now){return ((cycleTime(now)-cycleStart)%labelCycle)<labelDuration}'), 'Label timer must be independent of ray emission');
 assert.ok(html.includes('if(now>=emitAt&&particles.length<5)emit(now);'), 'Rays must continue emitting during hidden-name periods');
 assert.ok(html.includes('else if(showLabels&&!p.label&&!p.dead)addRayLabel(p,now)'), 'Labels must reappear in the next 20-second window');
