@@ -433,16 +433,17 @@ function renderResistorChoices(){const wrap=$('resistorChoices');if(!wrap)return
 const cv=$('circuitCanvas'),ctx=cv.getContext('2d'),voltage=$('voltage'),resistance=$('resistance'),variableResistance=$('variableResistance'),capacitance=$('capacitance'),capRating=$('capRating'),capPolarity=$('capPolarity');
 let switchOn=true,animating=true,capV=0,last=performance.now();
 let ledFailed=false,capFailed=false,batteryFailed=false,ledStress=0,batteryStress=0,capStress=0;
+const SUPER_CAP_MULTIPLIER=25; // Teaching model: 25x the selected capacitance for clearly longer charge/discharge.
 const flowElectrons=Array.from({length:36},(_,i)=>({u:i/36}));
 let electronDrift=0;
 function model(){
  const V=+voltage.value,R=+resistance.value,baseC=+capacitance.value/1e6,rating=+capRating.value,led=LEDS[ledKey],polarity=capPolarity.value;
- const hasCap=polarity!=='none',isSuper=polarity==='super',C=hasCap?baseC*(isSuper?4:1):0;
+ const hasCap=polarity!=='none',isSuper=polarity==='super',C=hasCap?baseC*(isSuper?SUPER_CAP_MULTIPLIER:1):0;
  const sourceOK=switchOn&&!batteryFailed;
  const supply=sourceOK?V:(!switchOn&&hasCap&&!capFailed?Math.abs(capV):0);
  const rawCurrent=Math.max(0,(supply-led.vf)/Math.max(1,R)*1000);
  const current=ledFailed?0:rawCurrent;
- const brightness=ledFailed?0:Math.min(100,current/20*100);
+ const brightness=ledFailed||current<=.02?0:Math.min(100,Math.sqrt(current/20)*100);
  const rec=V>led.vf?Math.ceil(((V-led.vf)/.02)/10)*10:0;
  return{V,R,C,baseC,rating,led,polarity,hasCap,isSuper,supply,current,rawCurrent,brightness,rec,sourceOK}
 }
@@ -464,12 +465,12 @@ function updatePhysics(dt,m){
  }else if(!switchOn&&m.hasCap){
    const dischargeV=Math.max(0,Math.abs(capV)-m.led.vf),amps=dischargeV/Math.max(1,m.R);
    if(amps>0)capV=Math.sign(capV||1)*Math.max(0,Math.abs(capV)-(amps/Math.max(.000001,m.C))*dt);
-   else capV=Math.sign(capV||1)*Math.abs(capV)*Math.exp(-dt/(m.isSuper?4.6:1.15));
+   else capV=Math.sign(capV||1)*Math.abs(capV)*Math.exp(-dt/(1.15*(m.isSuper?SUPER_CAP_MULTIPLIER:1)));
  }
  if(Math.abs(capV)<.02)capV=0;
  const ledOver=m.rawCurrent>30&&!ledFailed;ledStress=ledOver?ledStress+dt:Math.max(0,ledStress-dt*1.5);if(ledStress>.65)ledFailed=true;
  const batteryOver=m.sourceOK&&m.rawCurrent>150&&!batteryFailed;batteryStress=batteryOver?batteryStress+dt:Math.max(0,batteryStress-dt);if(batteryStress>1.25)batteryFailed=true;
- const capDanger=m.hasCap&&!m.isSuper&&!capFailed&&((Math.abs(capV)>m.rating+.15)||(m.polarity==='reversed'&&Math.abs(capV)>.8));capStress=capDanger?capStress+dt:Math.max(0,capStress-dt*2);if(capStress>.45)capFailed=true;
+ const capDanger=m.hasCap&&!capFailed&&((Math.abs(capV)>m.rating+.15)||(m.polarity==='reversed'&&Math.abs(capV)>.8));capStress=capDanger?capStress+dt:Math.max(0,capStress-dt*2);if(capStress>.45)capFailed=true;
  const poweredTarget=animating&&m.sourceOK&&m.current>.02&&!ledFailed ? .082*Math.min(1.15,.45+m.V/12) : 0;
  const dischargeTarget=animating&&!switchOn&&m.hasCap&&!capFailed&&!ledFailed&&Math.abs(capV)>m.led.vf+.01 ? .070*Math.min(1,Math.max(0,(Math.abs(capV)-m.led.vf)/6)) : 0;
  const targetDrift=switchOn?poweredTarget:dischargeTarget;
@@ -482,21 +483,41 @@ function updatePhysics(dt,m){
 function line(x1,y1,x2,y2,w=8,color='#798495'){ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke()}
 function label(x,y,text,color='#eaf0f7',align='center'){ctx.fillStyle=color;ctx.font='700 16px Inter,Arial';ctx.textAlign=align;ctx.fillText(text,x,y)}
 function boom(x,y,text){ctx.save();ctx.font='bold 44px Arial';ctx.textAlign='center';ctx.fillStyle='#ff9c2c';ctx.shadowBlur=24;ctx.shadowColor='#ff5261';ctx.fillText('💥',x,y);ctx.shadowBlur=0;ctx.font='800 14px Inter,Arial';ctx.fillStyle='#ff8b8b';ctx.fillText(text,x,y+28);ctx.restore()}
+function ledRgba(hex,alpha){const n=parseInt(hex.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+alpha+')'}
 function drawElectron(p,moving=true,size=5.2){ctx.fillStyle=moving?'#71d8ff':'rgba(113,216,255,.78)';ctx.shadowBlur=moving?9:2;ctx.shadowColor='#71d8ff';ctx.beginPath();ctx.arc(p.x,p.y,size,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
 function drawCircuit(m){ctx.clearRect(0,0,cv.width,cv.height);ctx.fillStyle='#0b0e15';ctx.fillRect(0,0,cv.width,cv.height);const wire='#758194';
 line(125,120,225,120,8,wire);line(125,455,330,455,8,wire);line(125,120,125,215,8,wire);line(125,355,125,455,8,wire);ctx.strokeStyle=batteryFailed?'#ff5261':'#f2f4f8';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(80,255);ctx.lineTo(170,255);ctx.moveTo(96,315);ctx.lineTo(154,315);ctx.stroke();line(125,215,125,255,6,'#f2f4f8');line(125,315,125,355,6,'#f2f4f8');ctx.fillStyle='#ff9c2c';ctx.font='bold 28px Arial';ctx.textAlign='left';ctx.fillText('+',86,250);ctx.fillStyle='#f4f6fb';ctx.fillText('−',91,325);label(125,195,lang==='ar'?'البطارية':'BATTERY',batteryFailed?'#ff5261':'#ff9c2c');label(125,390,m.V.toFixed(1)+' V','#f4f6fb');
 line(225,120,275,120,8,wire);line(330,120,390,120,8,wire);ctx.fillStyle='#eaf0f7';ctx.beginPath();ctx.arc(275,120,8,0,Math.PI*2);ctx.arc(330,120,8,0,Math.PI*2);ctx.fill();ctx.strokeStyle=switchOn?'#22e59a':'#ff5261';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(275,120);ctx.lineTo(switchOn?330:320,switchOn?120:83);ctx.stroke();label(302,72,lang==='ar'?'مفتاح':'SWITCH',switchOn?'#22e59a':'#ff5261');
 line(390,120,445,120,8,wire);line(675,120,940,120,8,wire);ctx.fillStyle='#3b3122';ctx.strokeStyle='#edc06d';ctx.lineWidth=4;ctx.beginPath();ctx.roundRect(445,92,230,56,18);ctx.fill();ctx.stroke();line(445,120,675,120,5,'#d9b35f');const density=4+Math.round((m.R-100)/145);for(let i=1;i<=density;i++){const x=445+i*(230/(density+1));ctx.strokeStyle='rgba(237,192,109,.65)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,101);ctx.lineTo(x,139);ctx.stroke()}label(560,65,(lang==='ar'?'المقاومة ':'RESISTOR ')+m.R.toFixed(0)+' Ω','#edc06d');
-line(940,120,940,245,8,wire);line(940,345,940,455,8,wire);const glow=m.brightness;ctx.save();ctx.shadowBlur=glow?12+glow*.35:0;ctx.shadowColor=m.led.color;ctx.fillStyle=ledFailed?'#29181b':(glow?m.led.color:'#303642');ctx.beginPath();ctx.arc(940,295,34,0,Math.PI*2);ctx.fill();ctx.restore();ctx.strokeStyle=ledFailed?'#ff5261':'#fff';ctx.lineWidth=3;ctx.stroke();ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(915,270);ctx.lineTo(965,320);ctx.moveTo(915,320);ctx.lineTo(965,270);ctx.stroke();line(940,245,940,261,5,'#fff');line(940,329,940,345,5,'#fff');label(990,274,lang==='ar'?'موجب +':'POSITIVE +','#ff9c72','left');label(990,299,'LED '+t(m.led.nameKey),ledFailed?'#ff5261':m.led.color,'left');label(990,324,lang==='ar'?'سالب −':'NEGATIVE −','#8fd3ff','left');
+line(940,120,940,245,8,wire);line(940,345,940,455,8,wire);const glow=Math.max(0,Math.min(100,m.brightness))/100;
+ctx.save();
+if(glow>.005){
+ const halo=ctx.createRadialGradient(940,295,14,940,295,83);
+ halo.addColorStop(0,ledRgba(m.led.color,.34*glow));
+ halo.addColorStop(.5,ledRgba(m.led.color,.14*glow));
+ halo.addColorStop(1,ledRgba(m.led.color,0));
+ ctx.fillStyle=halo;ctx.beginPath();ctx.arc(940,295,83,0,Math.PI*2);ctx.fill();
+}
+ctx.fillStyle=ledFailed?'#29181b':'#303642';ctx.beginPath();ctx.arc(940,295,34,0,Math.PI*2);ctx.fill();
+if(glow>.005){
+ // Scale both the LED body's luminosity and its outer halo with the measured current.
+ ctx.globalAlpha=Math.pow(glow,1.12);
+ ctx.shadowBlur=8+38*glow;ctx.shadowColor=m.led.color;ctx.fillStyle=m.led.color;
+ ctx.beginPath();ctx.arc(940,295,31,0,Math.PI*2);ctx.fill();
+ ctx.shadowBlur=0;ctx.globalAlpha=.32*glow;ctx.fillStyle='#ffffff';
+ ctx.beginPath();ctx.arc(930,284,9,0,Math.PI*2);ctx.fill();
+}
+ctx.restore();ctx.strokeStyle=ledFailed?'#ff5261':'#fff';ctx.lineWidth=3;ctx.stroke();ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(915,270);ctx.lineTo(965,320);ctx.moveTo(915,320);ctx.lineTo(965,270);ctx.stroke();line(940,245,940,261,5,'#fff');line(940,329,940,345,5,'#fff');label(990,274,lang==='ar'?'موجب +':'POSITIVE +','#ff9c72','left');label(990,299,'LED '+t(m.led.nameKey),ledFailed?'#ff5261':m.led.color,'left');label(990,324,lang==='ar'?'سالب −':'NEGATIVE −','#8fd3ff','left');
 line(330,455,940,455,8,wire);
  if(m.hasCap){
    // The capacitor is a removable branch: draw its connections ONLY when installed.
    line(330,120,330,270,7,wire);line(330,310,330,455,7,wire);
-   line(290,270,370,270,7,capFailed?'#ff5261':'#dbe3ee');line(290,310,370,310,7,capFailed?'#ff5261':'#dbe3ee');
+   line(290,270,370,270,7,capFailed?'#ff5261':m.isSuper?'#35dfff':'#dbe3ee');line(290,310,370,310,7,capFailed?'#ff5261':m.isSuper?'#35dfff':'#dbe3ee');
    ctx.fillStyle=m.polarity==='reversed'?'#ffd34e':'#ff5261';ctx.font='bold 24px Arial';ctx.textAlign='left';ctx.fillText(m.polarity==='reversed'?'−':'+',374,277);ctx.fillText(m.polarity==='reversed'?'+':'−',374,320);
    label(390,250,m.isSuper?(lang==='ar'?'مكثف فائق':'SUPERCAPACITOR'):(lang==='ar'?'مكثف مستقطب':'POLARIZED CAPACITOR'),capFailed?'#ff5261':'#35dfff','left');
    label(390,274,Math.abs(capV).toFixed(2)+' V / '+m.rating+' V',capFailed?'#ff5261':'#35dfff','left');
    if(m.polarity==='reversed')label(390,298,lang==='ar'?'⚠️ القطبية معكوسة':'⚠️ REVERSED POLARITY','#ffd34e','left');
+   if(m.isSuper)label(390,298,(lang==='ar'?'السعة ':'CAPACITANCE ')+(m.C*1000).toFixed(1)+' mF','#35dfff','left');
    const chargeReference=Math.max(.1,m.V||1),chargeRatio=Math.min(1,Math.abs(capV)/chargeReference),parked=Math.round(24*chargeRatio),chargePct=Math.round(chargeRatio*100);
    for(let i=0;i<parked;i++){const col=i%12,row=Math.floor(i/12),x=266+col*9,y=326+row*10;drawElectron({x,y},false,4.0)}
    label(390,322,(lang==='ar'?'الشحن ':'CHARGE ')+chargePct+'%',chargePct?'#8fd3ff':'#657184','left');
@@ -510,7 +531,7 @@ line(330,455,940,455,8,wire);
  label(28,525,lang==='ar'?'اتجاه النقاط: من + إلى −':'Displayed flow: + → −','#8fd3ff','left');
  if(capFailed)boom(330,290,lang==='ar'?'تعطل المكثف':'CAP FAILURE');if(ledFailed)boom(940,295,lang==='ar'?'LED محترق':'LED BURNED');if(batteryFailed)boom(125,290,lang==='ar'?'حمل زائد':'BATTERY OVERLOAD');
  label(28,552,lang==='ar'?'نقاط المكثف: 0% عند التفريغ وتزداد تدريجياً حتى 100%':'Capacitor dots: 0% when empty, gradually filling to 100% charge','#8fd3ff','left')}
-function updateCircuitLabels(){const m=model();$('vOut').textContent=m.V.toFixed(1)+' V';$('rOut').textContent=m.R.toFixed(0)+' Ω';$('capOut').textContent=(m.baseC*1e6).toFixed(0)+' µF';$('capRatingOut').textContent=m.rating+' V';const capLabel=m.polarity==='correct'?t('polarityCorrect'):m.polarity==='reversed'?t('polarityReversed'):(m.polarity==='none'?(lang==='ar'?'إزالة المكثف':'Remove capacitor'):(lang==='ar'?'مكثف فائق':'Supercapacitor'));$('capPolarityOut').textContent=capLabel;$('recommendedR').textContent=(m.rec||0)+' Ω';$('ledName').textContent=t(m.led.nameKey);$('selectedLedInfo').textContent=t(m.led.nameKey);$('vfInfo').textContent='~'+m.led.vf.toFixed(1)+' V';$('rInfo').textContent=m.R.toFixed(0)+' Ω';$('switchText').textContent=switchOn?t('switchOn'):t('switchOff')}
+function updateCircuitLabels(){const m=model();$('vOut').textContent=m.V.toFixed(1)+' V';$('rOut').textContent=m.R.toFixed(0)+' Ω';$('capOut').textContent=m.isSuper?(m.C*1000).toFixed(1)+' mF ×'+SUPER_CAP_MULTIPLIER:(m.baseC*1e6).toFixed(0)+' µF';$('capRatingOut').textContent=m.rating+' V';const capLabel=m.polarity==='correct'?t('polarityCorrect'):m.polarity==='reversed'?t('polarityReversed'):(m.polarity==='none'?(lang==='ar'?'إزالة المكثف':'Remove capacitor'):(lang==='ar'?'مكثف فائق':'Supercapacitor'));$('capPolarityOut').textContent=capLabel;$('recommendedR').textContent=(m.rec||0)+' Ω';$('ledName').textContent=t(m.led.nameKey);$('selectedLedInfo').textContent=t(m.led.nameKey);$('vfInfo').textContent='~'+m.led.vf.toFixed(1)+' V';$('rInfo').textContent=m.R.toFixed(0)+' Ω';$('switchText').textContent=switchOn?t('switchOn'):t('switchOff')}
 function updateStatus(m){$('iOut').textContent=m.current.toFixed(2);$('brightnessOut').textContent=m.brightness.toFixed(0);$('capVoltageOut').textContent=Math.abs(capV).toFixed(2);$('flowOut').textContent=Math.min(100,Math.round(m.current/30*100))+'%';
  if(batteryFailed){$('circuitStatus').innerHTML=`<h3 class="bad">${t('batteryFail')}</h3><p>${t('batteryFailText')}</p>`}
  else if(ledFailed){$('circuitStatus').innerHTML=`<h3 class="bad">${t('ledBurn')}</h3><p>${t('ledBurnText')}</p>`}
@@ -520,15 +541,16 @@ function updateStatus(m){$('iOut').textContent=m.current.toFixed(2);$('brightnes
  if(!m.hasCap){$('capStatus').innerHTML=`<h3>${lang==='ar'?'المكثف: مُزال':'Capacitor: Removed'}</h3><p>${lang==='ar'?'لا يوجد تخزين للطاقة في هذا الوضع.':'There is no capacitor energy storage in this mode.'}</p>`}
  else if(capFailed){$('capStatus').innerHTML=`<h3 class="bad">${t('capFail')}</h3><p>${t('capFailText')}</p>`}
  else if(m.polarity==='reversed'){$('capStatus').innerHTML=`<h3 class="bad">${t('capReverse')}</h3><p>${t('capReverseText')}</p>`}
- else if(switchOn&&Math.abs(capV-m.V)>.08){$('capStatus').innerHTML=`<h3 class="good">${m.isSuper?(lang==='ar'?'المكثف الفائق: يشحن':'Supercapacitor: Charging'):t('capCharging')}</h3><p>${m.isSuper?(lang==='ar'?'يشحن ببطء ويخزن طاقة أكثر في هذا النموذج.':'It charges more slowly and stores energy longer in this lesson.'):t('capChargingText')}</p>`}
- else if(!switchOn&&Math.abs(capV)>m.led.vf+.03){$('capStatus').innerHTML=`<h3 class="warn">${m.isSuper?(lang==='ar'?'المكثف الفائق: يفرغ':'Supercapacitor: Discharging'):t('capDischarging')}</h3><p>${m.isSuper?(lang==='ar'?'يفرغ بسرعة أقل بحوالي 75% من المكثف العادي في هذا النموذج.':'It discharges about 75% more slowly than the normal capacitor in this model.'):t('capDischargingText')}</p>`}
+ else if(switchOn&&Math.abs(capV-m.V)>.08){$('capStatus').innerHTML=`<h3 class="good">${m.isSuper?(lang==='ar'?'المكثف الفائق: يشحن':'Supercapacitor: Charging'):t('capCharging')}</h3><p>${m.isSuper?(lang==='ar'?'يشحن ببطء ويخزن طاقة أكثر بحوالي 25 مرة في هذه المحاكاة.':'It charges more slowly and stores 25× the selected capacitance in this simulation.'):t('capChargingText')}</p>`}
+ else if(!switchOn&&Math.abs(capV)>m.led.vf+.03){$('capStatus').innerHTML=`<h3 class="warn">${m.isSuper?(lang==='ar'?'المكثف الفائق: يفرغ':'Supercapacitor: Discharging'):t('capDischarging')}</h3><p>${m.isSuper?(lang==='ar'?'سعته الأكبر تبقي مصباح LED مضيئاً لفترة أطول بعد فتح المفتاح.':'Its larger capacitance keeps the LED glowing longer after the switch opens.'):t('capDischargingText')}</p>`}
  else if(switchOn&&Math.abs(capV)>0){$('capStatus').innerHTML=`<h3 class="good">${t('capCharged')}</h3><p>${t('capChargedText')}</p>`}
  else{$('capStatus').innerHTML=`<h3>${t('capEmpty')}</h3><p>${t('capEmptyText')}</p>`}}
 function tick(now){requestAnimationFrame(tick);
   if(now-last<32)return;const dt=Math.min(.05,(now-last)/1000);last=now;let m=model();updatePhysics(dt,m);m=model();updateCircuitLabels();updateStatus(m);drawCircuit(m)}
 [voltage,capacitance,capRating].forEach(x=>x.oninput=()=>updateCircuitLabels());
 capPolarity.oninput=()=>{
- if(capPolarity.value==='none'){capV=0;capFailed=false;capStress=0}
+ // Selecting a different capacitor installs a fresh uncharged part; no inherited charge.
+ capV=0;capFailed=false;capStress=0;chargeAnimPhase=0;
  const m=model();if(m.current<=.02)electronDrift=0;
  updateCircuitLabels();updateStatus(m);drawCircuit(m);
 };variableResistance.oninput=()=>{resistance.value=variableResistance.value;updateCircuitLabels()};$('fixedResistorMode').onclick=()=>{resistorMode='fixed';renderResistorChoices();updateCircuitLabels()};$('variableResistorMode').onclick=()=>{resistorMode='variable';variableResistance.value=resistance.value;renderResistorChoices();updateCircuitLabels()};$('switchBtn').onclick=()=>{if(!batteryFailed){switchOn=!switchOn;$('switchBtn').classList.toggle('on',switchOn);updateCircuitLabels()}};$('pauseBtn').onclick=()=>{animating=!animating;$('pauseBtn').textContent=animating?t('pauseElectrons'):t('resumeElectrons')};$('resetBtn').onclick=()=>{voltage.value=9;resistance.value=330;capacitance.value=2200;capRating.value=16;capPolarity.value='correct';ledKey='red';resistorMode='fixed';variableResistance.value=330;switchOn=true;animating=true;capV=0;electronDrift=0;chargeAnimPhase=0;flowElectrons.forEach((e,i)=>e.u=i/flowElectrons.length);ledFailed=capFailed=batteryFailed=false;ledStress=batteryStress=capStress=0;$('switchBtn').classList.add('on');renderLedChoices();renderResistorChoices();updateCircuitLabels();$('pauseBtn').textContent=t('pauseElectrons')};
