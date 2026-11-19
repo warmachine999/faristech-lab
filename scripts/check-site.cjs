@@ -190,8 +190,19 @@ for(const color of ['#ff3b45','#2795ff','#32e875']){
   assert.equal(contacts[before].color,color,'Ionization must retain its ray color');
   assert.ok(ray.dead,'Single-hit particle should stop after ionization');
 }
-assert.ok(html.includes('href="studio/games.html"'), 'Homepage Play & Learn must link to Studio games');
-assert.ok(html.includes('data-i18n="gamesLink"'), 'Game launch button needs bilingual copy');
+// User did not request Learning Games: keep the unrequested page and its entry points removed.
+assert.ok(!fs.existsSync('studio/games.html'),'Unrequested Learning Games page must remain absent');
+assert.ok(!fs.existsSync('scripts/check-studio-games.cjs'),'Removed games must not leave a dedicated test module');
+assert.ok(!fs.existsSync('GAME_BUG_REPORT.md'),'Removed games should not leave their obsolete bug report');
+for(const path of ['index.html','studio/index.html','studio/projects.html','studio/project.html','studio/pricing.html']){
+ const source=path==='index.html'?html:fs.readFileSync(path,'utf8');
+ assert.doesNotMatch(source,/games\.html|gamesLink|Learning Games|Learning games|data-nav="games"/i,
+  'Games link or promotion should not appear on '+path);
+}
+const studioSource=fs.readFileSync('studio/app.js','utf8');
+new vm.Script(studioSource,{filename:'studio/app.js'});
+assert.doesNotMatch(studioSource,/function games\(|shuffleGameItems|ohmGameOptions|refreshGamesLanguage|reactionBtn|memoryGrid/,
+ 'Unrequested games logic should not run in Studio');
 // Regression: the circuit must draw when its own animation loop runs.
 // The VARON pause variable is intentionally local to another script.
 const circuitStart=html.indexOf('function tick(now){requestAnimationFrame(tick);');

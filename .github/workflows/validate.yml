@@ -16,8 +16,6 @@ jobs:
           node-version: '22'
       - name: Validate homepage scripts and VARON controls
         run: node scripts/check-site.cjs
-      - name: Validate Studio game logic and interaction regressions
-        run: node scripts/check-studio-games.cjs
       - name: Check real circuit rendering in Chromium
         shell: bash
         run: |
