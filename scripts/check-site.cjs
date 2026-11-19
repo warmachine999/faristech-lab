@@ -269,7 +269,7 @@ const physicsScope={
  capPolarity:{value:'correct'},
  LEDS:{red:{vf:1.9,color:'#ff404f',nameKey:'red'}},ledKey:'red',
  switchOn:true,capV:0,ledFailed:false,capFailed:false,batteryFailed:false,
- capStress:0,ledStress:0,batteryStress:0,chargeAnimPhase:0,
+ capStress:0,ledStress:0,batteryStress:0,
  electronDrift:0,animating:false,flowElectrons:[]
 };
 const simulator=new vm.Script(html.slice(physicsStart,physicsEnd)+'\n({model,updatePhysics})').runInNewContext(physicsScope);
