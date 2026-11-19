@@ -40,4 +40,20 @@ jobs:
           grep -q 'data-last-draw="realistic"' /tmp/faristech-physical-dom.html
           grep -Eq 'id="iOut">2[0-9]\.[0-9]{2}<' /tmp/faristech-physical-dom.html
           echo "Both schematic and real-life circuit modes render in a real browser."
+          # Browser smoke test: exercise both the preview button and a genuine capacitor failure.
+          python3 - <<'PY'
+          from pathlib import Path
+          original = Path('index.html').read_text(encoding='utf-8')
+          preview = "<script>document.getElementById('realExplosionPreviewBtn').click();</script>"
+          fault = "<script>const cap=document.getElementById('capPolarity');cap.value='reversed';cap.dispatchEvent(new Event('input',{bubbles:true}));</script>"
+          Path('_lab-preview-explosion.html').write_text(original.replace('</body>',preview+'</body>',1),encoding='utf-8')
+          Path('_lab-fault-explosion.html').write_text(original.replace('</body>',fault+'</body>',1),encoding='utf-8')
+          PY
+          "$CHROME" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --virtual-time-budget=1100 --dump-dom 'http://127.0.0.1:8173/_lab-preview-explosion.html?circuitView=realistic' >/tmp/faristech-preview-explosion-dom.html 2>>/tmp/faristech-circuit-chrome.log
+          grep -q 'data-preview-explosion="capacitor"' /tmp/faristech-preview-explosion-dom.html
+          "$CHROME" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --virtual-time-budget=2600 --dump-dom 'http://127.0.0.1:8173/_lab-fault-explosion.html?circuitView=realistic' >/tmp/faristech-fault-explosion-dom.html 2>>/tmp/faristech-circuit-chrome.log
+          grep -q 'data-real-explosion="capacitor"' /tmp/faristech-fault-explosion-dom.html
+          grep -q 'id="circuitViewHint"' /tmp/faristech-fault-explosion-dom.html
+          echo "Preview and authentic capacitor-failure explosions triggered in the real browser."
+
 
