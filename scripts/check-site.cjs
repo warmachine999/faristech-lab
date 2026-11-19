@@ -198,7 +198,7 @@ const circuitStart=html.indexOf('function tick(now){requestAnimationFrame(tick);
 const circuitEnd=html.indexOf('[voltage,capacitance,capRating].forEach',circuitStart);
 assert.ok(circuitStart>=0&&circuitEnd>circuitStart,'Cannot find simulator animation loop');
 assert.ok(!html.slice(circuitStart,circuitEnd).includes('if(paused)'), 'Simulator must not reference undefined VARON pause state');
-assert.ok(html.includes('updateCircuitLabels();updateStatus(model());drawCircuit(model());requestAnimationFrame(tick);'),'Simulator must draw and populate meters on page load');
+assert.ok(html.includes('updateCircuitLabels();updateStatus(model());')&&html.includes('drawCircuit(model());requestAnimationFrame(tick);'),'Simulator must draw and populate meters on page load');
 let frames=0,drawn=0,updated=0,physics=0;
 const simulatorScope={
  requestAnimationFrame:()=>{frames++},
@@ -433,6 +433,7 @@ ctxMock.createLinearGradient=()=>({addColorStop(){}});
 ctxMock.createRadialGradient=()=>({addColorStop(){}});
 const physicalLabels=[];
 drawScope.label=(...args)=>physicalLabels.push(args);
+drawScope.drawRealisticExplosionEffects=()=>{};
 const realistic=new vm.Script(html.slice(realStart,realEnd)+'\ndrawRealisticCircuit').runInNewContext(drawScope);
 const physModel={...sampleModel,isSuper:true,hasCap:true,polarity:'super',C:.055,baseC:.0022,rating:16,brightness:68};
 realistic(physModel);
@@ -448,6 +449,79 @@ realistic({...sampleModel,brightness:0});
 assert.ok(physicalLabels.some(q=>q[2]==='CAPACITOR REMOVED'),
  'Physical view must hide its capacitor when the mode is removed');
 assert.equal(drawScope.cv.dataset.lastDraw,'realistic','Removed-capacitor mode must still render successfully');
+
+
+// Real-life component failure must be a visible, animated explosion rather than a static emoji.
+assert.ok(html.includes('id="circuitExplosionDemo"'), 'Preview explosion button must be available');
+assert.ok(html.includes('circuitExplosionDemo:"💥 Preview explosion"'), 'English explosion preview translation missing');
+assert.ok(html.includes('circuitExplosionDemo:"💥 تجربة الانفجار"'), 'Arabic explosion preview translation missing');
+assert.ok(html.includes("if(demo)demo.hidden=schematic"), 'Explosion demo must only show in physical mode');
+assert.ok(html.includes("triggerRealisticExplosion(model().hasCap?'capacitor':'led',true)"),
+ 'Explosions must be previewable without changing electrical state');
+assert.ok(html.includes("get('explosionDemo')==='1'"), 'Direct smoke-test preview query must be supported');
+assert.ok(html.includes('clearRealisticExplosions();'), 'Reset must clear previous explosion effects');
+assert.ok(html.includes("clearRealisticExplosions('capacitor')"), 'Replacing capacitor must clear old explosion and scorch');
+assert.ok(html.slice(realStart,realEnd).includes('drawRealisticExplosionEffects();'),
+ 'Realistic view must actually render explosion particles');
+assert.ok(!html.slice(realStart,realEnd).includes("if(capFailed)boom("),
+ 'Realistic mode must not overlay the old cartoon explosion emoji');
+assert.ok(html.slice(drawStart,drawEnd).includes("if(capFailed)boom("),
+ 'Original schematic failure indications must remain unchanged');
+
+const fxStart=html.indexOf('const REALISTIC_BLAST_SITES=');
+const fxEnd=html.indexOf('function drawRealisticCircuit(m){',fxStart);
+assert.ok(fxStart>=0&&fxEnd>fxStart,'Missing physical explosion animation helpers');
+let blastClock=100;
+const blastCanvas={dataset:{}},blastCtx=new Proxy({},{
+ get:(o,k)=>k in o?o[k]:()=>{},
+ set:(o,k,v)=>{o[k]=v;return true}
+});
+blastCtx.createRadialGradient=()=>({addColorStop(){}});
+blastCtx.createLinearGradient=()=>({addColorStop(){}});
+const blastScope={
+ ctx:blastCtx,cv:blastCanvas,
+ performance:{now:()=>blastClock},
+ window:{matchMedia:()=>({matches:false})},
+ lang:'en',capFailed:false,ledFailed:false,batteryFailed:false
+};
+const fx=new vm.Script(html.slice(fxStart,fxEnd)+
+ '\n({triggerRealisticExplosion,clearRealisticExplosions,drawRealisticExplosionEffects,realisticExplosionEvents,realisticExplosionSeen})'
+ ).runInNewContext(blastScope);
+fx.triggerRealisticExplosion('capacitor',true);
+assert.equal(fx.realisticExplosionEvents.size,1,'Preview should create exactly one explosion');
+assert.equal(blastScope.capFailed,false,'Preview must not damage the electrical circuit');
+assert.equal(blastScope.batteryFailed,false,'Preview must not damage the battery');
+fx.drawRealisticExplosionEffects();
+assert.equal(blastCanvas.dataset.explosion,'preview','Preview should animate in realistic view');
+assert.equal(fx.realisticExplosionEvents.get('preview').sparks.length,38,'Explosion must have flying sparks');
+assert.equal(fx.realisticExplosionEvents.get('preview').smoke.length,12,'Explosion must have layered smoke');
+assert.equal(fx.realisticExplosionEvents.get('preview').shards.length,13,'Explosion must include moving fragments');
+blastClock=6500;
+fx.drawRealisticExplosionEffects();
+assert.equal(fx.realisticExplosionEvents.size,0,'Completed preview must clean up particles');
+assert.equal(blastCanvas.dataset.explosion,'none','Preview must stop after the animation');
+blastScope.capFailed=true;
+fx.drawRealisticExplosionEffects();
+assert.equal(blastCanvas.dataset.explosion,'failure','Capacitor failure should launch animated explosion');
+assert.ok(fx.realisticExplosionSeen.has('capacitor'),'Actual failure must trigger once');
+const firstFailure=fx.realisticExplosionEvents.get('capacitor');
+fx.drawRealisticExplosionEffects();
+assert.equal(fx.realisticExplosionEvents.get('capacitor'),firstFailure,'Continuous frames must not restart the explosion');
+blastClock=12900;
+fx.drawRealisticExplosionEffects();
+assert.equal(blastCanvas.dataset.explosion,'damage','Failed component should retain scorch marks after smoke fades');
+fx.clearRealisticExplosions('capacitor');blastScope.capFailed=false;
+fx.drawRealisticExplosionEffects();
+assert.equal(blastCanvas.dataset.explosion,'none','Replacing failed capacitor must clear damage');
+blastScope.ledFailed=true;
+fx.drawRealisticExplosionEffects();
+assert.ok(fx.realisticExplosionSeen.has('led'),'LED overload should also trigger explosion');
+blastScope.batteryFailed=true;
+fx.drawRealisticExplosionEffects();
+assert.ok(fx.realisticExplosionSeen.has('battery'),'Battery overload should also trigger explosion');
+fx.clearRealisticExplosions();
+assert.equal(fx.realisticExplosionEvents.size,0,'Reset must remove all animations');
+assert.equal(fx.realisticExplosionSeen.size,0,'Reset must permit a new failure animation');
 
 const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
 assert.match(wrangler, /"name"\s*:\s*"faristech-lab"/, 'Lab must not deploy as production');
