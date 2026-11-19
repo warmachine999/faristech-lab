@@ -254,7 +254,7 @@ assert.ok(html.includes("capPolarity.oninput=()=>{"),'Changing capacitor mode mu
 assert.ok(html.includes('capV=0;capFailed=false;capStress=0;chargeAnimPhase=0;'), 'Switching capacitor type must install a fresh uncharged part');
 assert.ok(html.includes('const SUPER_CAP_MULTIPLIER=25;'), 'Supercapacitor storage multiplier missing');
 assert.ok(html.includes("m.isSuper?(m.C*1000).toFixed(1)+' mF"), 'Effective supercap capacitance must appear in the controls');
-assert.ok(html.includes('const brightness=ledFailed||current<=.02?0:Math.min(100,Math.sqrt(current/20)*100)'), 'LED perceived brightness must track electrical current');
+assert.ok(html.includes('const brightness=ledFailed||current<=.02?0:Math.min(100,Math.pow(current/30,1.15)*100)'), 'LED brightness must not saturate at ordinary 20mA');
 assert.ok(html.includes("const capDanger=m.hasCap&&!capFailed"), 'Supercapacitors must also honor the selected voltage rating');
 
 
@@ -307,24 +307,40 @@ physicsScope.resistance.value='680';
 const dimLed=simulator.model().brightness;
 assert.ok(brightLed>dimLed+18,'Higher resistance must visibly reduce the LED brightness');
 assert.ok(dimLed>0 && dimLed<100,'LED brightness must support dim intermediate states');
+assert.ok(brightLed>60&&brightLed<75,'Default 9V/330ohm red LED must be visibly BELOW 100%');
+assert.ok(Math.round(brightLed)===68,'Default LED brightness should be ~68% instead of the old 100%');
 physicsScope.capPolarity.value='super';physicsScope.resistance.value='330';
 physicsScope.capRating.value='6.3';physicsScope.capV=7;physicsScope.capStress=.44;
 simulator.updatePhysics(.05,simulator.model());
 assert.equal(physicsScope.capFailed,true,'Supercapacitor must fail when over its voltage rating');
 
-// The canvas LED is never fully painted at low brightness: test its actual fill alpha.
+// The new LED is a proper compact diode with light arrows, not a lamp ring/X.
+assert.ok(!html.includes("ctx.moveTo(915,270);ctx.lineTo(965,320)"), 'Crossed lamp lines must be removed');
+assert.ok(!html.includes("ctx.arc(940,295,34"), 'Old circular lamp outline must be removed');
+assert.ok(html.includes("ctx.roundRect(919,270,42,51,8)"), 'LED should have a compact diode body');
+assert.ok(html.includes("ctx.moveTo(929,281);ctx.lineTo(951,281);ctx.lineTo(940,298)"), 'Diode triangle is missing');
+assert.ok(html.includes("ctx.moveTo(926,304);ctx.lineTo(954,304)"), 'Diode cathode bar is missing');
+assert.ok(html.includes("Math.round(m.brightness)+'%'"), 'LED should show its live brightness beside the icon');
+
+// Verify the emitted LED diode light actually dims on canvas, not just the percentage text.
 const ledFills=[];
 ctxMock.createRadialGradient=()=>({addColorStop(){}});
 ctxMock.save=()=>{};
 ctxMock.restore=()=>{ctxMock.globalAlpha=1};
 ctxMock.fill=()=>{if(ctxMock.fillStyle==='#ff404f')ledFills.push(ctxMock.globalAlpha)};
 drawScope.ledRgba=(hex,alpha)=>hex+':'+alpha;
-testDrawCircuit({...sampleModel,brightness:25});
-const dimAlpha=ledFills.at(-1);
-testDrawCircuit({...sampleModel,brightness:100});
-const brightAlpha=ledFills.at(-1);
-assert.ok(dimAlpha>0 && dimAlpha<brightAlpha, 'Canvas LED light must scale with brightness, not switch on at full color');
-assert.ok(Math.abs(brightAlpha-1)<.001,'Full LED brightness must produce full color intensity');
+function diodeFillAt(percent){
+ ledFills.length=0;
+ testDrawCircuit({...sampleModel,brightness:percent});
+ return ledFills[0];
+}
+const offAlpha=diodeFillAt(0);
+const dimAlpha=diodeFillAt(25);
+const midAlpha=diodeFillAt(65);
+const brightAlpha=diodeFillAt(100);
+assert.ok(offAlpha>0 && offAlpha<dimAlpha,'Unpowered LED should keep only a faint, non-glowing diode symbol');
+assert.ok(dimAlpha<midAlpha && midAlpha<brightAlpha,'Canvas LED color intensity must increase smoothly with current');
+assert.ok(brightAlpha>=.9 && brightAlpha<=1,'Full LED brightness must produce a vivid diode');
 
 const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
 assert.match(wrangler, /"name"\s*:\s*"faristech-lab"/, 'Lab must not deploy as production');
