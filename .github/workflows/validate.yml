@@ -33,5 +33,11 @@ jobs:
           grep -Eq 'id="iOut">2[0-9]\.[0-9]{2}<' /tmp/faristech-circuit-dom.html
           grep -Eq 'id="brightnessOut">[1-9][0-9]*<' /tmp/faristech-circuit-dom.html
           grep -q 'id="circuitStatus" class="status"><h3' /tmp/faristech-circuit-dom.html
-          echo "Circuit simulator initializes and computes current in a real browser."
+          grep -q 'id="circuitSchematicBtn"' /tmp/faristech-circuit-dom.html
+          grep -q 'id="circuitRealisticBtn"' /tmp/faristech-circuit-dom.html
+          "$CHROME" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --virtual-time-budget=1600 --dump-dom 'http://127.0.0.1:8173/?circuitView=realistic' >/tmp/faristech-physical-dom.html 2>>/tmp/faristech-circuit-chrome.log
+          grep -q 'data-view="realistic"' /tmp/faristech-physical-dom.html
+          grep -q 'data-last-draw="realistic"' /tmp/faristech-physical-dom.html
+          grep -Eq 'id="iOut">2[0-9]\.[0-9]{2}<' /tmp/faristech-physical-dom.html
+          echo "Both schematic and real-life circuit modes render in a real browser."
 
