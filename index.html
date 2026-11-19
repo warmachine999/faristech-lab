@@ -583,6 +583,8 @@ function drawRealisticCircuit(m){
  cable(125,215,125,120,plus);cable(125,120,267,120,plus);
  cable(342,120,445,120,plus);cable(675,120,940,120,plus);
  cable(940,120,940,253,plus);cable(940,330,940,455,returnWire);
+ cable(940,315,940,330,'#c0cedb',5);
+ cable(445,120,460,120,'#b7c4d3',4);cable(660,120,675,120,'#b7c4d3',4);
  cable(940,455,125,455,returnWire);cable(125,455,125,355,returnWire);
  if(m.hasCap){cable(330,120,330,245,capWire,6);cable(330,336,330,455,capWire,6)}
 
@@ -688,6 +690,7 @@ function drawRealisticCircuit(m){
  if(ledFailed)boom(940,295,lang==='ar'?'LED محترق':'LED BURNED');
  if(batteryFailed)boom(125,290,lang==='ar'?'حمل زائد':'BATTERY OVERLOAD');
  label(72,513,lang==='ar'?'محاكاة تعليمية · أشكال القطع تقريبية':'EDUCATIONAL SIMULATION · COMPONENTS NOT TO SCALE','#88a4b8','left');
+ cv.dataset.lastDraw='realistic';
 }
 function drawCircuit(m){if(circuitViewMode==='realistic'){drawRealisticCircuit(m);return;}ctx.clearRect(0,0,cv.width,cv.height);ctx.fillStyle='#0b0e15';ctx.fillRect(0,0,cv.width,cv.height);const wire='#758194';
 line(125,120,225,120,8,wire);line(125,455,330,455,8,wire);line(125,120,125,215,8,wire);line(125,355,125,455,8,wire);ctx.strokeStyle=batteryFailed?'#ff5261':'#f2f4f8';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(80,255);ctx.lineTo(170,255);ctx.moveTo(96,315);ctx.lineTo(154,315);ctx.stroke();line(125,215,125,255,6,'#f2f4f8');line(125,315,125,355,6,'#f2f4f8');ctx.fillStyle='#ff9c2c';ctx.font='bold 28px Arial';ctx.textAlign='left';ctx.fillText('+',86,250);ctx.fillStyle='#f4f6fb';ctx.fillText('−',91,325);label(125,195,lang==='ar'?'البطارية':'BATTERY',batteryFailed?'#ff5261':'#ff9c2c');label(125,390,m.V.toFixed(1)+' V','#f4f6fb');
