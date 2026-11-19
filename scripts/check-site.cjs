@@ -314,15 +314,31 @@ physicsScope.capRating.value='6.3';physicsScope.capV=7;physicsScope.capStress=.4
 simulator.updatePhysics(.05,simulator.model());
 assert.equal(physicsScope.capFailed,true,'Supercapacitor must fail when over its voltage rating');
 
-// The new LED is a proper compact diode with light arrows, not a lamp ring/X.
-assert.ok(!html.includes("ctx.moveTo(915,270);ctx.lineTo(965,320)"), 'Crossed lamp lines must be removed');
-assert.ok(!html.includes("ctx.arc(940,295,34"), 'Old circular lamp outline must be removed');
-assert.ok(html.includes("ctx.roundRect(919,270,42,51,8)"), 'LED should have a compact diode body');
-assert.ok(html.includes("ctx.moveTo(929,281);ctx.lineTo(951,281);ctx.lineTo(940,298)"), 'Diode triangle is missing');
-assert.ok(html.includes("ctx.moveTo(926,304);ctx.lineTo(954,304)"), 'Diode cathode bar is missing');
-assert.ok(html.includes("Math.round(m.brightness)+'%'"), 'LED should show its live brightness beside the icon');
+// The user's requested circuit LED symbol is a clear X inside a circle, not a diode or bulb drawing.
+assert.ok(html.includes("ctx.arc(940,295,28,0,Math.PI*2)"), 'Schematic LED must have a visible round outline');
+assert.ok(html.includes("ctx.moveTo(925,280);ctx.lineTo(955,310)"), 'Circled LED must include the first X diagonal');
+assert.ok(html.includes("ctx.moveTo(955,280);ctx.lineTo(925,310)"), 'Circled LED must include the second X diagonal');
+assert.ok(!html.includes("ctx.roundRect(919,270,42,51,8)"), 'Old box-like diode must be removed');
+assert.ok(!html.includes("for(let k=0;k<2;k++)"), 'Old LED arrow decoration must be removed');
+assert.ok(!html.includes("ctx.roundRect(445,92,230,56,18)"), 'Resistor must not be drawn inside an old rectangular housing');
+assert.ok(html.includes("for(let tooth=1;tooth<=10;tooth++)ctx.lineTo("), 'Resistor must use a continuous zigzag, not lines inside a box');
+assert.ok(html.includes("p.zone==='resistor'?resistorZigzagY(x):p.y"), 'Electron dots must follow the zigzag resistor');
+assert.ok(html.includes("Math.round(m.brightness)+'%'"), 'LED should show its live brightness beside the symbol');
 
-// Verify the emitted LED diode light actually dims on canvas, not just the percentage text.
+// The zigzag resistor must be connected end-to-end, with alternating top/bottom teeth.
+const resistorBegin=html.indexOf('function resistorZigzagY(x){');
+const resistorEnd=html.indexOf('function drawElectron(p,moving=true,size=5.2){',resistorBegin);
+assert.ok(resistorBegin>0&&resistorEnd>resistorBegin,'Zigzag resistor coordinate function missing');
+const resistorY=new vm.Script(html.slice(resistorBegin,resistorEnd)+'\nresistorZigzagY').runInNewContext({});
+const zigStep=200/11;
+assert.equal(resistorY(445),120,'Resistor left terminal must meet upper wire');
+assert.equal(resistorY(675),120,'Resistor right terminal must meet upper wire');
+assert.ok(Math.abs(resistorY(460+zigStep)-103)<.01,'First resistor tooth must zig upward');
+assert.ok(Math.abs(resistorY(460+zigStep*2)-137)<.01,'Second resistor tooth must zag downward');
+assert.ok(Math.abs(resistorY(460+zigStep*3)-103)<.01,'Resistor must repeat the zigzag');
+assert.ok(Math.abs(resistorY(660)-120)<.01,'Zigzag resistor must return to the wire center');
+
+// Verify the emitted LED light actually dims on canvas, not just the percentage text.
 const ledFills=[];
 ctxMock.createRadialGradient=()=>({addColorStop(){}});
 ctxMock.save=()=>{};
