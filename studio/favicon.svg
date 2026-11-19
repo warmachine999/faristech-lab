@@ -1,1 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#42e8ef"/><stop offset="1" stop-color="#9c8bff"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="17" fill="#0d131a" stroke="url(#a)" stroke-width="2"/><path d="M19 46V18h22v7H27v5h12v7H27v9z" fill="#42e8ef"/><path d="M43 22l9 9m0-9l-9 9" stroke="#9c8bff" stroke-width="4" stroke-linecap="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="FarisTech X">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#111D31"/>
+      <stop offset="1" stop-color="#070B16"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#51E9F5"/>
+      <stop offset=".55" stop-color="#4C81E8"/>
+      <stop offset="1" stop-color="#9B66FF"/>
+    </linearGradient>
+    <linearGradient id="f" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#A2FAFF"/>
+      <stop offset="1" stop-color="#11CFFF"/>
+    </linearGradient>
+    <linearGradient id="x" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFD36F"/>
+      <stop offset="1" stop-color="#FF863E"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="16" fill="url(#bg)" stroke="url(#rim)" stroke-width="2.4"/>
+  <path d="M13.5 16H35.5V23H21.5V30H34V37H21.5V49H13.5Z" fill="url(#f)"/>
+  <path d="M39 19.5L53 44.5M53 19.5L39 44.5" fill="none" stroke="url(#x)" stroke-width="7" stroke-linecap="round"/>
+</svg>
