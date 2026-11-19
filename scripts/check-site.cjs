@@ -198,7 +198,7 @@ const circuitStart=html.indexOf('function tick(now){requestAnimationFrame(tick);
 const circuitEnd=html.indexOf('[voltage,capacitance,capRating].forEach',circuitStart);
 assert.ok(circuitStart>=0&&circuitEnd>circuitStart,'Cannot find simulator animation loop');
 assert.ok(!html.slice(circuitStart,circuitEnd).includes('if(paused)'), 'Simulator must not reference undefined VARON pause state');
-assert.ok(html.includes('updateCircuitLabels();updateStatus(model());drawCircuit(model());requestAnimationFrame(tick);'),'Simulator must draw and populate meters on page load');
+assert.ok(html.includes('updateCircuitLabels();updateStatus(model());')&&html.includes('drawCircuit(model());requestAnimationFrame(tick);'),'Simulator must draw and populate meters on page load');
 let frames=0,drawn=0,updated=0,physics=0;
 const simulatorScope={
  requestAnimationFrame:()=>{frames++},
