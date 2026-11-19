@@ -513,22 +513,25 @@ label(560,65,(lang==='ar'?'المقاومة ':'RESISTOR ')+m.R.toFixed(0)+' Ω',
 line(940,120,940,267,8,wire);line(940,323,940,455,8,wire);
 const ledLight=Math.max(0,Math.min(100,m.brightness))/100;
 ctx.save();
-// Soft glow only around the powered symbol, not a large permanently bright blob.
+// Stronger but still current-responsive LED glow; fully off means no halo.
+const ledVisual=Math.pow(ledLight,.65);
 if(ledLight>.001&&!ledFailed){
- const intensity=ledLight*ledLight;
- const halo=ctx.createRadialGradient(940,295,5,940,295,56);
- halo.addColorStop(0,ledRgba(m.led.color,.30*intensity));
- halo.addColorStop(.5,ledRgba(m.led.color,.10*intensity));
+ const intensity=Math.pow(ledLight,1.1);
+ const halo=ctx.createRadialGradient(940,295,5,940,295,72);
+ halo.addColorStop(0,ledRgba(m.led.color,.66*intensity));
+ halo.addColorStop(.42,ledRgba(m.led.color,.27*intensity));
  halo.addColorStop(1,ledRgba(m.led.color,0));
- ctx.fillStyle=halo;ctx.beginPath();ctx.arc(940,295,56,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=halo;ctx.beginPath();ctx.arc(940,295,72,0,Math.PI*2);ctx.fill();
 }
 // Requested schematic style: a clear X enclosed by a circle.
 ctx.fillStyle='#111923';ctx.beginPath();ctx.arc(940,295,28,0,Math.PI*2);ctx.fill();
-ctx.globalAlpha=ledFailed?.1:.1+.88*ledLight;
+ctx.globalAlpha=ledFailed?.08:.06+.94*ledVisual;
+ctx.shadowColor=m.led.color;ctx.shadowBlur=ledLight>.001?9+25*ledVisual:0;
 ctx.fillStyle=m.led.color;ctx.beginPath();ctx.arc(940,295,25,0,Math.PI*2);ctx.fill();
+ctx.shadowBlur=0;
 ctx.globalAlpha=1;ctx.strokeStyle=ledFailed?'#ff5261':'#e7eef8';ctx.lineWidth=3;
 ctx.beginPath();ctx.arc(940,295,28,0,Math.PI*2);ctx.stroke();
-ctx.globalAlpha=ledFailed?.48:.58+.42*ledLight;
+ctx.globalAlpha=ledFailed?.48:.68+.32*ledVisual;
 ctx.strokeStyle=ledFailed?'#ff5261':'#f5f8fc';ctx.lineWidth=4;ctx.lineCap='round';
 ctx.beginPath();ctx.moveTo(925,280);ctx.lineTo(955,310);
 ctx.moveTo(955,280);ctx.lineTo(925,310);ctx.stroke();
