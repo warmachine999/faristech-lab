@@ -11,6 +11,16 @@ for (const match of scripts) {
   new vm.Script(match[2], { filename: 'index.html inline script ' + (++checked) });
 }
 assert.ok(checked > 0, 'Expected at least one inline JS script');
+const faviconPath='studio/favicon.svg';
+assert.ok(fs.existsSync(faviconPath),'The FarisTech X tab logo must exist');
+const faviconSvg=fs.readFileSync(faviconPath,'utf8');
+assert.match(faviconSvg,/<svg\s[^>]*viewBox="0 0 64 64"/,'Favicon should have a crisp scalable SVG design');
+for(const page of ['index.html','projects.html','project.html']){
+ const markup=page==='index.html'?html:fs.readFileSync(page,'utf8');
+ assert.ok(markup.includes('<link rel="icon" type="image/svg+xml" href="'+faviconPath+'">'),
+  page+' must display the FarisTech X icon instead of the default browser globe');
+}
+
 for (const id of ['varonPause', 'varonReset', 'varonStatus', 'varonCycle']) {
   assert.ok(html.includes('id="' + id + '"'), 'Missing VARON control: ' + id);
 }
