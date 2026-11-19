@@ -473,7 +473,8 @@ function updatePhysics(dt,m){
  const poweredTarget=animating&&m.sourceOK&&m.current>.02&&!ledFailed ? .082*Math.min(1.15,.45+m.V/12) : 0;
  const dischargeTarget=animating&&!switchOn&&m.hasCap&&!capFailed&&!ledFailed&&Math.abs(capV)>m.led.vf+.01 ? .070*Math.min(1,Math.max(0,(Math.abs(capV)-m.led.vf)/6)) : 0;
  const targetDrift=switchOn?poweredTarget:dischargeTarget;
- electronDrift=ease(electronDrift,targetDrift,dt,targetDrift>electronDrift?1.65:2.6);
+ // No current means no moving electrons: never show leftover particles in an open circuit.
+ electronDrift=m.current>.02?ease(electronDrift,targetDrift,dt,targetDrift>electronDrift?1.65:2.6):0;
  if(electronDrift<.00005)electronDrift=0;
  const activePath=switchOn?sourceFlowPoints():dischargeFlowPoints();
  if(animating&&electronDrift>0){for(const e of flowElectrons)advanceParticle(e,dt,electronDrift,activePath,m.R)}
@@ -487,9 +488,11 @@ line(125,120,225,120,8,wire);line(125,455,330,455,8,wire);line(125,120,125,215,8
 line(225,120,275,120,8,wire);line(330,120,390,120,8,wire);ctx.fillStyle='#eaf0f7';ctx.beginPath();ctx.arc(275,120,8,0,Math.PI*2);ctx.arc(330,120,8,0,Math.PI*2);ctx.fill();ctx.strokeStyle=switchOn?'#22e59a':'#ff5261';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(275,120);ctx.lineTo(switchOn?330:320,switchOn?120:83);ctx.stroke();label(302,72,lang==='ar'?'مفتاح':'SWITCH',switchOn?'#22e59a':'#ff5261');
 line(390,120,445,120,8,wire);line(675,120,940,120,8,wire);ctx.fillStyle='#3b3122';ctx.strokeStyle='#edc06d';ctx.lineWidth=4;ctx.beginPath();ctx.roundRect(445,92,230,56,18);ctx.fill();ctx.stroke();line(445,120,675,120,5,'#d9b35f');const density=4+Math.round((m.R-100)/145);for(let i=1;i<=density;i++){const x=445+i*(230/(density+1));ctx.strokeStyle='rgba(237,192,109,.65)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,101);ctx.lineTo(x,139);ctx.stroke()}label(560,65,(lang==='ar'?'المقاومة ':'RESISTOR ')+m.R.toFixed(0)+' Ω','#edc06d');
 line(940,120,940,245,8,wire);line(940,345,940,455,8,wire);const glow=m.brightness;ctx.save();ctx.shadowBlur=glow?12+glow*.35:0;ctx.shadowColor=m.led.color;ctx.fillStyle=ledFailed?'#29181b':(glow?m.led.color:'#303642');ctx.beginPath();ctx.arc(940,295,34,0,Math.PI*2);ctx.fill();ctx.restore();ctx.strokeStyle=ledFailed?'#ff5261':'#fff';ctx.lineWidth=3;ctx.stroke();ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(915,270);ctx.lineTo(965,320);ctx.moveTo(915,320);ctx.lineTo(965,270);ctx.stroke();line(940,245,940,261,5,'#fff');line(940,329,940,345,5,'#fff');label(990,274,lang==='ar'?'موجب +':'POSITIVE +','#ff9c72','left');label(990,299,'LED '+t(m.led.nameKey),ledFailed?'#ff5261':m.led.color,'left');label(990,324,lang==='ar'?'سالب −':'NEGATIVE −','#8fd3ff','left');
-line(330,455,940,455,8,wire);line(330,120,330,215,8,wire);line(330,355,330,455,8,wire);
+line(330,455,940,455,8,wire);
  if(m.hasCap){
-   line(290,270,370,270,7,capFailed?'#ff5261':'#dbe3ee');line(290,310,370,310,7,capFailed?'#ff5261':'#dbe3ee');line(330,215,330,270,6,wire);line(330,310,330,355,6,wire);
+   // The capacitor is a removable branch: draw its connections ONLY when installed.
+   line(330,120,330,270,7,wire);line(330,310,330,455,7,wire);
+   line(290,270,370,270,7,capFailed?'#ff5261':'#dbe3ee');line(290,310,370,310,7,capFailed?'#ff5261':'#dbe3ee');
    ctx.fillStyle=m.polarity==='reversed'?'#ffd34e':'#ff5261';ctx.font='bold 24px Arial';ctx.textAlign='left';ctx.fillText(m.polarity==='reversed'?'−':'+',374,277);ctx.fillText(m.polarity==='reversed'?'+':'−',374,320);
    label(390,250,m.isSuper?(lang==='ar'?'مكثف فائق':'SUPERCAPACITOR'):(lang==='ar'?'مكثف مستقطب':'POLARIZED CAPACITOR'),capFailed?'#ff5261':'#35dfff','left');
    label(390,274,Math.abs(capV).toFixed(2)+' V / '+m.rating+' V',capFailed?'#ff5261':'#35dfff','left');
@@ -523,7 +526,12 @@ function updateStatus(m){$('iOut').textContent=m.current.toFixed(2);$('brightnes
  else{$('capStatus').innerHTML=`<h3>${t('capEmpty')}</h3><p>${t('capEmptyText')}</p>`}}
 function tick(now){requestAnimationFrame(tick);
   if(now-last<32)return;const dt=Math.min(.05,(now-last)/1000);last=now;let m=model();updatePhysics(dt,m);m=model();updateCircuitLabels();updateStatus(m);drawCircuit(m)}
-[voltage,capacitance,capRating,capPolarity].forEach(x=>x.oninput=()=>updateCircuitLabels());variableResistance.oninput=()=>{resistance.value=variableResistance.value;updateCircuitLabels()};$('fixedResistorMode').onclick=()=>{resistorMode='fixed';renderResistorChoices();updateCircuitLabels()};$('variableResistorMode').onclick=()=>{resistorMode='variable';variableResistance.value=resistance.value;renderResistorChoices();updateCircuitLabels()};$('switchBtn').onclick=()=>{if(!batteryFailed){switchOn=!switchOn;$('switchBtn').classList.toggle('on',switchOn);updateCircuitLabels()}};$('pauseBtn').onclick=()=>{animating=!animating;$('pauseBtn').textContent=animating?t('pauseElectrons'):t('resumeElectrons')};$('resetBtn').onclick=()=>{voltage.value=9;resistance.value=330;capacitance.value=2200;capRating.value=16;capPolarity.value='correct';ledKey='red';resistorMode='fixed';variableResistance.value=330;switchOn=true;animating=true;capV=0;electronDrift=0;chargeAnimPhase=0;flowElectrons.forEach((e,i)=>e.u=i/flowElectrons.length);ledFailed=capFailed=batteryFailed=false;ledStress=batteryStress=capStress=0;$('switchBtn').classList.add('on');renderLedChoices();renderResistorChoices();updateCircuitLabels();$('pauseBtn').textContent=t('pauseElectrons')};
+[voltage,capacitance,capRating].forEach(x=>x.oninput=()=>updateCircuitLabels());
+capPolarity.oninput=()=>{
+ if(capPolarity.value==='none'){capV=0;capFailed=false;capStress=0}
+ const m=model();if(m.current<=.02)electronDrift=0;
+ updateCircuitLabels();updateStatus(m);drawCircuit(m);
+};variableResistance.oninput=()=>{resistance.value=variableResistance.value;updateCircuitLabels()};$('fixedResistorMode').onclick=()=>{resistorMode='fixed';renderResistorChoices();updateCircuitLabels()};$('variableResistorMode').onclick=()=>{resistorMode='variable';variableResistance.value=resistance.value;renderResistorChoices();updateCircuitLabels()};$('switchBtn').onclick=()=>{if(!batteryFailed){switchOn=!switchOn;$('switchBtn').classList.toggle('on',switchOn);updateCircuitLabels()}};$('pauseBtn').onclick=()=>{animating=!animating;$('pauseBtn').textContent=animating?t('pauseElectrons'):t('resumeElectrons')};$('resetBtn').onclick=()=>{voltage.value=9;resistance.value=330;capacitance.value=2200;capRating.value=16;capPolarity.value='correct';ledKey='red';resistorMode='fixed';variableResistance.value=330;switchOn=true;animating=true;capV=0;electronDrift=0;chargeAnimPhase=0;flowElectrons.forEach((e,i)=>e.u=i/flowElectrons.length);ledFailed=capFailed=batteryFailed=false;ledStress=batteryStress=capStress=0;$('switchBtn').classList.add('on');renderLedChoices();renderResistorChoices();updateCircuitLabels();$('pauseBtn').textContent=t('pauseElectrons')};
 let tradeValues={fast:100,cheap:50,good:0};
 const TRADE_MAX=200;
 function tradeMessage(){

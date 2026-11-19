@@ -195,7 +195,7 @@ assert.ok(html.includes('data-i18n="gamesLink"'), 'Game launch button needs bili
 // Regression: the circuit must draw when its own animation loop runs.
 // The VARON pause variable is intentionally local to another script.
 const circuitStart=html.indexOf('function tick(now){requestAnimationFrame(tick);');
-const circuitEnd=html.indexOf('[voltage,capacitance,capRating,capPolarity].forEach',circuitStart);
+const circuitEnd=html.indexOf('[voltage,capacitance,capRating].forEach',circuitStart);
 assert.ok(circuitStart>=0&&circuitEnd>circuitStart,'Cannot find simulator animation loop');
 assert.ok(!html.slice(circuitStart,circuitEnd).includes('if(paused)'), 'Simulator must not reference undefined VARON pause state');
 assert.ok(html.includes('updateCircuitLabels();updateStatus(model());drawCircuit(model());requestAnimationFrame(tick);'),'Simulator must draw and populate meters on page load');
@@ -215,6 +215,44 @@ assert.equal(frames,1,'Circuit animation must schedule another frame');
 assert.equal(drawn,1,'Circuit canvas must draw without a ReferenceError');
 assert.equal(updated,2,'Circuit meters and labels must update each frame');
 assert.equal(physics,1,'Circuit physics must run each frame');
+
+const drawStart=html.indexOf('function drawCircuit(m){');
+const drawEnd=html.indexOf('function updateCircuitLabels(){',drawStart);
+assert.ok(drawStart>=0 && drawEnd>drawStart,'Missing canvas circuit drawing routine');
+const drawnWires=[],drawnLabels=[];
+const ctxMock=new Proxy({},{
+ get:(obj,key)=>key in obj?obj[key]:()=>{},
+ set:(obj,key,value)=>{obj[key]=value;return true}
+});
+const drawScope={
+ ctx:ctxMock,cv:{width:1100,height:590},
+ line:(...args)=>drawnWires.push(args),
+ label:(...args)=>drawnLabels.push(args),
+ boom:()=>{},drawElectron:()=>{},
+ pointOnPath:()=>({x:0,y:0}),
+ t:value=>value,lang:'en',
+ batteryFailed:false,ledFailed:false,capFailed:false,
+ switchOn:false,animating:false,capV:0,chargeAnimPhase:0,
+ electronDrift:0,flowElectrons:[]
+};
+const testDrawCircuit=new vm.Script(html.slice(drawStart,drawEnd)+'\ndrawCircuit').runInNewContext(drawScope);
+const sampleModel={hasCap:false,isSuper:false,polarity:'none',V:9,R:330,brightness:0,sourceOK:false,rating:16,
+ led:{color:'#ff404f',nameKey:'red'}};
+testDrawCircuit(sampleModel);
+const hasLead=(x1,y1,x2,y2)=>drawnWires.some(w=>w[0]===x1&&w[1]===y1&&w[2]===x2&&w[3]===y2);
+assert.ok(!hasLead(330,120,330,270) && !hasLead(330,310,330,455),'Removed capacitor must have NO dangling vertical leads');
+assert.ok(!hasLead(290,270,370,270) && !hasLead(290,310,370,310),'Removed capacitor must have NO plates');
+assert.ok(drawnLabels.some(l=>l[2]==='CAPACITOR REMOVED'),'Removed mode should show a clear label');
+assert.ok(hasLead(330,455,940,455),'Main lower circuit wire must remain intact when capacitor removed');
+drawnWires.length=0;drawnLabels.length=0;
+testDrawCircuit({...sampleModel,hasCap:true,polarity:'correct'});
+assert.ok(hasLead(330,120,330,270) && hasLead(330,310,330,455),'Installed capacitor must reconnect both leads');
+assert.ok(hasLead(290,270,370,270) && hasLead(290,310,370,310),'Installed capacitor must show both plates');
+assert.ok(!drawnLabels.some(l=>l[2]==='CAPACITOR REMOVED'),'Installed capacitor must not be labeled removed');
+assert.ok(html.includes('electronDrift=m.current>.02?ease('),'Electron dots must stop when current is zero');
+assert.ok(html.includes("capPolarity.oninput=()=>{"),'Changing capacitor mode must trigger an immediate redraw');
+assert.ok(html.includes("if(capPolarity.value==='none'){capV=0;capFailed=false;capStress=0}"),'Removing capacitor must clear stored charge and failure state');
+
 const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
 assert.match(wrangler, /"name"\s*:\s*"faristech-lab"/, 'Lab must not deploy as production');
 console.log('Lab validation OK: ' + checked + ' inline JavaScript scripts and VARON controls.');
