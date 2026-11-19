@@ -485,47 +485,58 @@ function line(x1,y1,x2,y2,w=8,color='#798495'){ctx.strokeStyle=color;ctx.lineWid
 function label(x,y,text,color='#eaf0f7',align='center'){ctx.fillStyle=color;ctx.font='700 16px Inter,Arial';ctx.textAlign=align;ctx.fillText(text,x,y)}
 function boom(x,y,text){ctx.save();ctx.font='bold 44px Arial';ctx.textAlign='center';ctx.fillStyle='#ff9c2c';ctx.shadowBlur=24;ctx.shadowColor='#ff5261';ctx.fillText('💥',x,y);ctx.shadowBlur=0;ctx.font='800 14px Inter,Arial';ctx.fillStyle='#ff8b8b';ctx.fillText(text,x,y+28);ctx.restore()}
 function ledRgba(hex,alpha){const n=parseInt(hex.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+alpha+')'}
-function drawElectron(p,moving=true,size=5.2){ctx.fillStyle=moving?'#71d8ff':'rgba(113,216,255,.78)';ctx.shadowBlur=moving?9:2;ctx.shadowColor='#71d8ff';ctx.beginPath();ctx.arc(p.x,p.y,size,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
+function resistorZigzagY(x){
+ if(x<=460||x>=660)return 120;
+ const tooth=(x-460)/(200/11),index=Math.floor(tooth),fraction=tooth-index;
+ const a=index===0?0:(index%2?-17:17);
+ const b=index+1===11?0:((index+1)%2?-17:17);
+ return 120+a+(b-a)*fraction;
+}
+function drawElectron(p,moving=true,size=5.2){
+ // Electron markers now follow the drawn resistor zigzag instead of an invisible straight wire.
+ const x=p.x,y=p.zone==='resistor'?resistorZigzagY(x):p.y;
+ ctx.fillStyle=moving?'#71d8ff':'rgba(113,216,255,.78)';
+ ctx.shadowBlur=moving?9:2;ctx.shadowColor='#71d8ff';
+ ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+}
 function drawCircuit(m){ctx.clearRect(0,0,cv.width,cv.height);ctx.fillStyle='#0b0e15';ctx.fillRect(0,0,cv.width,cv.height);const wire='#758194';
 line(125,120,225,120,8,wire);line(125,455,330,455,8,wire);line(125,120,125,215,8,wire);line(125,355,125,455,8,wire);ctx.strokeStyle=batteryFailed?'#ff5261':'#f2f4f8';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(80,255);ctx.lineTo(170,255);ctx.moveTo(96,315);ctx.lineTo(154,315);ctx.stroke();line(125,215,125,255,6,'#f2f4f8');line(125,315,125,355,6,'#f2f4f8');ctx.fillStyle='#ff9c2c';ctx.font='bold 28px Arial';ctx.textAlign='left';ctx.fillText('+',86,250);ctx.fillStyle='#f4f6fb';ctx.fillText('−',91,325);label(125,195,lang==='ar'?'البطارية':'BATTERY',batteryFailed?'#ff5261':'#ff9c2c');label(125,390,m.V.toFixed(1)+' V','#f4f6fb');
 line(225,120,275,120,8,wire);line(330,120,390,120,8,wire);ctx.fillStyle='#eaf0f7';ctx.beginPath();ctx.arc(275,120,8,0,Math.PI*2);ctx.arc(330,120,8,0,Math.PI*2);ctx.fill();ctx.strokeStyle=switchOn?'#22e59a':'#ff5261';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(275,120);ctx.lineTo(switchOn?330:320,switchOn?120:83);ctx.stroke();label(302,72,lang==='ar'?'مفتاح':'SWITCH',switchOn?'#22e59a':'#ff5261');
-line(390,120,445,120,8,wire);line(675,120,940,120,8,wire);ctx.fillStyle='#3b3122';ctx.strokeStyle='#edc06d';ctx.lineWidth=4;ctx.beginPath();ctx.roundRect(445,92,230,56,18);ctx.fill();ctx.stroke();line(445,120,675,120,5,'#d9b35f');const density=4+Math.round((m.R-100)/145);for(let i=1;i<=density;i++){const x=445+i*(230/(density+1));ctx.strokeStyle='rgba(237,192,109,.65)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,101);ctx.lineTo(x,139);ctx.stroke()}label(560,65,(lang==='ar'?'المقاومة ':'RESISTOR ')+m.R.toFixed(0)+' Ω','#edc06d');
-line(940,120,940,260,8,wire);line(940,329,940,455,8,wire);
+line(390,120,445,120,8,wire);line(675,120,940,120,8,wire);
+// Classic schematic resistor: one continuous zigzag between both wire terminals.
+ctx.save();ctx.strokeStyle='#edc06d';ctx.lineWidth=5;ctx.lineJoin='round';ctx.lineCap='round';
+ctx.shadowColor='rgba(237,192,109,.22)';ctx.shadowBlur=7;
+ctx.beginPath();ctx.moveTo(445,120);ctx.lineTo(460,120);
+for(let tooth=1;tooth<=10;tooth++)ctx.lineTo(460+tooth*(200/11),120+(tooth%2?-17:17));
+ctx.lineTo(660,120);ctx.lineTo(675,120);ctx.stroke();ctx.restore();
+label(560,65,(lang==='ar'?'المقاومة ':'RESISTOR ')+m.R.toFixed(0)+' Ω','#edc06d');
+line(940,120,940,267,8,wire);line(940,323,940,455,8,wire);
 const ledLight=Math.max(0,Math.min(100,m.brightness))/100;
 ctx.save();
-// A soft, compact light bloom that fades continuously with current.
+// Soft glow only around the powered symbol, not a large permanently bright blob.
 if(ledLight>.001&&!ledFailed){
- const strength=ledLight*ledLight;
- const halo=ctx.createRadialGradient(940,295,6,940,295,64);
- halo.addColorStop(0,ledRgba(m.led.color,.36*strength));
- halo.addColorStop(.45,ledRgba(m.led.color,.13*strength));
+ const intensity=ledLight*ledLight;
+ const halo=ctx.createRadialGradient(940,295,5,940,295,56);
+ halo.addColorStop(0,ledRgba(m.led.color,.30*intensity));
+ halo.addColorStop(.5,ledRgba(m.led.color,.10*intensity));
  halo.addColorStop(1,ledRgba(m.led.color,0));
- ctx.fillStyle=halo;ctx.beginPath();ctx.arc(940,295,64,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=halo;ctx.beginPath();ctx.arc(940,295,56,0,Math.PI*2);ctx.fill();
 }
-// Properly distinguish the LED from an incandescent lamp: no circled X symbol.
-ctx.fillStyle='#151d2c';ctx.strokeStyle=ledFailed?'#f26577':'#a9b9cd';ctx.lineWidth=2.5;
-ctx.beginPath();ctx.roundRect(919,270,42,51,8);ctx.fill();ctx.stroke();
-// Vertical diode triangle and cathode bar.
-ctx.save();ctx.globalAlpha=ledFailed?.18:.13+.83*ledLight;
-ctx.fillStyle=m.led.color;ctx.shadowColor=m.led.color;
-ctx.shadowBlur=ledFailed?0:2+22*ledLight;
-ctx.beginPath();ctx.moveTo(929,281);ctx.lineTo(951,281);ctx.lineTo(940,298);
-ctx.closePath();ctx.fill();ctx.restore();
-ctx.strokeStyle=ledFailed?'#758094':'#e4edfa';ctx.lineWidth=3;
-ctx.beginPath();ctx.moveTo(926,304);ctx.lineTo(954,304);ctx.stroke();
-// Two outward light rays identify this device as an LED, not a lamp.
-ctx.strokeStyle=ledFailed?'#637186':m.led.color;
-ctx.globalAlpha=ledFailed?.32:.24+.76*ledLight;ctx.lineWidth=2.2;ctx.lineCap='round';
-for(let k=0;k<2;k++){
- const ax=962,ay=283+k*15,bx=976,by=269+k*15;
- ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.moveTo(bx-8,by+1);ctx.lineTo(bx,by);ctx.lineTo(bx-1,by+8);ctx.stroke();
-}
+// Requested schematic style: a clear X enclosed by a circle.
+ctx.fillStyle='#111923';ctx.beginPath();ctx.arc(940,295,28,0,Math.PI*2);ctx.fill();
+ctx.globalAlpha=ledFailed?.1:.1+.88*ledLight;
+ctx.fillStyle=m.led.color;ctx.beginPath();ctx.arc(940,295,25,0,Math.PI*2);ctx.fill();
+ctx.globalAlpha=1;ctx.strokeStyle=ledFailed?'#ff5261':'#e7eef8';ctx.lineWidth=3;
+ctx.beginPath();ctx.arc(940,295,28,0,Math.PI*2);ctx.stroke();
+ctx.globalAlpha=ledFailed?.48:.58+.42*ledLight;
+ctx.strokeStyle=ledFailed?'#ff5261':'#f5f8fc';ctx.lineWidth=4;ctx.lineCap='round';
+ctx.beginPath();ctx.moveTo(925,280);ctx.lineTo(955,310);
+ctx.moveTo(955,280);ctx.lineTo(925,310);ctx.stroke();
 ctx.restore();
-line(940,260,940,270,5,'#e2ebf7');line(940,321,940,329,5,'#e2ebf7');
 label(990,274,lang==='ar'?'موجب +':'POSITIVE +','#ff9c72','left');
 label(990,299,'LED '+t(m.led.nameKey),ledFailed?'#ff5261':m.led.color,'left');
 label(990,324,lang==='ar'?'سالب −':'NEGATIVE −','#8fd3ff','left');
-// The numeric brightness and compact meter now match the actual canvas glow.
+// Keep the live LED percentage and intensity bar.
 ctx.fillStyle=ledLight>.001?m.led.color:'#8393a9';
 ctx.font='700 12px Inter,Arial';ctx.textAlign='left';
 ctx.fillText((lang==='ar'?'السطوع ':'BRIGHTNESS ')+Math.round(m.brightness)+'%',990,347);
