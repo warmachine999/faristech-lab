@@ -50,7 +50,18 @@ jobs:
           Path('_lab-fault-explosion.html').write_text(original.replace('</body>',fault+'</body>',1),encoding='utf-8')
           PY
           "$CHROME" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --virtual-time-budget=1100 --dump-dom 'http://127.0.0.1:8173/_lab-preview-explosion.html?circuitView=realistic' >/tmp/faristech-preview-explosion-dom.html 2>>/tmp/faristech-circuit-chrome.log
-          grep -q 'data-preview-explosion="capacitor"' /tmp/faristech-preview-explosion-dom.html
+          if ! grep -q 'data-preview-explosion="capacitor"' /tmp/faristech-preview-explosion-dom.html; then
+            echo "Preview explosion marker missing. Browser diagnostic:"
+            python3 - <<'PY'
+          from pathlib import Path
+          h=Path('/tmp/faristech-preview-explosion-dom.html').read_text(errors='replace')
+          for marker in ['id="realExplosionPreviewBtn"', 'id="circuitCanvas"', 'data-view=', 'data-preview-explosion=', 'data-last-draw=', "realExplosionPreviewBtn').click()"]:
+              pos=h.find(marker)
+              print('MARKER',repr(marker),'POSITION',pos,'SNIPPET',repr(h[max(0,pos-170):pos+280]) if pos>=0 else '')
+          print('CHROME LOG TAIL',Path('/tmp/faristech-circuit-chrome.log').read_text(errors='replace')[-2500:])
+          PY
+            exit 1
+          fi
           "$CHROME" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --virtual-time-budget=2600 --dump-dom 'http://127.0.0.1:8173/_lab-fault-explosion.html?circuitView=realistic' >/tmp/faristech-fault-explosion-dom.html 2>>/tmp/faristech-circuit-chrome.log
           grep -q 'data-real-explosion="capacitor"' /tmp/faristech-fault-explosion-dom.html
           grep -q 'id="circuitViewHint"' /tmp/faristech-fault-explosion-dom.html
