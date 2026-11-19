@@ -12,13 +12,21 @@ for (const match of scripts) {
 }
 assert.ok(checked > 0, 'Expected at least one inline JS script');
 const faviconPath='studio/favicon.svg';
+const faviconVersion='premium-fx-25';
 assert.ok(fs.existsSync(faviconPath),'The FarisTech X tab logo must exist');
 const faviconSvg=fs.readFileSync(faviconPath,'utf8');
-assert.match(faviconSvg,/<svg\s[^>]*viewBox="0 0 64 64"/,'Favicon should have a crisp scalable SVG design');
-for(const page of ['index.html','projects.html','project.html']){
+assert.match(faviconSvg,/<svg\s[^>]*viewBox="0 0 64 64"/,'Favicon must be a crisp, scalable 64px SVG');
+assert.match(faviconSvg,/fill="url\(#f\)"/,'New favicon must feature the cyan F monogram');
+assert.match(faviconSvg,/stroke="url\(#x\)"/,'New favicon must feature the orange X monogram');
+assert.match(faviconSvg,/#FF863E/,'New F× design must have the orange accent');
+assert.match(faviconSvg,/#11CFFF/,'New F× design must have the cyan accent');
+const faviconPages=['index.html','projects.html','project.html',
+ 'studio/index.html','studio/projects.html','studio/project.html','studio/pricing.html'];
+for(const page of faviconPages){
  const markup=page==='index.html'?html:fs.readFileSync(page,'utf8');
- assert.ok(markup.includes('<link rel="icon" type="image/svg+xml" href="'+faviconPath+'">'),
-  page+' must display the FarisTech X icon instead of the default browser globe');
+ const icon=page.startsWith('studio/')?'favicon.svg':'studio/favicon.svg';
+ const expected='<link rel="icon" type="image/svg+xml" href="'+icon+'?v='+faviconVersion+'">';
+ assert.ok(markup.includes(expected),page+' must show the new F× favicon without stale caching');
 }
 
 for (const id of ['varonPause', 'varonReset', 'varonStatus', 'varonCycle']) {
