@@ -251,7 +251,80 @@ assert.ok(hasLead(290,270,370,270) && hasLead(290,310,370,310),'Installed capaci
 assert.ok(!drawnLabels.some(l=>l[2]==='CAPACITOR REMOVED'),'Installed capacitor must not be labeled removed');
 assert.ok(html.includes('electronDrift=m.current>.02?ease('),'Electron dots must stop when current is zero');
 assert.ok(html.includes("capPolarity.oninput=()=>{"),'Changing capacitor mode must trigger an immediate redraw');
-assert.ok(html.includes("if(capPolarity.value==='none'){capV=0;capFailed=false;capStress=0}"),'Removing capacitor must clear stored charge and failure state');
+assert.ok(html.includes('capV=0;capFailed=false;capStress=0;chargeAnimPhase=0;'), 'Switching capacitor type must install a fresh uncharged part');
+assert.ok(html.includes('const SUPER_CAP_MULTIPLIER=25;'), 'Supercapacitor storage multiplier missing');
+assert.ok(html.includes("m.isSuper?(m.C*1000).toFixed(1)+' mF"), 'Effective supercap capacitance must appear in the controls');
+assert.ok(html.includes('const brightness=ledFailed||current<=.02?0:Math.min(100,Math.sqrt(current/20)*100)'), 'LED perceived brightness must track electrical current');
+assert.ok(html.includes("const capDanger=m.hasCap&&!capFailed"), 'Supercapacitors must also honor the selected voltage rating');
+
+
+// Exercise the real capacitor/LED physics across charging, powered-off discharge, and low-current LED states.
+const physicsStart=html.indexOf('function model(){');
+const physicsEnd=html.indexOf('function line(x1,y1,x2,y2',physicsStart);
+assert.ok(physicsStart>=0&&physicsEnd>physicsStart,'Cannot find circuit model and physics');
+const physicsScope={
+ SUPER_CAP_MULTIPLIER:25,
+ voltage:{value:'9'},resistance:{value:'330'},
+ capacitance:{value:'2200'},capRating:{value:'16'},
+ capPolarity:{value:'correct'},
+ LEDS:{red:{vf:1.9,color:'#ff404f',nameKey:'red'}},ledKey:'red',
+ switchOn:true,capV:0,ledFailed:false,capFailed:false,batteryFailed:false,
+ capStress:0,ledStress:0,batteryStress:0,chargeAnimPhase:0,
+ electronDrift:0,animating:false,flowElectrons:[]
+};
+const simulator=new vm.Script(html.slice(physicsStart,physicsEnd)+'\n({model,updatePhysics})').runInNewContext(physicsScope);
+physicsScope.capPolarity.value='correct';
+const normalC=simulator.model().C;
+physicsScope.capPolarity.value='super';
+const superC=simulator.model().C;
+assert.equal(Math.round(superC/normalC),25,'Supercapacitor must store 25 times the base capacitance');
+function chargeFor(mode,seconds){
+ physicsScope.capPolarity.value=mode;physicsScope.capV=0;physicsScope.capFailed=false;
+ physicsScope.capStress=0;physicsScope.switchOn=true;
+ for(let i=0;i<Math.round(seconds/.05);i++)simulator.updatePhysics(.05,simulator.model());
+ return physicsScope.capV;
+}
+const normalCharge=chargeFor('correct',5);
+const superCharge=chargeFor('super',5);
+assert.ok(normalCharge>8.5,'Normal capacitor must charge promptly');
+assert.ok(superCharge>1 && superCharge<5,'New supercapacitor must charge gradually instead of instantly starting full');
+function dischargeFor(mode,seconds){
+ physicsScope.capPolarity.value=mode;physicsScope.capV=9;physicsScope.capFailed=false;
+ physicsScope.capStress=0;physicsScope.switchOn=false;physicsScope.batteryFailed=false;
+ for(let i=0;i<Math.round(seconds/.05);i++)simulator.updatePhysics(.05,simulator.model());
+ return {v:physicsScope.capV,current:simulator.model().current,brightness:simulator.model().brightness};
+}
+const normalOff=dischargeFor('correct',10);
+const superOff=dischargeFor('super',10);
+assert.ok(superOff.v>normalOff.v+2,'Supercapacitor should retain significantly more voltage after 10 seconds');
+assert.ok(superOff.brightness>normalOff.brightness+20,'Supercapacitor should keep the LED visibly brighter after opening the switch');
+physicsScope.capPolarity.value='none';physicsScope.switchOn=false;physicsScope.capV=0;
+assert.equal(simulator.model().current,0,'No capacitor and open switch must give zero current');
+assert.equal(simulator.model().brightness,0,'LED must go dark without current');
+physicsScope.switchOn=true;physicsScope.resistance.value='330';
+const brightLed=simulator.model().brightness;
+physicsScope.resistance.value='680';
+const dimLed=simulator.model().brightness;
+assert.ok(brightLed>dimLed+18,'Higher resistance must visibly reduce the LED brightness');
+assert.ok(dimLed>0 && dimLed<100,'LED brightness must support dim intermediate states');
+physicsScope.capPolarity.value='super';physicsScope.resistance.value='330';
+physicsScope.capRating.value='6.3';physicsScope.capV=7;physicsScope.capStress=.44;
+simulator.updatePhysics(.05,simulator.model());
+assert.equal(physicsScope.capFailed,true,'Supercapacitor must fail when over its voltage rating');
+
+// The canvas LED is never fully painted at low brightness: test its actual fill alpha.
+const ledFills=[];
+ctxMock.createRadialGradient=()=>({addColorStop(){}});
+ctxMock.save=()=>{};
+ctxMock.restore=()=>{ctxMock.globalAlpha=1};
+ctxMock.fill=()=>{if(ctxMock.fillStyle==='#ff404f')ledFills.push(ctxMock.globalAlpha)};
+drawScope.ledRgba=(hex,alpha)=>hex+':'+alpha;
+testDrawCircuit({...sampleModel,brightness:25});
+const dimAlpha=ledFills.at(-1);
+testDrawCircuit({...sampleModel,brightness:100});
+const brightAlpha=ledFills.at(-1);
+assert.ok(dimAlpha>0 && dimAlpha<brightAlpha, 'Canvas LED light must scale with brightness, not switch on at full color');
+assert.ok(Math.abs(brightAlpha-1)<.001,'Full LED brightness must produce full color intensity');
 
 const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
 assert.match(wrangler, /"name"\s*:\s*"faristech-lab"/, 'Lab must not deploy as production');
