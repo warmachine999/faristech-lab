@@ -433,6 +433,11 @@ ctxMock.createLinearGradient=()=>({addColorStop(){}});
 ctxMock.createRadialGradient=()=>({addColorStop(){}});
 const physicalLabels=[];
 drawScope.label=(...args)=>physicalLabels.push(args);
+// The full live page provides these functions; the isolated renderer needs test stubs.
+let syncCount=0,paintCount=0;
+drawScope.performance={now:()=>1000};
+drawScope.syncPhysicalExplosions=()=>{syncCount++};
+drawScope.paintPhysicalExplosions=()=>{paintCount++};
 const realistic=new vm.Script(html.slice(realStart,realEnd)+'\ndrawRealisticCircuit').runInNewContext(drawScope);
 const physModel={...sampleModel,isSuper:true,hasCap:true,polarity:'super',C:.055,baseC:.0022,rating:16,brightness:68};
 realistic(physModel);
@@ -448,6 +453,89 @@ realistic({...sampleModel,brightness:0});
 assert.ok(physicalLabels.some(q=>q[2]==='CAPACITOR REMOVED'),
  'Physical view must hide its capacitor when the mode is removed');
 assert.equal(drawScope.cv.dataset.lastDraw,'realistic','Removed-capacitor mode must still render successfully');
+assert.equal(syncCount,2,'Each physical frame must check for new component failures');
+assert.equal(paintCount,2,'Each physical frame must render active explosion effects');
+
+
+// IRL ONLY: simulate true component failures, no repeated explosions per frame, and timed fade-out.
+assert.ok(html.includes('id="realExplosionPreviewBtn"')&&html.includes('data-i18n="previewExplosion"'),
+ 'Real-life mode needs a user-accessible explosion preview button');
+assert.ok(html.includes("if(preview)preview.hidden=schematic"),
+ 'Explosion preview must be hidden in the regular schematic');
+assert.ok(html.includes("launchPhysicalExplosion('capacitor',true)"),
+ 'The preview button must trigger a visual-only effect');
+assert.ok(html.includes("syncPhysicalExplosions(explosionNow);paintPhysicalExplosions(explosionNow);"),
+ 'Realistic drawing must run physical explosion effects');
+assert.ok(!html.slice(realStart,realEnd).includes("boom(330,290"),
+ 'IRL mode must not overlay a repeating cartoon explosion emoji');
+assert.ok(html.includes('clearPhysicalExplosions();flowElectrons.forEach'),
+ 'Circuit reset must clear all explosion effects');
+assert.ok(html.includes("clearPhysicalExplosions('capacitor')"),
+ 'Replacing the capacitor must allow a new one-time failure animation');
+const blastStart=html.indexOf('const physicalExplosionState={');
+const blastEnd=html.indexOf("$('realExplosionPreviewBtn').addEventListener",blastStart);
+assert.ok(blastStart>=0&&blastEnd>blastStart,'Cannot locate one-shot explosion system');
+const blastScope={
+ cv:{dataset:{}},
+ ctx:new Proxy({},{
+  get:(obj,key)=>key in obj?obj[key]:()=>{},
+  set:(obj,key,value)=>{obj[key]=value;return true}
+ }),
+ window:{matchMedia:()=>({matches:false})},
+ performance:{now:()=>1000},
+ capFailed:false,ledFailed:false,batteryFailed:false,lang:'en'
+};
+blastScope.ctx.createRadialGradient=()=>({addColorStop(){}});
+const blastCode=html.slice(blastStart,blastEnd);
+const explosion=new vm.Script(blastCode+'\n({state:physicalExplosionState,start:launchPhysicalExplosion,update:syncPhysicalExplosions,paint:paintPhysicalExplosions,clear:clearPhysicalExplosions})').runInNewContext(blastScope);
+explosion.update(1000);
+assert.equal(explosion.state.bursts.length,0,'Healthy electronics must not explode');
+blastScope.capFailed=true;
+explosion.update(1100);
+assert.equal(explosion.state.bursts.length,1,'Capacitor failure must produce exactly one explosion');
+assert.equal(explosion.state.bursts[0].kind,'capacitor','Capacitor burst must originate at the capacitor');
+assert.equal(explosion.state.bursts[0].x,330,'Capacitor explosion X should match its real component');
+assert.ok(explosion.state.bursts[0].sparks.length>=90,'Real-life failure must produce a shower of sparks');
+assert.ok(explosion.state.bursts[0].debris.length>=20,'Real-life failure must eject flying fragments');
+assert.ok(explosion.state.bursts[0].smoke.length>=20,'Real-life failure must make visible smoke');
+assert.equal(blastScope.cv.dataset.realExplosion,'capacitor','Actual failure must register a real explosion');
+explosion.update(1350);explosion.update(1700);
+assert.equal(explosion.state.bursts.length,1,'Frames must not re-trigger the same capacitor explosion');
+explosion.paint(1400);
+explosion.paint(2400);
+explosion.paint(6200);
+assert.equal(explosion.state.bursts.length,0,'Finished explosions must be discarded after smoke fades');
+blastScope.capFailed=false;blastScope.ledFailed=true;
+explosion.update(6500);
+assert.equal(explosion.state.bursts[0].kind,'led','LED failure must explode at the LED');
+assert.equal(explosion.state.bursts[0].x,940,'LED explosion must occur at the physical diode');
+blastScope.batteryFailed=true;
+explosion.update(6600);
+assert.equal(explosion.state.bursts.length,2,'Different failed components may each emit their own burst');
+assert.ok(explosion.state.bursts.some(b=>b.kind==='battery'&&b.x===125),'Battery failure must originate at the battery');
+explosion.clear();
+assert.equal(explosion.state.bursts.length,0,'Reset must remove all sparks, smoke, and fragments');
+assert.equal(blastScope.cv.dataset.realExplosion,undefined,'Reset must clear the failure marker');
+assert.ok(Object.values(explosion.state.latched).every(x=>!x),'Reset must rearm all failure effects');
+blastScope.capFailed=true;blastScope.ledFailed=false;blastScope.batteryFailed=false;
+explosion.update(9000);
+assert.equal(explosion.state.bursts.length,1,'Fresh circuit must be able to explode again on a new failure');
+explosion.clear('capacitor');
+assert.equal(explosion.state.bursts.length,0,'Swapping a capacitor must clear its stale animation');
+explosion.start('capacitor',true,9500);
+assert.equal(blastScope.cv.dataset.previewExplosion,'capacitor','Preview must mark itself as simulated');
+assert.equal(explosion.state.latched.capacitor,false,'Preview must never change physical failure state');
+
+// Accessibility: reduced-motion preference still shows a brief, safe burst without strobing fragments.
+const reducedScope={...blastScope,cv:{dataset:{}},
+ window:{matchMedia:()=>({matches:true})},capFailed:false,ledFailed:false,batteryFailed:false};
+const reducedExplosion=new vm.Script(blastCode+'\n({state:physicalExplosionState,start:launchPhysicalExplosion,paint:paintPhysicalExplosions})').runInNewContext(reducedScope);
+reducedExplosion.start('capacitor',true,1000);
+assert.equal(reducedExplosion.state.bursts[0].sparks.length,0,'Reduced motion must remove fast sparks');
+assert.equal(reducedExplosion.state.bursts[0].debris.length,0,'Reduced motion must remove flying debris');
+assert.ok(reducedExplosion.state.bursts[0].smoke.length>0,'Reduced motion may still show gentle smoke');
+reducedExplosion.paint(1200);
+
 
 const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
 assert.match(wrangler, /"name"\s*:\s*"faristech-lab"/, 'Lab must not deploy as production');
