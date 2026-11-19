@@ -357,6 +357,25 @@ const brightAlpha=diodeFillAt(100);
 assert.ok(offAlpha>0 && offAlpha<dimAlpha,'Unpowered LED should keep only a faint, non-glowing diode symbol');
 assert.ok(dimAlpha<midAlpha && midAlpha<brightAlpha,'Canvas LED color intensity must increase smoothly with current');
 assert.ok(brightAlpha>=.9 && brightAlpha<=1,'Full LED brightness must produce a vivid diode');
+assert.ok(html.includes('const ledVisual=Math.pow(ledLight,.65)'), 'Visual brightness boost must preserve dimming');
+assert.ok(html.includes('ctx.shadowBlur=ledLight>.001?9+25*ledVisual:0'), 'LED core glow must follow brightness');
+assert.ok(html.includes('ctx.createRadialGradient(940,295,5,940,295,72)'), 'LED halo should be brighter but remain localized');
+const haloStops=[];
+ctxMock.createRadialGradient=()=>({addColorStop:(offset,color)=>haloStops.push({offset,color})});
+function glowAlphaAt(percent){
+ haloStops.length=0;
+ testDrawCircuit({...sampleModel,brightness:percent});
+ const center=haloStops.find(stop=>stop.offset===0);
+ return center?Number(center.color.split(':').at(-1)):0;
+}
+assert.equal(glowAlphaAt(0),0,'Powered-off LED must emit no colored halo');
+const weakGlow=glowAlphaAt(25);
+const normalGlow=glowAlphaAt(68);
+const strongGlow=glowAlphaAt(100);
+assert.ok(weakGlow>0 && weakGlow<normalGlow && normalGlow<strongGlow,'LED glow must increase smoothly with current');
+assert.ok(normalGlow>.40,'LED must be noticeably brighter at the default 68% setting');
+assert.ok(strongGlow<=.67,'LED glow intensity must remain bounded');
+
 
 const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
 assert.match(wrangler, /"name"\s*:\s*"faristech-lab"/, 'Lab must not deploy as production');
