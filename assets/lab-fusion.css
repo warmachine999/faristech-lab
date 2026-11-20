@@ -223,4 +223,7 @@ main.wrap{max-width:1400px}
 @media(prefers-reduced-motion:reduce){.ft-ribbon-track,.ft-hero-led{animation:none!important}.ft-ribbon-track{transform:none!important}.ft-spotlight-card{transition:none!important}}
 
 /* Keep the four main entry cards balanced at full-width desktops. */
-@media(min-width:1321px){.ft-spotlight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ft-spotlight-card{min-height:375px}.ft-spotlight-card:first-child{grid-row:span 2;min-height:765px}.ft-spotlight-card:first-child .ft-mini-circuit{min-height:260px}.ft-spotlight-card:first-child .ft-card-body{margin-top:0}}
+@media(min-width:1321px){.ft-spotlight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ft-spotlight-card{min-height:365px}.ft-spotlight-card:first-child{grid-row:auto;min-height:430px}.ft-spotlight-card:first-child .ft-mini-circuit{min-height:205px}.ft-spotlight-card:first-child .ft-card-body{margin-top:auto}}
+
+/* Keep the Inventium monogram luminous even in the light theme. */
+.atom.inventium-atom .core .inventium-symbol{color:#f1ffed!important}
