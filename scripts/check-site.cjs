@@ -12,21 +12,23 @@ for (const match of scripts) {
 }
 assert.ok(checked > 0, 'Expected at least one inline JS script');
 const faviconPath='studio/favicon.svg';
-const faviconVersion='premium-fx-25';
-assert.ok(fs.existsSync(faviconPath),'The FarisTech X tab logo must exist');
+const faviconVersion='orbital-globe-20261120';
+assert.ok(fs.existsSync(faviconPath),'FarisTech X browser tab icon must exist');
 const faviconSvg=fs.readFileSync(faviconPath,'utf8');
-assert.match(faviconSvg,/<svg\s[^>]*viewBox="0 0 64 64"/,'Favicon must be a crisp, scalable 64px SVG');
-assert.match(faviconSvg,/fill="url\(#f\)"/,'New favicon must feature the cyan F monogram');
-assert.match(faviconSvg,/stroke="url\(#x\)"/,'New favicon must feature the orange X monogram');
-assert.match(faviconSvg,/#FF863E/,'New F× design must have the orange accent');
-assert.match(faviconSvg,/#11CFFF/,'New F× design must have the cyan accent');
+assert.match(faviconSvg,/<svg\s[^>]*viewBox="0 0 64 64"/,'Globe favicon must remain a scalable 64px SVG');
+assert.match(faviconSvg,/radialGradient id="ocean"/,'Icon must feature a dimensional blue globe');
+assert.match(faviconSvg,/clipPath id="planetClip"/,'Globe latitude and longitude grid must be contained in a circle');
+assert.match(faviconSvg,/rx="29\.5" ry="11\.2"/,'Orbital ring around the globe is missing');
+assert.match(faviconSvg,/linearGradient id="beacon"/,'Globe logo must keep its orange X brand accent');
+assert.match(faviconSvg,/#FF833D/,'Orange X accent missing from globe favicon');
+assert.match(faviconSvg,/#5AF5FB/,'Cyan globe highlight missing from favicon');
 const faviconPages=['index.html','projects.html','project.html',
  'studio/index.html','studio/projects.html','studio/project.html','studio/pricing.html'];
 for(const page of faviconPages){
  const markup=page==='index.html'?html:fs.readFileSync(page,'utf8');
  const icon=page.startsWith('studio/')?'favicon.svg':'studio/favicon.svg';
  const expected='<link rel="icon" type="image/svg+xml" href="'+icon+'?v='+faviconVersion+'">';
- assert.ok(markup.includes(expected),page+' must show the new F× favicon without stale caching');
+ assert.ok(markup.includes(expected),page+' must display the current globe favicon without stale browser cache');
 }
 
 for (const id of ['varonPause', 'varonReset', 'varonStatus', 'varonCycle']) {
