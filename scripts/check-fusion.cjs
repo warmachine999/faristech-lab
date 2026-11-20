@@ -2,7 +2,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict'),vm=require('nod
 const read=path=>fs.readFileSync(path,'utf8');
 const index=read('index.html'),css=read('assets/lab-fusion.css'),interaction=read('assets/lab-fusion.js');
 const gamePage=read('jewel-thief.html'),game=read('assets/jewel-thief.js');
-const projectLibrary=read('project.html'),projectDetails=read('projects.html');
+const projectLibrary=read('projects.html'),projectDetails=read('project.html');
 assert.ok(index.includes('class="atom inventium-atom"')&&index.includes('varon-radiation-effect'),'Original atom and ionization engine must stay');
 assert.ok(index.includes('requestAnimationFrame(frame);requestAnimationFrame(animateElectrons);'),'Keep original particle and electron animation loops');
 assert.ok(index.includes('function matchaBackground()'),'Matcha background must be animated with the canvas engine');
@@ -17,9 +17,9 @@ assert.ok(index.includes('id="circuitSchematicBtn"')&&index.includes('id="circui
 assert.ok(index.includes('href="#lab"'),'Circuit card must link to the in-page simulator');
 assert.ok(index.includes('href="studio/index.html"'),'Maker Studio must be local');
 assert.ok(index.includes('href="jewel-thief.html"'),'Jewel Thief must be local');
-assert.ok(index.includes('href="project.html"'),'Projects should open the library in this site');
-assert.ok(index.includes('projects.html?id='),'Project card must open details');
-assert.ok(projectLibrary.includes("location.href='projects.html?id="),'Library cards must open detail pages');
+assert.ok(index.includes('href="projects.html"'),'Projects should open the library in this site');
+assert.ok(index.includes('project.html?id='),'Project card must open details');
+assert.ok(projectLibrary.includes('href="project.html?id=')||projectLibrary.includes("href='project.html?id="),'Library cards must open detail pages');
 assert.ok(projectDetails.includes('id="overview"'),'Individual project detail must remain functional');
 assert.equal((index.match(/class="ft-ribbon-text"/g)||[]).length,2,'Ribbon needs exactly two identical strips for seamless motion');
 assert.ok(css.includes('translate3d(-50%,0,0)'),'Ribbon should run as a GPU-composited continuous marquee');
