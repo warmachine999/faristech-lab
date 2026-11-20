@@ -40,6 +40,12 @@ assert.ok(html.includes('id="inventium-127-atom-style"'),'Inventium nucleus must
 assert.ok(html.includes('INVENTIUM <span style="color:var(--cyan)">Iv · 127</span>'),
  'Atom console must identify the Inventium element');
 assert.ok(html.includes('⚙ Inventium controls'),'Atom control button must use its new name');
+assert.ok(html.includes("settingsToggle.textContent=open?'✕ Hide Inventium controls':'⚙ Inventium controls';"),
+ 'Inventium settings button must keep its new name after opening or closing');
+assert.ok(html.includes('aria-label="Inventium atom animation control panel"'),
+ 'Atom settings must have an accessible Inventium label');
+assert.ok(html.includes('class="orbit o1"')&&html.includes('class="orbit o2"')&&html.includes('class="orbit o3"'),
+ 'Inventium must keep the three existing animated orbital planes');
 
 for (const id of ['varonPause', 'varonReset', 'varonStatus', 'varonCycle']) {
   assert.ok(html.includes('id="' + id + '"'), 'Missing VARON control: ' + id);
