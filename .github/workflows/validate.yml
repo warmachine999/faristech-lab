@@ -16,6 +16,8 @@ jobs:
           node-version: '22'
       - name: Validate homepage scripts and VARON controls
         run: node scripts/check-site.cjs
+      - name: Validate premium integration, routes, themes and Jewel Thief
+        run: node scripts/check-fusion.cjs
       - name: Check real circuit rendering in Chromium
         shell: bash
         run: |
