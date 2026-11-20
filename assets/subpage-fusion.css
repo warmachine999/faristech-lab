@@ -1,0 +1,27 @@
+/* Consistent FarisTech Lab subpage shell. No project functionality removed. */
+html[data-theme=matcha]{--bg:#09130d;--panel:#17261d;--panel2:#213426;--text:#edf8e8;
+--muted:#a3bba8;--line:rgba(201,245,181,.18);--cyan:#a9efbd;--purple:#c8fa84;
+--green:#b4e890;--orange:#f3dca5;--yellow:#e1e7a7;--shadow:0 24px 75px rgba(0,0,0,.32)}
+html[data-theme=matcha] body{background:radial-gradient(ellipse at 78% 6%,rgba(188,249,159,.17),transparent 34%),radial-gradient(ellipse at 8% 63%,rgba(117,197,139,.07),transparent 29%),linear-gradient(180deg,#0a170e,#101d14 65%,#07120b)}
+html[data-theme=matcha] .card,html[data-theme=matcha] .projectCard,html[data-theme=matcha] .storyCard,html[data-theme=matcha] .sideCard{background:rgba(22,42,29,.9);border-color:rgba(190,250,169,.16)}
+html[data-theme=matcha] header{background:rgba(9,23,13,.86);border-color:rgba(191,253,151,.18)}
+html[data-theme=matcha] .btn.primary{background:linear-gradient(120deg,#bef48b,#a3eec3);color:#091b0e}
+html[data-theme=matcha] .ctrl{background:#1c2f22;color:#e7f9e6}
+html[data-theme=matcha] .visual{background:radial-gradient(circle at 65% 45%,rgba(193,250,146,.16),transparent 58%),rgba(18,33,20,.83)}
+body{font-family:Inter,system-ui,sans-serif}
+h1,h2,h3{font-family:"Space Grotesk",Inter,system-ui,sans-serif}
+header .nav{min-height:72px}
+header .brand{font-weight:800;letter-spacing:-.03em;gap:10px}
+header .brandMark{background:transparent!important;border:1px solid var(--line);padding:2px;object-fit:contain;box-shadow:0 0 18px color-mix(in srgb,var(--cyan) 12%,transparent)}
+header .links a{font-weight:700;transition:color .2s}
+header .links a:hover{color:var(--cyan)}
+header .ctrl{border-radius:10px}
+main.wrap{padding-bottom:100px}
+h1{letter-spacing:-.07em;line-height:1}
+.projectCard,.storyCard,.sideCard,.moreCard,.visual{border-radius:17px}
+.btn{border-radius:10px;transition:transform .2s,border-color .2s}
+.btn:hover{transform:translateY(-2px)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+html[data-theme=light] .brandMark{border-color:rgba(28,66,52,.25)}
+@media(max-width:800px){header .nav{gap:9px}header .brand span{font-size:.85rem}header .links{box-shadow:0 13px 30px rgba(0,0,0,.2)}}
+@media(prefers-reduced-motion:reduce){.btn{transition:none!important}}

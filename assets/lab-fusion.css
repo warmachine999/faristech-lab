@@ -1,0 +1,229 @@
+/* FARISTECH LAB / FUSION EDITION
+   Modern visual system layered over the ORIGINAL working atom, ray physics,
+   animated theme canvas, circuit simulator, projects and chat. */
+html{scroll-behavior:smooth;scroll-padding-top:95px}
+html[data-theme=matcha]{
+ --bg:#09130d;--panel:#14241a;--panel2:#1d3024;--text:#f0f7e7;
+ --muted:#abbcad;--line:rgba(204,246,178,.18);
+ --purple:#c8fa84;--cyan:#a9edc7;--pink:#e1e9b4;
+ --orange:#d6d29a;--green:#baf29b;--red:#fa887b;--yellow:#eae59e;
+ --shadow:0 22px 70px rgba(0,0,0,.31)
+}
+html[data-theme=matcha] body{
+ background:radial-gradient(ellipse at 78% 9%,rgba(142,214,115,.20),transparent 34%),
+ radial-gradient(ellipse at 6% 63%,rgba(94,178,134,.11),transparent 31%),
+ linear-gradient(180deg,#09140d,#0e1c12 52%,#08120b)
+}
+html[data-theme=matcha] body:before{opacity:.34;background-size:54px 54px}
+html[data-theme=matcha] .header{background:rgba(12,26,16,.87);border-color:rgba(201,248,165,.22)}
+html[data-theme=matcha] .gradient{background:linear-gradient(96deg,#c9fd83,#9fecc7,#e3f0bc);-webkit-background-clip:text;background-clip:text;color:transparent}
+html[data-theme=matcha] .btn.primary{background:linear-gradient(116deg,#c9fd88,#a8ebc0);color:#102114;box-shadow:0 15px 36px rgba(149,221,132,.13)}
+html[data-theme=matcha] .controlBtn{background:#19291e;color:#f0f7e7}
+html[data-theme=matcha] .card,
+html[data-theme=matcha] .service,
+html[data-theme=matcha] .about,
+html[data-theme=matcha] .labCard,
+html[data-theme=matcha] .contact{background:rgba(19,35,24,.94);border-color:rgba(197,244,179,.17)}
+html[data-theme=matcha] .card:hover,
+html[data-theme=matcha] .service:hover{border-color:rgba(201,250,132,.48)}
+html[data-theme=matcha] .atom .orbit{border-color:rgba(182,244,163,.4)}
+html[data-theme=matcha] #themeBg{opacity:1}
+html[data-theme=matcha] .ft-hero-badge{color:#d5f2bd}
+html[data-theme=light] .ft-spotlight-card{background:rgba(255,255,255,.86)}
+html[data-theme=light] .ft-spotlight-card p,
+html[data-theme=light] .ft-spotlight-title p,
+html[data-theme=light] .ft-quick-meta,
+html[data-theme=light] .ft-spotlight-more{color:#536277}
+html[data-theme=light] .ft-spotlight-card:hover{border-color:rgba(66,95,164,.4)}
+/* The original canvas remains visible in ALL five themes. */
+#themeBg{z-index:-2!important;pointer-events:none!important}
+:root{--ft-card-radius:20px;--ft-flow:cubic-bezier(.2,.7,.2,1)}
+main.wrap{max-width:1400px}
+.header.wrap{box-shadow:0 15px 46px rgba(0,0,0,.19);border-radius:17px}
+.brandName{font-weight:850;letter-spacing:-.035em}
+.brandX{font-weight:850}
+@media(min-width:1181px){
+ .header.wrap{gap:clamp(8px,1.2vw,16px);padding:11px 19px}
+ .header .nav{gap:clamp(8px,1.06vw,15px);font-size:.77rem}
+ .header .nav a{font-weight:700}
+ .header .controlBtn{padding:8px 10px}
+ .brandLine .identityBadge{font-size:.6rem!important}
+}
+.controls{position:relative}
+.ft-theme-menu[hidden]{display:none!important}
+.ft-theme-menu{
+ position:absolute;right:0;top:calc(100% + 13px);z-index:190;
+ display:grid;grid-template-columns:repeat(2,minmax(125px,1fr));gap:7px;
+ padding:12px;width:min(330px,calc(100vw - 32px));
+ background:color-mix(in srgb,var(--panel) 94%,transparent);
+ border:1px solid var(--line);border-radius:15px;
+ box-shadow:0 22px 70px rgba(0,0,0,.4);
+ -webkit-backdrop-filter:blur(17px);backdrop-filter:blur(17px)
+}
+.ft-theme-choice{display:flex;align-items:center;justify-content:flex-start;gap:10px;
+ border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text);
+ padding:12px;text-align:start;font-size:.78rem;font-weight:750;transition:.2s}
+.ft-theme-choice:hover,.ft-theme-choice[aria-pressed=true]{border-color:var(--cyan);background:color-mix(in srgb,var(--cyan) 9%,var(--panel))}
+.ft-theme-choice .ft-choice-icon{font-size:1.2rem}
+.ft-theme-choice[aria-pressed=true]:after{content:"✓";font-weight:900;color:var(--cyan);margin-inline-start:auto}
+.ft-theme-choice:last-child:nth-child(odd){grid-column:span 2}
+.ft-theme-choice:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.ft-hero-intro{display:flex;align-items:center;gap:10px;width:max-content;max-width:100%;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:1.1px;font-size:.66rem;
+ font-weight:800;color:var(--cyan);margin-bottom:10px}
+.ft-hero-led{width:7px;height:7px;background:var(--green);border-radius:50%;box-shadow:0 0 10px var(--green);animation:ftBlink 2.9s ease-in-out infinite}
+@keyframes ftBlink{50%{opacity:.42}}
+.hero{min-height:clamp(650px,78vh,850px);gap:clamp(18px,4vw,74px);padding-top:clamp(75px,9vw,115px);padding-bottom:75px}
+.hero>div:first-child{position:relative;z-index:4}
+.hero .eyebrow{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.hero h1{font-size:clamp(3.8rem,6.4vw,7rem);line-height:.99;letter-spacing:-.084em}
+.hero h1 .gradient{filter:drop-shadow(0 10px 35px color-mix(in srgb,var(--purple) 17%,transparent))}
+.hero #heroText{font-size:clamp(.99rem,1.3vw,1.14rem);max-width:610px;line-height:1.82}
+.hero .actions .btn{min-height:49px;padding:12px 19px}
+.hero .actions{margin:27px 0}
+.hero .banners{max-width:570px}
+.varon-visual{position:relative;z-index:3}
+.varon-visual::before{content:"";position:absolute;z-index:-1;top:6%;left:4%;right:4%;bottom:14%;
+ border:1px solid color-mix(in srgb,var(--cyan) 14%,transparent);border-radius:30px;
+ background:radial-gradient(circle at 55% 46%,color-mix(in srgb,var(--purple) 8%,transparent),transparent 57%);
+ pointer-events:none}
+.ft-atom-interface{position:absolute;z-index:8;left:5%;top:5%;font:700 .57rem ui-monospace,SFMono-Regular,monospace;letter-spacing:1.2px;color:var(--muted);display:flex;gap:9px;align-items:center;pointer-events:none}
+.ft-atom-interface:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 13px var(--green)}
+.ft-atom-metadata{position:absolute;right:5%;top:5%;z-index:8;color:var(--muted);letter-spacing:1px;font:700 .57rem ui-monospace,SFMono-Regular,monospace;pointer-events:none}
+/* Chip nucleus — same .core, same origin for particle / electron calculations */
+.atom.inventium-atom .core{
+ width:185px;height:185px;overflow:visible;border-radius:19px;
+ background:linear-gradient(138deg,color-mix(in srgb,var(--purple) 28%,#141b24),#0b1415 57%,#071013);
+ border:2px solid color-mix(in srgb,var(--cyan) 66%,#61786c);
+ box-shadow:0 0 0 6px color-mix(in srgb,var(--cyan) 4%,transparent),
+ 0 22px 50px rgba(0,0,0,.52),0 0 65px color-mix(in srgb,var(--purple) 22%,transparent),
+ inset 0 0 42px rgba(0,0,0,.5);
+ transform:rotate(-9deg);
+ transition:box-shadow .35s ease
+}
+.atom.inventium-atom .core:before{content:"";position:absolute;inset:14px;z-index:0;pointer-events:none;border:1px solid color-mix(in srgb,var(--cyan) 38%,transparent);
+ border-radius:8px;background:linear-gradient(130deg,rgba(255,255,255,.05),transparent 47%)}
+.atom.inventium-atom .core:after{content:"";position:absolute;inset:4px;z-index:0;pointer-events:none;border:1px dashed color-mix(in srgb,var(--cyan) 23%,transparent);border-radius:13px}
+.ft-chip-pin{position:absolute;z-index:0;display:block;pointer-events:none}
+.ft-chip-pin.top,.ft-chip-pin.bottom{height:12px;left:10%;right:10%;background:repeating-linear-gradient(90deg,transparent 0 4%,var(--cyan) 4% 8%,transparent 8% 12%)}
+.ft-chip-pin.top{top:-13px}.ft-chip-pin.bottom{bottom:-13px}
+.ft-chip-pin.left,.ft-chip-pin.right{width:12px;top:10%;bottom:10%;background:repeating-linear-gradient(0deg,transparent 0 4%,var(--cyan) 4% 8%,transparent 8% 12%)}
+.ft-chip-pin.left{left:-13px}.ft-chip-pin.right{right:-13px}
+.atom.inventium-atom .core .inventium-core-label{transform:rotate(9deg);gap:5px}
+.atom.inventium-atom .core .inventium-number{
+ font-size:.78rem!important;color:var(--orange);letter-spacing:.23em;animation:none!important}
+.atom.inventium-atom .core .inventium-symbol{
+ font-size:4.5rem!important;color:var(--text);letter-spacing:-.1em;animation:none!important;
+ text-shadow:0 0 18px color-mix(in srgb,var(--cyan) 58%,transparent)}
+.atom.inventium-atom .core .inventium-name{font-size:.55rem!important;letter-spacing:.22em;animation:none!important;color:var(--cyan)}
+.atom.inventium-atom .core:hover{box-shadow:0 25px 65px rgba(0,0,0,.5),0 0 80px color-mix(in srgb,var(--cyan) 23%,transparent)}
+/* Never modify the rotating orbital planes or Javascript-controlled electron labels */
+.atom.inventium-atom .orbLabel{border-radius:999px;padding:7px 10px;background:color-mix(in srgb,var(--panel) 88%,transparent);
+ -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 8px 23px rgba(0,0,0,.22)}
+.varon-caption{pointer-events:none}
+.ft-ribbon{position:relative;left:50%;transform:translateX(-50%);width:100vw;max-width:none;overflow:hidden;
+ background:color-mix(in srgb,var(--purple) 13%,var(--panel));border-top:1px solid color-mix(in srgb,var(--cyan) 25%,var(--line));
+ border-bottom:1px solid color-mix(in srgb,var(--cyan) 22%,var(--line));padding:14px 0;
+ display:flex;align-items:center;direction:ltr;isolation:isolate}
+.ft-ribbon-track{display:flex;align-items:center;flex:0 0 auto;width:max-content;will-change:transform;
+ animation:ftRibbon 46s linear infinite;transform:translate3d(0,0,0)}
+.ft-ribbon-text{flex:0 0 auto;display:flex;align-items:center;gap:28px;padding-right:28px;
+ font:750 .67rem ui-monospace,SFMono-Regular,monospace;letter-spacing:2px;white-space:nowrap;color:var(--text)}
+.ft-ribbon-text i{font-size:1.05rem;font-style:normal;color:var(--cyan)}
+@keyframes ftRibbon{to{transform:translate3d(-50%,0,0)}}
+.ft-spotlight{padding-top:85px;padding-bottom:38px}
+.ft-spotlight-heading{display:flex;align-items:end;justify-content:space-between;gap:26px;margin-bottom:25px}
+.ft-spotlight-kicker{font:800 .71rem ui-monospace,SFMono-Regular,monospace;letter-spacing:2px;color:var(--cyan)}
+.ft-spotlight-heading h2{margin:8px 0 0;font-family:"Space Grotesk",Inter,sans-serif;line-height:1;letter-spacing:-.07em;font-size:clamp(2.7rem,5vw,4.8rem)}
+.ft-spotlight-heading h2 em{color:var(--cyan);font-style:normal}
+.ft-spotlight-heading>p{max-width:360px;margin:0 0 4px;color:var(--muted);line-height:1.75;font-size:.87rem}
+.ft-spotlight-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.ft-spotlight-card{display:flex;flex-direction:column;gap:15px;position:relative;padding:20px;min-height:330px;
+ border-radius:var(--ft-card-radius);border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 92%,transparent);
+ box-shadow:0 22px 50px rgba(0,0,0,.10);transition:transform .28s var(--ft-flow),border-color .28s}
+.ft-spotlight-card:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--cyan) 55%,var(--line))}
+.ft-spotlight-card:first-child{grid-column:span 1}
+.ft-quick-meta{font:700 .66rem ui-monospace,SFMono-Regular,monospace;letter-spacing:1.4px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ft-live-pill{font-size:.59rem;border-radius:999px;padding:5px 8px;border:1px solid color-mix(in srgb,var(--green) 48%,var(--line));color:var(--green);white-space:nowrap}
+.ft-card-body{margin-top:auto}
+.ft-card-body h3{margin:0 0 9px;font-size:clamp(1.45rem,2vw,2rem);font-family:"Space Grotesk",sans-serif;letter-spacing:-.055em}
+.ft-card-body p{color:var(--muted);font-size:.79rem;line-height:1.8;margin:0 0 17px}
+.ft-card-link{display:inline-flex;align-items:center;gap:12px;color:var(--cyan);font-size:.78rem;font-weight:800}
+.ft-card-link:hover{text-decoration:underline;text-underline-offset:4px}
+.ft-mini-circuit{width:100%;display:grid;place-items:center;flex:1;min-height:145px;border-radius:13px;
+ border:1px solid color-mix(in srgb,var(--cyan) 23%,var(--line));
+ background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--cyan) 7%,var(--panel)),color-mix(in srgb,var(--panel) 90%,#000));position:relative;overflow:hidden}
+.ft-mini-circuit svg{display:block;width:100%;height:auto;max-height:176px}
+.ft-wire{stroke:var(--cyan);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.ft-battery{stroke:var(--cyan);stroke-width:3}
+.ft-led-glow{opacity:1;transition:opacity .24s}
+.ft-mini-circuit[data-power=off] .ft-led-glow,.ft-mini-circuit[data-power=off] .ft-led-rays{opacity:0}
+.ft-mini-circuit[data-power=off] .ft-led-ring,.ft-mini-circuit[data-power=off] .ft-led-cross{stroke:var(--muted)}
+.ft-led-ring,.ft-led-cross,.ft-led-rays{stroke:var(--green);stroke-width:2.3;transition:stroke .2s}
+.ft-mini-circuit text{fill:var(--muted);font:11px ui-monospace,SFMono-Regular,monospace}
+.ft-mini-switch{display:inline-flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--line);
+ border-radius:999px;background:var(--panel2);color:var(--text);font:750 .63rem ui-monospace,monospace}
+.ft-mini-switch:after{content:"";width:23px;height:13px;border-radius:99px;background:var(--green);border:1px solid color-mix(in srgb,var(--green) 60%,transparent);
+ box-shadow:inset -10px 0 #152215}
+.ft-mini-switch[aria-pressed=false]:after{background:#647568;box-shadow:inset 10px 0 #27342a}
+.ft-mini-switch:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.ft-quick-art{position:relative;min-height:146px;display:grid;place-items:center;overflow:hidden;border-radius:13px;
+ background:radial-gradient(circle,color-mix(in srgb,var(--cyan) 16%,var(--panel)),color-mix(in srgb,var(--panel) 90%,#000));
+ border:1px solid color-mix(in srgb,var(--cyan) 18%,var(--line))}
+.ft-quick-art::before{content:"";position:absolute;inset:0;opacity:.55;background-image:linear-gradient(color-mix(in srgb,var(--cyan) 10%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--cyan) 10%,transparent) 1px,transparent 1px);background-size:22px 22px}
+.ft-quick-art .ft-art-icon{position:relative;z-index:1;font-size:4.8rem;font-weight:600;letter-spacing:-.17em;color:var(--cyan);transform:rotate(-8deg);text-shadow:0 8px 38px color-mix(in srgb,var(--cyan) 25%,transparent)}
+.ft-quick-art .ft-art-code{font:600 1.2rem ui-monospace,SFMono-Regular,monospace;letter-spacing:-.07em;color:var(--cyan)}
+.ft-jewel{font-size:4rem!important;filter:drop-shadow(0 0 23px color-mix(in srgb,var(--cyan) 40%,transparent))}
+.ft-spotlight-more{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:19px 4px 0;
+ color:var(--muted);font-size:.75rem;line-height:1.6}
+.ft-spotlight-more a{color:var(--cyan);text-decoration:underline;text-underline-offset:4px}
+.ft-section-index{font:800 .68rem ui-monospace,SFMono-Regular,monospace;letter-spacing:1.4px;color:var(--cyan)}
+#projects .head h2,#services .head h2,#lab .labHeader h2{font-size:clamp(2.5rem,4.35vw,4.3rem);letter-spacing:-.065em}
+.card,.service,.labCard,.about,.contact{border-radius:19px}
+.card:hover,.service:hover{box-shadow:0 17px 56px rgba(0,0,0,.20)}
+#lab{scroll-margin-top:99px}
+.labGrid{grid-template-columns:minmax(0,1.6fr) minmax(285px,.64fr)}
+#lab .labCard{min-width:0}
+.ft-footer-links{display:flex;flex-wrap:wrap;gap:16px;align-items:center;width:100%;padding:10px 0 0}
+.ft-footer-links a{font-size:.78rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:8px 12px}
+.ft-footer-links a:hover{color:var(--cyan);border-color:var(--cyan)}
+@media(max-width:1320px){.ft-spotlight-grid{grid-template-columns:1.2fr 1fr;}.ft-spotlight-card:nth-child(3){grid-column:span 1}.ft-spotlight-card:nth-child(4){grid-column:span 1}.ft-spotlight-card{min-height:320px}}
+@media(max-width:1150px){.labGrid{grid-template-columns:1fr}.hero{padding-top:70px}.ft-atom-interface{top:9%}}
+@media(max-width:760px){
+ .hero{min-height:0;padding-top:57px;padding-bottom:40px}
+ .hero h1{font-size:clamp(3.1rem,12vw,5.1rem)}
+ .hero .actions{justify-content:center}
+ .varon-visual::before{left:0;right:0}
+ .atom.inventium-atom .core{width:151px;height:151px;border-radius:16px}
+ .atom.inventium-atom .core .inventium-symbol{font-size:3.55rem!important}
+ .ft-atom-interface{font-size:.5rem;top:3%}
+ .ft-atom-metadata{font-size:.5rem;top:3%}
+ .ft-spotlight{padding-top:67px}
+ .ft-spotlight-heading{display:block}
+ .ft-spotlight-heading>p{margin-top:14px}
+ .ft-spotlight-grid{grid-template-columns:1fr 1fr}
+ .ft-spotlight-card{min-height:285px}
+ .ft-spotlight-card:first-child{grid-column:span 2}
+ .ft-mini-circuit{min-height:205px}
+ .ft-spotlight-card:last-child{grid-column:span 2}
+}
+@media(max-width:530px){
+ .header.wrap{min-height:58px}
+ .ft-theme-menu{left:auto;right:0;top:calc(100% + 10px);grid-template-columns:1fr 1fr}
+ .ft-spotlight-heading h2{font-size:clamp(2.5rem,11vw,3.8rem)}
+ .ft-spotlight-grid{display:grid;grid-template-columns:1fr;gap:12px}
+ .ft-spotlight-card,.ft-spotlight-card:first-child,.ft-spotlight-card:last-child,.ft-spotlight-card:nth-child(3){grid-column:span 1;min-height:285px}
+ .ft-quick-art{min-height:150px}
+ .ft-mini-circuit{min-height:190px}
+ .ft-spotlight-more{flex-direction:column;align-items:flex-start}
+ .ft-atom-interface,.ft-atom-metadata{display:none}
+ .ft-spotlight-card{padding:17px}
+ .ft-ribbon{padding:12px 0}
+ .ft-ribbon-text{font-size:.59rem;letter-spacing:1.4px;gap:19px;padding-right:19px}
+}
+@media(prefers-reduced-motion:reduce){.ft-ribbon-track,.ft-hero-led{animation:none!important}.ft-ribbon-track{transform:none!important}.ft-spotlight-card{transition:none!important}}
+
+/* Keep the four main entry cards balanced at full-width desktops. */
+@media(min-width:1321px){.ft-spotlight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ft-spotlight-card{min-height:365px}.ft-spotlight-card:first-child{grid-row:auto;min-height:430px}.ft-spotlight-card:first-child .ft-mini-circuit{min-height:205px}.ft-spotlight-card:first-child .ft-card-body{margin-top:auto}}
+
+/* Keep the Inventium monogram luminous even in the light theme. */
+.atom.inventium-atom .core .inventium-symbol{color:#f1ffed!important}
