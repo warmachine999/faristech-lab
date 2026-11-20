@@ -1,24 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="FarisTech X">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Inventium, symbol Iv, atomic number 127">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#111D31"/>
-      <stop offset="1" stop-color="#070B16"/>
+    <linearGradient id="space" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#172D45"/>
+      <stop offset="1" stop-color="#07101E"/>
     </linearGradient>
-    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#51E9F5"/>
-      <stop offset=".55" stop-color="#4C81E8"/>
-      <stop offset="1" stop-color="#9B66FF"/>
+    <radialGradient id="nucleus" cx="35%" cy="21%" r="90%">
+      <stop stop-color="#267DB7"/>
+      <stop offset=".50" stop-color="#123459"/>
+      <stop offset="1" stop-color="#0B1C34"/>
+    </radialGradient>
+    <linearGradient id="symbol" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#EAFFFF"/>
+      <stop offset="1" stop-color="#54DCFF"/>
     </linearGradient>
-    <linearGradient id="f" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#A2FAFF"/>
-      <stop offset="1" stop-color="#11CFFF"/>
-    </linearGradient>
-    <linearGradient id="x" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#FFD36F"/>
-      <stop offset="1" stop-color="#FF863E"/>
+    <linearGradient id="orbit" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#4CF2FF"/>
+      <stop offset="1" stop-color="#AE83FF"/>
     </linearGradient>
   </defs>
-  <rect x="1.5" y="1.5" width="61" height="61" rx="16" fill="url(#bg)" stroke="url(#rim)" stroke-width="2.4"/>
-  <path d="M13.5 16H35.5V23H21.5V30H34V37H21.5V49H13.5Z" fill="url(#f)"/>
-  <path d="M39 19.5L53 44.5M53 19.5L39 44.5" fill="none" stroke="url(#x)" stroke-width="7" stroke-linecap="round"/>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="16" fill="url(#space)" stroke="#4489AE" stroke-width="1.7"/>
+  <ellipse cx="31.5" cy="31" rx="29.5" ry="12.6" transform="rotate(-27 31.5 31)" fill="none" stroke="url(#orbit)" stroke-width="2.1" opacity=".8"/>
+  <circle cx="32" cy="32" r="23.5" fill="url(#nucleus)" stroke="#5CC9F6" stroke-width="1.4"/>
+  <path d="M16 29 Q32 37 48 29 M20 43 Q32 36 44 43" fill="none" stroke="#5DDCF3" stroke-width=".95" opacity=".30"/>
+  <text x="14.5" y="20" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="800" fill="#FFCA75">127</text>
+  <text x="32" y="42" font-family="Arial,Helvetica,sans-serif" font-size="30" font-weight="900" letter-spacing="-2.5" text-anchor="middle" fill="url(#symbol)">Iv</text>
+  <text x="32" y="51" font-family="Arial,Helvetica,sans-serif" font-size="6.1" font-weight="700" letter-spacing=".8" text-anchor="middle" fill="#BEEBFF">INVENTIUM</text>
+  <circle cx="51.5" cy="14.5" r="3.4" fill="#FFAE4D" stroke="#FFE3A6" stroke-width=".8"/>
 </svg>
