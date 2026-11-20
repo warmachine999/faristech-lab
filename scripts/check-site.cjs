@@ -12,15 +12,16 @@ for (const match of scripts) {
 }
 assert.ok(checked > 0, 'Expected at least one inline JS script');
 const faviconPath='studio/favicon.svg';
-const faviconVersion='inventium-127-20261120';
-assert.ok(fs.existsSync(faviconPath),'Inventium tab icon must exist');
+const faviconVersion='inventium-iv-only-27';
+assert.ok(fs.existsSync(faviconPath),'Inventium Iv browser tab icon must exist');
 const faviconSvg=fs.readFileSync(faviconPath,'utf8');
-assert.match(faviconSvg,/<svg\s[^>]*viewBox="0 0 64 64"/,'Favicon must remain crisp and scalable');
-assert.match(faviconSvg,/aria-label="Inventium, symbol Iv, atomic number 127"/,'Favicon must identify Inventium correctly');
-assert.match(faviconSvg,/>Iv<\/text>/,'Inventium chemical symbol Iv must appear on the favicon');
-assert.match(faviconSvg,/>127<\/text>/,'Inventium atomic number 127 must appear on the favicon');
-assert.match(faviconSvg,/>INVENTIUM<\/text>/,'Inventium element name must appear on the favicon');
-assert.match(faviconSvg,/ellipse cx="31\.5" cy="31" rx="29\.5"/,'Atom orbit styling must remain in the icon');
+assert.match(faviconSvg,/<svg\s[^>]*viewBox="0 0 64 64"/,'Favicon must remain a scalable 64px SVG');
+assert.match(faviconSvg,/aria-label="Inventium Iv orbital logo"/,'Icon should identify the Inventium Iv brand');
+assert.match(faviconSvg,/>Iv<\/text>/,'Icon must show the new large Iv monogram');
+assert.doesNotMatch(faviconSvg,/127|>INVENTIUM<\/text>/i,'New favicon must not show 127 or tiny element-name text');
+assert.match(faviconSvg,/radialGradient id="planet"/,'Icon must show a bright blue globe');
+assert.match(faviconSvg,/ellipse cx="32" cy="32" rx="29\.5"/,'Icon must retain the orbital ring');
+assert.match(faviconSvg,/radialGradient id="electron"/,'Icon must have a glowing orange accent');
 const faviconPages=['index.html','projects.html','project.html',
  'studio/index.html','studio/projects.html','studio/project.html','studio/pricing.html'];
 for(const page of faviconPages){
