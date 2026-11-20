@@ -12,22 +12,40 @@ for (const match of scripts) {
 }
 assert.ok(checked > 0, 'Expected at least one inline JS script');
 const faviconPath='studio/favicon.svg';
-const faviconVersion='premium-fx-25';
-assert.ok(fs.existsSync(faviconPath),'The FarisTech X tab logo must exist');
+const faviconVersion='inventium-127-20261120';
+assert.ok(fs.existsSync(faviconPath),'Inventium tab icon must exist');
 const faviconSvg=fs.readFileSync(faviconPath,'utf8');
-assert.match(faviconSvg,/<svg\s[^>]*viewBox="0 0 64 64"/,'Favicon must be a crisp, scalable 64px SVG');
-assert.match(faviconSvg,/fill="url\(#f\)"/,'New favicon must feature the cyan F monogram');
-assert.match(faviconSvg,/stroke="url\(#x\)"/,'New favicon must feature the orange X monogram');
-assert.match(faviconSvg,/#FF863E/,'New F× design must have the orange accent');
-assert.match(faviconSvg,/#11CFFF/,'New F× design must have the cyan accent');
+assert.match(faviconSvg,/<svg\s[^>]*viewBox="0 0 64 64"/,'Favicon must remain crisp and scalable');
+assert.match(faviconSvg,/aria-label="Inventium, symbol Iv, atomic number 127"/,'Favicon must identify Inventium correctly');
+assert.match(faviconSvg,/>Iv<\/text>/,'Inventium chemical symbol Iv must appear on the favicon');
+assert.match(faviconSvg,/>127<\/text>/,'Inventium atomic number 127 must appear on the favicon');
+assert.match(faviconSvg,/>INVENTIUM<\/text>/,'Inventium element name must appear on the favicon');
+assert.match(faviconSvg,/ellipse cx="31\.5" cy="31" rx="29\.5"/,'Atom orbit styling must remain in the icon');
 const faviconPages=['index.html','projects.html','project.html',
  'studio/index.html','studio/projects.html','studio/project.html','studio/pricing.html'];
 for(const page of faviconPages){
  const markup=page==='index.html'?html:fs.readFileSync(page,'utf8');
  const icon=page.startsWith('studio/')?'favicon.svg':'studio/favicon.svg';
  const expected='<link rel="icon" type="image/svg+xml" href="'+icon+'?v='+faviconVersion+'">';
- assert.ok(markup.includes(expected),page+' must show the new F× favicon without stale caching');
+ assert.ok(markup.includes(expected),page+' must show the Inventium icon without stale cache');
 }
+assert.ok(html.includes('class="atom inventium-atom" data-element="Inventium" data-symbol="Iv" data-atomic-number="127"'),
+ 'Homepage atom must be the requested Inventium Iv, atomic number 127');
+assert.ok(html.includes('class="inventium-number">127</span>'),'Nucleus must show number 127');
+assert.ok(html.includes('class="inventium-symbol">Iv</span>'),'Nucleus must show element symbol Iv');
+assert.ok(html.includes('class="inventium-name">INVENTIUM</span>'),'Nucleus must show Inventium name');
+assert.ok(html.includes('127 p⁺ · 127 e⁻ · Concept element'),
+ 'Neutral fictional Inventium must describe 127 protons and 127 electrons without falsely claiming discovery');
+assert.ok(html.includes('id="inventium-127-atom-style"'),'Inventium nucleus must have its own responsive styling');
+assert.ok(html.includes('INVENTIUM <span style="color:var(--cyan)">Iv · 127</span>'),
+ 'Atom console must identify the Inventium element');
+assert.ok(html.includes('⚙ Inventium controls'),'Atom control button must use its new name');
+assert.ok(html.includes("settingsToggle.textContent=open?'✕ Hide Inventium controls':'⚙ Inventium controls';"),
+ 'Inventium settings button must keep its new name after opening or closing');
+assert.ok(html.includes('aria-label="Inventium atom animation control panel"'),
+ 'Atom settings must have an accessible Inventium label');
+assert.ok(html.includes('class="orbit o1"')&&html.includes('class="orbit o2"')&&html.includes('class="orbit o3"'),
+ 'Inventium must keep the three existing animated orbital planes');
 
 for (const id of ['varonPause', 'varonReset', 'varonStatus', 'varonCycle']) {
   assert.ok(html.includes('id="' + id + '"'), 'Missing VARON control: ' + id);
