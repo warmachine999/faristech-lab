@@ -57,4 +57,18 @@ jobs:
           grep -q 'class="cell wall"' /tmp/faristech-jewel-dom.html
           grep -q 'class="piece thief"' /tmp/faristech-jewel-dom.html
           echo "Premium homepage and live Jewel Thief game rendered successfully in Chromium."
+          "$CHROME" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --virtual-time-budget=2300 --dump-dom 'http://127.0.0.1:8173/projects.html' >/tmp/faristech-project-library-dom.html 2>>/tmp/faristech-circuit-chrome.log
+          grep -q 'id="search"' /tmp/faristech-project-library-dom.html
+          grep -q 'projectCard' /tmp/faristech-project-library-dom.html
+          grep -q 'project.html?id=0' /tmp/faristech-project-library-dom.html
+          grep -q '8 project areas found' /tmp/faristech-project-library-dom.html
+          "$CHROME" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --virtual-time-budget=2300 --dump-dom 'http://127.0.0.1:8173/project.html?id=0' >/tmp/faristech-project-detail-dom.html 2>>/tmp/faristech-circuit-chrome.log
+          grep -q 'id="name">3D Models' /tmp/faristech-project-detail-dom.html
+          grep -q 'id="overview">' /tmp/faristech-project-detail-dom.html
+          grep -q 'class="moreCard"' /tmp/faristech-project-detail-dom.html
+          "$CHROME" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --virtual-time-budget=2300 --dump-dom 'http://127.0.0.1:8173/projects.html?lang=ar' >/tmp/faristech-project-arabic-dom.html 2>>/tmp/faristech-circuit-chrome.log
+          grep -q 'lang="ar" dir="rtl"' /tmp/faristech-project-arabic-dom.html
+          grep -q 'نماذج ثلاثية الأبعاد' /tmp/faristech-project-arabic-dom.html
+          echo "Project library and detail pages verified in Chromium (English and Arabic)."
+
 
