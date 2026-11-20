@@ -2,18 +2,13 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
 
-const html = fs.readFileSync('lab.html', 'utf8');
-const landing = fs.readFileSync('index.html', 'utf8');
-const landingJS = fs.readFileSync('assets/landing.js', 'utf8');
-const landingCSS = fs.readFileSync('assets/landing.css', 'utf8');
-new vm.Script(landingJS, {filename:'assets/landing.js'});
-for (const href of ['assets/landing.js','assets/landing.css','lab.html#lab','projects.html','studio/index.html']) {
-  assert.ok(landing.includes(href), 'Premium homepage missing a required asset or working link: '+href);
-}
-for (const id of ['langToggle','themeToggle','menuToggle','powerToggle','circuitDemo']) {
-  assert.ok(landing.includes('id="'+id+'"'), 'Premium homepage missing interactive control: '+id);
-}
-assert.ok(landingCSS.includes('.feature-circuit') && landingJS.includes('updatePower'), 'Premium homepage styles and interactivity must be present');
+const html = fs.readFileSync('index.html', 'utf8');
+const referenceLab = fs.readFileSync('lab.html', 'utf8');
+assert.ok(html.includes('id="faristech-targeted-refinement"'), 'Targeted homepage visual improvements must remain');
+assert.ok(html.includes('id="mainNav"') && html.includes('id="faristech-nav-accessibility"'), 'Responsive navigation and accessibility must be present');
+assert.ok(html.includes('id="projectsGrid"') && html.includes('id="servicesGrid"'), 'Keep the existing project and service sections');
+assert.ok(html.includes('id="circuitSchematicBtn"') && html.includes('id="circuitRealisticBtn"'), 'Keep the original circuit simulator modes on homepage');
+assert.ok(referenceLab.includes('id="circuitSchematicBtn"'), 'Unmodified original lab must remain available as reference');
 const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
 let checked = 0;
 for (const match of scripts) {
@@ -33,10 +28,10 @@ assert.doesNotMatch(faviconSvg,/127|>INVENTIUM<\/text>/i,'New favicon must not s
 assert.match(faviconSvg,/radialGradient id="planet"/,'Icon must show a bright blue globe');
 assert.match(faviconSvg,/ellipse cx="32" cy="32" rx="29\.5"/,'Icon must retain the orbital ring');
 assert.match(faviconSvg,/radialGradient id="electron"/,'Icon must have a glowing orange accent');
-const faviconPages=['lab.html','projects.html','project.html',
+const faviconPages=['index.html','lab.html','projects.html','project.html',
  'studio/index.html','studio/projects.html','studio/project.html','studio/pricing.html'];
 for(const page of faviconPages){
- const markup=page==='lab.html'?html:fs.readFileSync(page,'utf8');
+ const markup=page==='index.html'?html:fs.readFileSync(page,'utf8');
  const icon=page.startsWith('studio/')?'favicon.svg':'studio/favicon.svg';
  const expected='<link rel="icon" type="image/svg+xml" href="'+icon+'?v='+faviconVersion+'">';
  assert.ok(markup.includes(expected),page+' must show the Inventium icon without stale cache');
@@ -243,7 +238,7 @@ assert.ok(!fs.existsSync('studio/games.html'),'Unrequested Learning Games page m
 assert.ok(!fs.existsSync('scripts/check-studio-games.cjs'),'Removed games must not leave a dedicated test module');
 assert.ok(!fs.existsSync('GAME_BUG_REPORT.md'),'Removed games should not leave their obsolete bug report');
 for(const path of ['index.html','lab.html','studio/index.html','studio/projects.html','studio/project.html','studio/pricing.html']){
- const source=path==='lab.html'?html:fs.readFileSync(path,'utf8');
+ const source=path==='index.html'?html:fs.readFileSync(path,'utf8');
  assert.doesNotMatch(source,/games\.html|gamesLink|Learning Games|Learning games|data-nav="games"/i,
   'Games link or promotion should not appear on '+path);
 }
@@ -584,4 +579,4 @@ assert.equal(fx.realisticExplosionSeen.size,0,'Reset must permit a new failure a
 
 const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
 assert.match(wrangler, /"name"\s*:\s*"faristech-lab"/, 'Lab must not deploy as production');
-console.log('Lab and premium homepage validation OK: ' + checked + ' legacy inline scripts, VARON controls, and landing interactions.');
+console.log('Original homepage restored and polished: ' + checked + ' inline scripts, VARON and simulator regression tests passed.');
