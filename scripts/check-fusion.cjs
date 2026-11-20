@@ -21,6 +21,21 @@ assert.ok(index.includes('href="projects.html"'),'Projects should open the libra
 assert.ok(index.includes('project.html?id='),'Project card must open details');
 assert.ok(projectLibrary.includes('href="project.html?id=')||projectLibrary.includes("href='project.html?id="),'Library cards must open detail pages');
 assert.ok(projectDetails.includes('id="overview"'),'Individual project detail must remain functional');
+const projectPageJS=read('assets/projects-page.js');
+new vm.Script(projectPageJS,{filename:'assets/projects-page.js'});
+assert.ok(projectLibrary.includes('class="project-library-page"')&&projectLibrary.includes('id="search"')&&projectLibrary.includes('id="clearFilters"'),'Project library needs working search and clear filters');
+assert.ok(projectDetails.includes('class="project-detail-page"')&&projectDetails.includes('id="mediaSection"'),'Project details and optional media section must exist');
+assert.ok(projectLibrary.includes('new URLSearchParams(location.search)')&&projectDetails.includes("location.replace('projects.html'"),'Legacy project URLs must resolve correctly');
+assert.ok(projectLibrary.includes('class="projectCard" href="project.html?id=')||projectLibrary.includes('class=\"projectCard\" href=\"project.html?id='),'Project tiles need native link access');
+assert.ok(projectDetails.includes('class="moreCard" href="project.html?id='),'Related projects must open details by keyboard and click');
+assert.ok(!projectDetails.includes('Add parts in admin.html'),'Do not show editor instructions to visitors');
+assert.ok(projectDetails.includes('mediaSection.hidden=true'),'Hide empty media instead of fake photo placeholders');
+assert.ok(projectLibrary.includes("function matchaBackground()")&&projectDetails.includes("function matchaBackground()"),'Matcha theme should work on both pages');
+const grabData=source=>{const match=source.match(/const PROJECTS_DATA=(\[[\s\S]*?\]);\nconst Q=/);assert.ok(match,'Project data missing');return JSON.parse(match[1])};
+const libraryData=grabData(projectLibrary),detailsData=grabData(projectDetails);
+assert.deepEqual(libraryData,detailsData,'Library and details should use identical original data');
+assert.ok(libraryData.length>=8,'All original project areas should be preserved');
+
 assert.equal((index.match(/class="ft-ribbon-text"/g)||[]).length,2,'Ribbon needs exactly two identical strips for seamless motion');
 assert.ok(css.includes('translate3d(-50%,0,0)'),'Ribbon should run as a GPU-composited continuous marquee');
 assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'),'Respect user motion preferences');
