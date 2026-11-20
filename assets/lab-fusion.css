@@ -103,7 +103,7 @@ main.wrap{max-width:1400px}
 .atom.inventium-atom .core:before{content:"";position:absolute;inset:14px;z-index:0;pointer-events:none;border:1px solid color-mix(in srgb,var(--cyan) 38%,transparent);
  border-radius:8px;background:linear-gradient(130deg,rgba(255,255,255,.05),transparent 47%)}
 .atom.inventium-atom .core:after{content:"";position:absolute;inset:4px;z-index:0;pointer-events:none;border:1px dashed color-mix(in srgb,var(--cyan) 23%,transparent);border-radius:13px}
-.ft-chip-pin{position:absolute;z-index:-1;display:block;pointer-events:none}
+.ft-chip-pin{position:absolute;z-index:0;display:block;pointer-events:none}
 .ft-chip-pin.top,.ft-chip-pin.bottom{height:12px;left:10%;right:10%;background:repeating-linear-gradient(90deg,transparent 0 4%,var(--cyan) 4% 8%,transparent 8% 12%)}
 .ft-chip-pin.top{top:-13px}.ft-chip-pin.bottom{bottom:-13px}
 .ft-chip-pin.left,.ft-chip-pin.right{width:12px;top:10%;bottom:10%;background:repeating-linear-gradient(0deg,transparent 0 4%,var(--cyan) 4% 8%,transparent 8% 12%)}
@@ -136,7 +136,7 @@ main.wrap{max-width:1400px}
 .ft-spotlight-heading h2{margin:8px 0 0;font-family:"Space Grotesk",Inter,sans-serif;line-height:1;letter-spacing:-.07em;font-size:clamp(2.7rem,5vw,4.8rem)}
 .ft-spotlight-heading h2 em{color:var(--cyan);font-style:normal}
 .ft-spotlight-heading>p{max-width:360px;margin:0 0 4px;color:var(--muted);line-height:1.75;font-size:.87rem}
-.ft-spotlight-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:14px}
+.ft-spotlight-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .ft-spotlight-card{display:flex;flex-direction:column;gap:15px;position:relative;padding:20px;min-height:330px;
  border-radius:var(--ft-card-radius);border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 92%,transparent);
  box-shadow:0 22px 50px rgba(0,0,0,.10);transition:transform .28s var(--ft-flow),border-color .28s}
@@ -221,3 +221,6 @@ main.wrap{max-width:1400px}
  .ft-ribbon-text{font-size:.59rem;letter-spacing:1.4px;gap:19px;padding-right:19px}
 }
 @media(prefers-reduced-motion:reduce){.ft-ribbon-track,.ft-hero-led{animation:none!important}.ft-ribbon-track{transform:none!important}.ft-spotlight-card{transition:none!important}}
+
+/* Keep the four main entry cards balanced at full-width desktops. */
+@media(min-width:1321px){.ft-spotlight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ft-spotlight-card{min-height:375px}.ft-spotlight-card:first-child{grid-row:span 2;min-height:765px}.ft-spotlight-card:first-child .ft-mini-circuit{min-height:260px}.ft-spotlight-card:first-child .ft-card-body{margin-top:0}}
