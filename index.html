@@ -597,7 +597,28 @@ function setupAskButtons(){
  $('waLink').href=wa(lang==='ar'?'مرحباً FarisTech X! لدي طلب عام وأريد مناقشته. التفاصيل هي: ':'Hi FarisTech X! I have a general request I want to discuss. Here are the details: ');
  const d=$('discordLink');if(d){d.href=DISCORD_URL;d.target='_blank';d.rel='noopener';d.classList.remove('disabled');d.removeAttribute('aria-disabled');$('discordText').textContent='@'+DISCORD_USERNAME;d.title=lang==='ar'?('افتح Discord ثم أضف @'+DISCORD_USERNAME):('Open Discord, then add @'+DISCORD_USERNAME)}
 }
-const themes=['dark','light','caramel','tech'];function themeLabel(th){return th==='dark'?t('themeDark'):th==='light'?t('themeLight'):th==='caramel'?t('themeCaramel'):t('themeTech')}function themeIcon(th){return th==='dark'?'🌙':th==='light'?'☀️':th==='caramel'?'🍮':'◈'}function updateThemeButton(){const th=document.documentElement.dataset.theme;$('themeIcon').textContent=themeIcon(th);$('themeText').textContent=themeLabel(th)}document.documentElement.dataset.theme=localStorage.getItem('ft-theme')||'dark';$('themeBtn').onclick=()=>{const cur=document.documentElement.dataset.theme;const next=themes[(themes.indexOf(cur)+1)%themes.length];document.documentElement.dataset.theme=next;localStorage.setItem('ft-theme',next);updateThemeButton()};$('langBtn').onclick=()=>{lang=lang==='en'?'ar':'en';localStorage.setItem('ft-lang',lang);applyLanguage()};$('menuBtn').onclick=()=>document.querySelector('.nav').classList.toggle('open');document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>document.querySelector('.nav').classList.remove('open')));
+const themes=['dark','light','caramel','tech','matcha'];
+function themeLabel(th){return th==='dark'?t('themeDark'):th==='light'?t('themeLight'):th==='caramel'?t('themeCaramel'):th==='matcha'?t('themeMatcha'):t('themeTech')}
+function themeIcon(th){return th==='dark'?'🌙':th==='light'?'☀️':th==='caramel'?'🍮':th==='matcha'?'🍵':'◈'}
+function updateThemeButton(){
+ const th=document.documentElement.dataset.theme;
+ $('themeIcon').textContent=themeIcon(th);
+ $('themeText').textContent=themeLabel(th);
+ document.querySelectorAll('[data-theme-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.themeChoice===th)));
+}
+const savedTheme=localStorage.getItem('ft-theme')||'dark';
+document.documentElement.dataset.theme=themes.includes(savedTheme)?savedTheme:'dark';
+const themeMenu=$('themeMenu'),themeTrigger=$('themeBtn');
+function closeThemeMenu(){themeMenu.hidden=true;themeTrigger.setAttribute('aria-expanded','false')}
+themeTrigger.onclick=()=>{themeMenu.hidden=!themeMenu.hidden;themeTrigger.setAttribute('aria-expanded',String(!themeMenu.hidden))}
+document.querySelectorAll('[data-theme-choice]').forEach(button=>button.addEventListener('click',()=>{
+ const choice=button.dataset.themeChoice;if(!themes.includes(choice))return;
+ document.documentElement.dataset.theme=choice;localStorage.setItem('ft-theme',choice);
+ updateThemeButton();closeThemeMenu();
+}));
+document.addEventListener('pointerdown',event=>{if(!themeMenu.hidden&&!event.target.closest('#themeMenu')&&!event.target.closest('#themeBtn'))closeThemeMenu()});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!themeMenu.hidden){closeThemeMenu();themeTrigger.focus()}});
+$('langBtn').onclick=()=>{lang=lang==='en'?'ar':'en';localStorage.setItem('ft-lang',lang);applyLanguage()};$('menuBtn').onclick=()=>document.querySelector('.nav').classList.toggle('open');document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>document.querySelector('.nav').classList.remove('open')));
 const FRIEND_CHAT_PASSWORD='123456788';
 const CHAT_KEY='faristech_private_chat_v3';
 const chatOverlay=$('friendChatOverlay'),chatName=$('friendName'),chatInput=$('friendMessage'),chatMessages=$('friendChatMessages');
@@ -1191,7 +1212,29 @@ drawCircuit(model());requestAnimationFrame(tick);
   traces.forEach((s,i)=>{trace(s,i%4===0?'rgba(0,238,155,.14)':'rgba(0,215,244,.125)',1.05);s.forEach((p,j)=>{if(j&&j<s.length-1){g.fillStyle=i%4===0?'rgba(0,238,155,.24)':'rgba(0,215,244,.22)';g.beginPath();g.arc(p.x,p.y,2.1,0,7);g.fill()}})});
   movers.forEach((m,i)=>{let p=pathPoint(traces[m.tr],m.u+t*m.sp);g.shadowBlur=11;g.shadowColor=i%3===0?'#00ee9b':'#00d7f4';g.fillStyle=i%3===0?'rgba(0,238,155,.82)':'rgba(0,215,244,.84)';g.beginPath();g.arc(p.x,p.y,2.6,0,7);g.fill();g.shadowBlur=0});cubes.forEach((o,i)=>cube(o,t,i%3===0?'0,238,155':'0,215,244',.12));
  }
- let lastDraw=0;function draw(now){requestAnimationFrame(draw);if(now-lastDraw<40)return;lastDraw=now;t=now/1000;g.clearRect(0,0,W,H);const th=document.documentElement.dataset.theme||'dark';if(th==='dark')darkBackground();else if(th==='light')lightBackground();else if(th==='caramel')caramelBackground();else techBackground()}
+ function matchaBackground(){
+  const gradient=g.createRadialGradient(W*.76,H*.16,10,W*.76,H*.16,Math.max(W,H)*.82);
+  gradient.addColorStop(0,'rgba(164,241,128,.14)');gradient.addColorStop(.48,'rgba(77,149,101,.055)');gradient.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=gradient;g.fillRect(0,0,W,H);
+  stars.slice(0,120).forEach((p,i)=>{
+    const a=.13+.22*(.5+.5*Math.sin(t*p.sp+p.p));
+    g.fillStyle=i%4===0?'rgba(202,253,140,'+a+')':'rgba(148,239,188,'+(a*.68)+')';
+    g.beginPath();g.arc(p.x,p.y,p.r*.8,0,Math.PI*2);g.fill();
+  });
+  traces.slice(0,24).forEach((seg,i)=>trace(seg,i%4===0?'rgba(190,248,152,.16)':'rgba(142,224,177,.095)',1.05));
+  movers.slice(0,25).forEach((m,i)=>{
+    const p=pathPoint(traces[m.tr],m.u+t*m.sp*.68);
+    g.fillStyle=i%2?'rgba(196,255,145,.59)':'rgba(147,239,191,.53)';
+    g.beginPath();g.arc(p.x,p.y,2.1,0,7);g.fill();
+  });
+  cubes.slice(0,8).forEach((o,i)=>cube(o,t,i%2?'176,239,194':'198,248,141',.13));
+  for(let i=0;i<3;i++){
+    const x=W*(.14+i*.34),y=H*(.25+.22*(i%2));
+    g.strokeStyle='rgba(173,241,174,.11)';g.lineWidth=1.2;
+    g.beginPath();g.ellipse(x,y,73+i*18,33+i*7,t*.018+i,0,Math.PI*2);g.stroke();
+  }
+}
+let lastDraw=0;function draw(now){requestAnimationFrame(draw);if(now-lastDraw<40)return;lastDraw=now;t=now/1000;g.clearRect(0,0,W,H);const th=document.documentElement.dataset.theme||'dark';if(th==='dark')darkBackground();else if(th==='light')lightBackground();else if(th==='caramel')caramelBackground();else if(th==='matcha')matchaBackground();else techBackground()}
  addEventListener('resize',rebuild);rebuild();requestAnimationFrame(draw);
 })();
 </script>
@@ -1415,7 +1458,7 @@ drawCircuit(model());requestAnimationFrame(tick);
  }
  // Only visible text lines and then the actual characters can receive ray hits.
  const textIonSelector='.hero .eyebrow,.hero h1,.hero #heroText,.hero .note,.hero .actions .btn,.header .brandName,.header .identityBadge,.header .tagline,.header .nav a,.header .controlBtn';
- const ionTargetSelector='.card,.service,.labCard,.about,.contact,.print,.status,.infoItem,.statBox,.banner,.pill';
+ const ionTargetSelector='.card,.service,.labCard,.about,.contact,.print,.status,.infoItem,.statBox,.banner,.pill,.ft-spotlight-card';
  const textHeatNames={ALPHA:'varon-heat-alpha',BETA:'varon-heat-beta',GAMMA:'varon-heat-gamma'};
  function visibleIonTargets(now){
   if(now>=nextIonTargetRefresh){
