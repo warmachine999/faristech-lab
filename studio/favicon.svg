@@ -1,29 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Inventium, symbol Iv, atomic number 127">
-  <defs>
-    <linearGradient id="space" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#172D45"/>
-      <stop offset="1" stop-color="#07101E"/>
-    </linearGradient>
-    <radialGradient id="nucleus" cx="35%" cy="21%" r="90%">
-      <stop stop-color="#267DB7"/>
-      <stop offset=".50" stop-color="#123459"/>
-      <stop offset="1" stop-color="#0B1C34"/>
-    </radialGradient>
-    <linearGradient id="symbol" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#EAFFFF"/>
-      <stop offset="1" stop-color="#54DCFF"/>
-    </linearGradient>
-    <linearGradient id="orbit" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#4CF2FF"/>
-      <stop offset="1" stop-color="#AE83FF"/>
-    </linearGradient>
-  </defs>
-  <rect x="1.5" y="1.5" width="61" height="61" rx="16" fill="url(#space)" stroke="#4489AE" stroke-width="1.7"/>
-  <ellipse cx="31.5" cy="31" rx="29.5" ry="12.6" transform="rotate(-27 31.5 31)" fill="none" stroke="url(#orbit)" stroke-width="2.1" opacity=".8"/>
-  <circle cx="32" cy="32" r="23.5" fill="url(#nucleus)" stroke="#5CC9F6" stroke-width="1.4"/>
-  <path d="M16 29 Q32 37 48 29 M20 43 Q32 36 44 43" fill="none" stroke="#5DDCF3" stroke-width=".95" opacity=".30"/>
-  <text x="14.5" y="20" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="800" fill="#FFCA75">127</text>
-  <text x="32" y="42" font-family="Arial,Helvetica,sans-serif" font-size="30" font-weight="900" letter-spacing="-2.5" text-anchor="middle" fill="url(#symbol)">Iv</text>
-  <text x="32" y="51" font-family="Arial,Helvetica,sans-serif" font-size="6.1" font-weight="700" letter-spacing=".8" text-anchor="middle" fill="#BEEBFF">INVENTIUM</text>
-  <circle cx="51.5" cy="14.5" r="3.4" fill="#FFAE4D" stroke="#FFE3A6" stroke-width=".8"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Inventium Iv orbital logo">
+ <defs>
+  <linearGradient id="space" x1="0" y1="0" x2="1" y2="1">
+   <stop stop-color="#101F42"/>
+   <stop offset="1" stop-color="#030A1B"/>
+  </linearGradient>
+  <radialGradient id="planet" cx="31%" cy="22%" r="84%">
+   <stop stop-color="#59EEFF"/>
+   <stop offset=".23" stop-color="#21A7E8"/>
+   <stop offset=".57" stop-color="#075CB8"/>
+   <stop offset="1" stop-color="#06245B"/>
+  </radialGradient>
+  <linearGradient id="orbit" x1="0" y1="1" x2="1" y2="0">
+   <stop stop-color="#2AF1F7"/>
+   <stop offset=".60" stop-color="#47B5FF"/>
+   <stop offset="1" stop-color="#B783FF"/>
+  </linearGradient>
+  <radialGradient id="electron">
+   <stop stop-color="#FFF9C8"/>
+   <stop offset=".55" stop-color="#FFC04D"/>
+   <stop offset="1" stop-color="#F67819"/>
+  </radialGradient>
+ </defs>
+ <rect x="1" y="1" width="62" height="62" rx="16" fill="url(#space)" stroke="#2A679D" stroke-width="1.6"/>
+ <circle cx="32" cy="32" r="25" fill="#20CEFF" opacity=".12"/>
+ <!-- Back half of the orbit -->
+ <ellipse cx="32" cy="32" rx="29.5" ry="12" transform="rotate(-29 32 32)" fill="none" stroke="url(#orbit)" stroke-width="2.7" opacity=".73"/>
+ <!-- Clear luminous sphere for small browser-tab sizes -->
+ <circle cx="32" cy="32" r="22" fill="url(#planet)" stroke="#52E7FF" stroke-width="1.6"/>
+ <path d="M17 17 Q32 9 46 18" fill="none" stroke="#D1FFFF" stroke-width="1.7" stroke-linecap="round" opacity=".50"/>
+ <!-- Large, crisp Iv monogram. No atomic number or small text. -->
+ <text x="32" y="43.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="33.5" font-weight="900" letter-spacing="-2" fill="#FFFFFF">Iv</text>
+ <!-- Foreground orbital sweep -->
+ <path d="M7.8 45.6 C17.4 57.8 42.2 52.7 56.3 24.5" fill="none" stroke="url(#orbit)" stroke-width="3" stroke-linecap="round"/>
+ <circle cx="51.8" cy="16" r="4.1" fill="url(#electron)" stroke="#FFE59B" stroke-width=".9"/>
+ <circle cx="51.8" cy="16" r="5.7" fill="none" stroke="#FFAB47" stroke-width=".7" opacity=".36"/>
 </svg>
