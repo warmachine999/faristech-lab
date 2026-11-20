@@ -49,4 +49,12 @@ jobs:
           grep -q 'id="circuitExplosionDemo"' /tmp/faristech-explosion-dom.html
           echo "Real-life animated explosion preview verified in Chromium."
           echo "Both schematic and real-life circuit modes render in a real browser."
+          grep -q 'id="ftLedToggle"' /tmp/faristech-circuit-dom.html
+          grep -q 'data-theme-choice="matcha"' /tmp/faristech-circuit-dom.html
+          grep -q 'class="ft-ribbon-track"' /tmp/faristech-circuit-dom.html
+          "$CHROME" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --virtual-time-budget=2100 --dump-dom 'http://127.0.0.1:8173/jewel-thief.html' >/tmp/faristech-jewel-dom.html 2>>/tmp/faristech-circuit-chrome.log
+          grep -q 'id="levelNum">01' /tmp/faristech-jewel-dom.html
+          grep -q 'class="cell wall"' /tmp/faristech-jewel-dom.html
+          grep -q 'class="piece thief"' /tmp/faristech-jewel-dom.html
+          echo "Premium homepage and live Jewel Thief game rendered successfully in Chromium."
 
